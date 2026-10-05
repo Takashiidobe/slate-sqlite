@@ -1,0 +1,23 @@
+[package]
+name = "slate-sqlite"
+version = "0.0.0"
+edition = "2024"
+
+
+[workspace]
+
+[dependencies]
+libc = "0.2"
+aligned = { path = "aligned" }
+bitint = { path = "bitint" }
+num-complex = { path = "num-complex", default-features = false }
+bitfields = { path = "vendor/bitfields" }
+
+
+[profile.dev]
+overflow-checks = false
+codegen-units = 256
+
+[lib]
+name = "sqlite_generated"
+crate-type = ["cdylib"]

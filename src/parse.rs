@@ -1,0 +1,16540 @@
+unsafe extern "C" {
+    static mut sqlite3CtypeMap: [u8; 0];
+    fn sqlite3_realloc(__v609: *mut (), __v610: i32) -> *mut ();
+    fn sqlite3_free(__v611: *mut ());
+    fn sqlite3_strnicmp(__v612: *const i8, __v613: *const i8, __v614: i32) -> i32;
+    fn memcpy(__dest: *mut (), __src: *const (), __n: u64) -> *mut ();
+    fn memset(__s: *mut (), __c: i32, __n: u64) -> *mut ();
+    fn sqlite3MultiValues(
+        pParse: *mut Parse,
+        pLeft: *mut Select,
+        pRow: *mut ExprList,
+    ) -> *mut Select;
+    fn sqlite3MultiValuesEnd(pParse: *mut Parse, pVal: *mut Select);
+    fn sqlite3WindowDelete(__v626: *mut sqlite3, __v627: *mut Window);
+    fn sqlite3WindowListDelete(db: *mut sqlite3, p: *mut Window);
+    fn sqlite3WindowAlloc(
+        __v630: *mut Parse,
+        __v631: i32,
+        __v632: i32,
+        __v633: *mut Expr,
+        __v634: i32,
+        __v635: *mut Expr,
+        __v636: u8,
+    ) -> *mut Window;
+    fn sqlite3WindowAttach(__v637: *mut Parse, __v638: *mut Expr, __v639: *mut Window);
+    fn sqlite3WindowChain(__v640: *mut Parse, __v641: *mut Window, __v642: *mut Window);
+    fn sqlite3WindowAssemble(
+        __v643: *mut Parse,
+        __v644: *mut Window,
+        __v645: *mut ExprList,
+        __v646: *mut ExprList,
+        __v647: *mut Token,
+    ) -> *mut Window;
+    fn sqlite3DbMallocZero(__v648: *mut sqlite3, __v649: u64) -> *mut ();
+    fn sqlite3DbMallocRawNN(__v650: *mut sqlite3, __v651: u64) -> *mut ();
+    fn sqlite3DbStrNDup(__v652: *mut sqlite3, __v653: *const i8, __v654: u64) -> *mut i8;
+    fn sqlite3ErrorMsg(__v655: *mut Parse, __v656: *const i8, ...);
+    fn sqlite3DequoteExpr(__v657: *mut Expr);
+    fn sqlite3DequoteNumber(__v658: *mut Parse, __v659: *mut Expr);
+    fn sqlite3FinishCoding(__v660: *mut Parse);
+    fn sqlite3ExprAlloc(
+        __v661: *mut sqlite3,
+        __v662: i32,
+        __v663: *const Token,
+        __v664: i32,
+    ) -> *mut Expr;
+    fn sqlite3Expr(__v665: *mut sqlite3, __v666: i32, __v667: *const i8) -> *mut Expr;
+    fn sqlite3ExprInt32(__v668: *mut sqlite3, __v669: i32) -> *mut Expr;
+    fn sqlite3ExprAttachSubtrees(
+        __v670: *mut sqlite3,
+        __v671: *mut Expr,
+        __v672: *mut Expr,
+        __v673: *mut Expr,
+    );
+    fn sqlite3PExpr(
+        __v674: *mut Parse,
+        __v675: i32,
+        __v676: *mut Expr,
+        __v677: *mut Expr,
+    ) -> *mut Expr;
+    fn sqlite3PExprAddSelect(__v678: *mut Parse, __v679: *mut Expr, __v680: *mut Select);
+    fn sqlite3ExprAnd(__v681: *mut Parse, __v682: *mut Expr, __v683: *mut Expr) -> *mut Expr;
+    fn sqlite3ExprFunction(
+        __v684: *mut Parse,
+        __v685: *mut ExprList,
+        __v686: *const Token,
+        __v687: i32,
+    ) -> *mut Expr;
+    fn sqlite3ExprAddFunctionOrderBy(__v688: *mut Parse, __v689: *mut Expr, __v690: *mut ExprList);
+    fn sqlite3ExprAssignVarNumber(__v691: *mut Parse, __v692: *mut Expr, __v693: u32);
+    fn sqlite3ExprDelete(__v694: *mut sqlite3, __v695: *mut Expr);
+    fn sqlite3ExprDeferredDelete(__v696: *mut Parse, __v697: *mut Expr) -> i32;
+    fn sqlite3ExprUnmapAndDelete(__v698: *mut Parse, __v699: *mut Expr);
+    fn sqlite3ExprListAppend(
+        __v700: *mut Parse,
+        __v701: *mut ExprList,
+        __v702: *mut Expr,
+    ) -> *mut ExprList;
+    fn sqlite3ExprListAppendVector(
+        __v703: *mut Parse,
+        __v704: *mut ExprList,
+        __v705: *mut IdList,
+        __v706: *mut Expr,
+    ) -> *mut ExprList;
+    fn sqlite3ExprListToValues(
+        __v707: *mut Parse,
+        __v708: i32,
+        __v709: *mut ExprList,
+    ) -> *mut Select;
+    fn sqlite3ExprListSetSortOrder(__v710: *mut ExprList, __v711: i32, __v712: i32);
+    fn sqlite3ExprListSetName(
+        __v713: *mut Parse,
+        __v714: *mut ExprList,
+        __v715: *const Token,
+        __v716: i32,
+    );
+    fn sqlite3ExprListSetSpan(
+        __v717: *mut Parse,
+        __v718: *mut ExprList,
+        __v719: *const i8,
+        __v720: *const i8,
+    );
+    fn sqlite3ExprListDelete(__v721: *mut sqlite3, __v722: *mut ExprList);
+    fn sqlite3Pragma(
+        __v723: *mut Parse,
+        __v724: *mut Token,
+        __v725: *mut Token,
+        __v726: *mut Token,
+        __v727: i32,
+    );
+    fn sqlite3StartTable(
+        __v728: *mut Parse,
+        __v729: *mut Token,
+        __v730: *mut Token,
+        __v731: i32,
+        __v732: i32,
+        __v733: i32,
+        __v734: i32,
+    );
+    fn sqlite3AddColumn(__v735: *mut Parse, __v736: Token, __v737: Token);
+    fn sqlite3AddNotNull(__v738: *mut Parse, __v739: i32);
+    fn sqlite3AddPrimaryKey(
+        __v740: *mut Parse,
+        __v741: *mut ExprList,
+        __v742: i32,
+        __v743: i32,
+        __v744: i32,
+    );
+    fn sqlite3AddCheckConstraint(
+        __v745: *mut Parse,
+        __v746: *mut Expr,
+        __v747: *const i8,
+        __v748: *const i8,
+    );
+    fn sqlite3AddDefaultValue(
+        __v749: *mut Parse,
+        __v750: *mut Expr,
+        __v751: *const i8,
+        __v752: *const i8,
+    );
+    fn sqlite3AddCollateType(__v753: *mut Parse, __v754: *mut Token);
+    fn sqlite3AddGenerated(__v755: *mut Parse, __v756: *mut Expr, __v757: *mut Token);
+    fn sqlite3EndTable(
+        __v758: *mut Parse,
+        __v759: *mut Token,
+        __v760: *mut Token,
+        __v761: u32,
+        __v762: *mut Select,
+    );
+    fn sqlite3AddReturning(__v763: *mut Parse, __v764: *mut ExprList);
+    fn sqlite3FaultSim(__v765: i32) -> i32;
+    fn sqlite3CreateView(
+        __v766: *mut Parse,
+        __v767: *mut Token,
+        __v768: *mut Token,
+        __v769: *mut Token,
+        __v770: *mut ExprList,
+        __v771: *mut Select,
+        __v772: i32,
+        __v773: i32,
+    );
+    fn sqlite3DropTable(__v774: *mut Parse, __v775: *mut SrcList, __v776: i32, __v777: i32);
+    fn sqlite3Insert(
+        __v778: *mut Parse,
+        __v779: *mut SrcList,
+        __v780: *mut Select,
+        __v781: *mut IdList,
+        __v782: i32,
+        __v783: *mut Upsert,
+    );
+    fn sqlite3IdListAppend(
+        __v784: *mut Parse,
+        __v785: *mut IdList,
+        __v786: *mut Token,
+    ) -> *mut IdList;
+    fn sqlite3SrcListAppendList(
+        pParse: *mut Parse,
+        p1: *mut SrcList,
+        p2: *mut SrcList,
+    ) -> *mut SrcList;
+    fn sqlite3SrcListAppend(
+        __v790: *mut Parse,
+        __v791: *mut SrcList,
+        __v792: *mut Token,
+        __v793: *mut Token,
+    ) -> *mut SrcList;
+    fn sqlite3SrcListAppendFromTerm(
+        __v794: *mut Parse,
+        __v795: *mut SrcList,
+        __v796: *mut Token,
+        __v797: *mut Token,
+        __v798: *mut Token,
+        __v799: *mut Select,
+        __v800: *mut OnOrUsing,
+    ) -> *mut SrcList;
+    fn sqlite3SrcListIndexedBy(__v801: *mut Parse, __v802: *mut SrcList, __v803: *mut Token);
+    fn sqlite3SrcListFuncArgs(__v804: *mut Parse, __v805: *mut SrcList, __v806: *mut ExprList);
+    fn sqlite3SrcListShiftJoinType(__v807: *mut Parse, __v808: *mut SrcList);
+    fn sqlite3IdListDelete(__v809: *mut sqlite3, __v810: *mut IdList);
+    fn sqlite3SrcListDelete(__v811: *mut sqlite3, __v812: *mut SrcList);
+    fn sqlite3CreateIndex(
+        __v813: *mut Parse,
+        __v814: *mut Token,
+        __v815: *mut Token,
+        __v816: *mut SrcList,
+        __v817: *mut ExprList,
+        __v818: i32,
+        __v819: *mut Token,
+        __v820: *mut Expr,
+        __v821: i32,
+        __v822: i32,
+        __v823: u8,
+    );
+    fn sqlite3DropIndex(__v824: *mut Parse, __v825: *mut SrcList, __v826: i32);
+    fn sqlite3Select(__v827: *mut Parse, __v828: *mut Select, __v829: *mut SelectDest) -> i32;
+    fn sqlite3SelectNew(
+        __v830: *mut Parse,
+        __v831: *mut ExprList,
+        __v832: *mut SrcList,
+        __v833: *mut Expr,
+        __v834: *mut ExprList,
+        __v835: *mut Expr,
+        __v836: *mut ExprList,
+        __v837: u32,
+        __v838: *mut Expr,
+    ) -> *mut Select;
+    fn sqlite3SelectDelete(__v839: *mut sqlite3, __v840: *mut Select);
+    fn sqlite3DeleteFrom(
+        __v841: *mut Parse,
+        __v842: *mut SrcList,
+        __v843: *mut Expr,
+        __v844: *mut ExprList,
+        __v845: *mut Expr,
+    );
+    fn sqlite3Update(
+        __v846: *mut Parse,
+        __v847: *mut SrcList,
+        __v848: *mut ExprList,
+        __v849: *mut Expr,
+        __v850: i32,
+        __v851: *mut ExprList,
+        __v852: *mut Expr,
+        __v853: *mut Upsert,
+    );
+    fn sqlite3Vacuum(__v854: *mut Parse, __v855: *mut Token, __v856: *mut Expr);
+    fn sqlite3NameFromToken(__v857: *mut sqlite3, __v858: *const Token) -> *mut i8;
+    fn sqlite3BeginTransaction(__v859: *mut Parse, __v860: i32);
+    fn sqlite3EndTransaction(__v861: *mut Parse, __v862: i32);
+    fn sqlite3Savepoint(__v863: *mut Parse, __v864: i32, __v865: *mut Token);
+    fn sqlite3ExprIdToTrueFalse(__v866: *mut Expr) -> i32;
+    fn sqlite3ExprIsConstant(__v867: *mut Parse, __v868: *mut Expr) -> i32;
+    fn sqlite3BeginTrigger(
+        __v869: *mut Parse,
+        __v870: *mut Token,
+        __v871: *mut Token,
+        __v872: i32,
+        __v873: i32,
+        __v874: *mut IdList,
+        __v875: *mut SrcList,
+        __v876: *mut Expr,
+        __v877: i32,
+        __v878: i32,
+    );
+    fn sqlite3FinishTrigger(__v879: *mut Parse, __v880: *mut TriggerStep, __v881: *mut Token);
+    fn sqlite3DropTrigger(__v882: *mut Parse, __v883: *mut SrcList, __v884: i32);
+    fn sqlite3DeleteTriggerStep(__v885: *mut sqlite3, __v886: *mut TriggerStep);
+    fn sqlite3TriggerSelectStep(
+        __v887: *mut sqlite3,
+        __v888: *mut Select,
+        __v889: *const i8,
+        __v890: *const i8,
+    ) -> *mut TriggerStep;
+    fn sqlite3TriggerInsertStep(
+        __v891: *mut Parse,
+        __v892: *mut SrcList,
+        __v893: *mut IdList,
+        __v894: *mut Select,
+        __v895: u8,
+        __v896: *mut Upsert,
+        __v897: *const i8,
+        __v898: *const i8,
+    ) -> *mut TriggerStep;
+    fn sqlite3TriggerUpdateStep(
+        __v899: *mut Parse,
+        __v900: *mut SrcList,
+        __v901: *mut SrcList,
+        __v902: *mut ExprList,
+        __v903: *mut Expr,
+        __v904: u8,
+        __v905: *const i8,
+        __v906: *const i8,
+    ) -> *mut TriggerStep;
+    fn sqlite3TriggerDeleteStep(
+        __v907: *mut Parse,
+        __v908: *mut SrcList,
+        __v909: *mut Expr,
+        __v910: *const i8,
+        __v911: *const i8,
+    ) -> *mut TriggerStep;
+    fn sqlite3JoinType(
+        __v912: *mut Parse,
+        __v913: *mut Token,
+        __v914: *mut Token,
+        __v915: *mut Token,
+    ) -> i32;
+    fn sqlite3CreateForeignKey(
+        __v916: *mut Parse,
+        __v917: *mut ExprList,
+        __v918: *mut Token,
+        __v919: *mut ExprList,
+        __v920: i32,
+    );
+    fn sqlite3DeferForeignKey(__v921: *mut Parse, __v922: i32);
+    fn sqlite3Attach(__v923: *mut Parse, __v924: *mut Expr, __v925: *mut Expr, __v926: *mut Expr);
+    fn sqlite3Detach(__v927: *mut Parse, __v928: *mut Expr);
+    fn sqlite3GetInt32(__v929: *const i8, __v930: *mut i32) -> i32;
+    fn sqlite3ReadSchema(pParse: *mut Parse) -> i32;
+    fn sqlite3ExprAddCollateToken(
+        pParse: *const Parse,
+        __v933: *mut Expr,
+        __v934: *const Token,
+        __v935: i32,
+    ) -> *mut Expr;
+    fn sqlite3Reindex(__v936: *mut Parse, __v937: *mut Token, __v938: *mut Token);
+    fn sqlite3AlterRenameTable(__v939: *mut Parse, __v940: *mut SrcList, __v941: *mut Token);
+    fn sqlite3AlterRenameColumn(
+        __v942: *mut Parse,
+        __v943: *mut SrcList,
+        __v944: *mut Token,
+        __v945: *mut Token,
+    );
+    fn sqlite3AlterDropConstraint(
+        __v946: *mut Parse,
+        __v947: *mut SrcList,
+        __v948: *mut Token,
+        __v949: *mut Token,
+    );
+    fn sqlite3AlterAddConstraint(
+        pParse: *mut Parse,
+        pSrc: *mut SrcList,
+        pFirst: *mut Token,
+        pName: *mut Token,
+        zExpr: *const i8,
+        nExpr: i32,
+        pExpr: *mut Expr,
+    );
+    fn sqlite3AlterSetNotNull(
+        __v957: *mut Parse,
+        __v958: *mut SrcList,
+        __v959: *mut Token,
+        __v960: *mut Token,
+    );
+    fn sqlite3AlterFinishAddColumn(__v961: *mut Parse, __v962: *mut Token);
+    fn sqlite3AlterBeginAddColumn(__v963: *mut Parse, __v964: *mut SrcList);
+    fn sqlite3AlterDropColumn(__v965: *mut Parse, __v966: *mut SrcList, __v967: *const Token);
+    fn sqlite3RenameTokenMap(
+        __v968: *mut Parse,
+        __v969: *const (),
+        __v970: *const Token,
+    ) -> *const ();
+    fn sqlite3RenameTokenRemap(__v971: *mut Parse, pTo: *const (), pFrom: *const ());
+    fn sqlite3Analyze(__v974: *mut Parse, __v975: *mut Token, __v976: *mut Token);
+    fn sqlite3SelectOpName(__v977: i32) -> *const i8;
+    fn sqlite3OomFault(__v978: *mut sqlite3) -> *mut ();
+    fn sqlite3VtabBeginParse(
+        __v987: *mut Parse,
+        __v988: *mut Token,
+        __v989: *mut Token,
+        __v990: *mut Token,
+        __v991: i32,
+    );
+    fn sqlite3VtabFinishParse(__v992: *mut Parse, __v993: *mut Token);
+    fn sqlite3VtabArgInit(__v994: *mut Parse);
+    fn sqlite3VtabArgExtend(__v995: *mut Parse, __v996: *mut Token);
+    fn sqlite3ExprListCheckLength(__v997: *mut Parse, __v998: *mut ExprList, __v999: *const i8);
+    fn sqlite3CteNew(
+        __v1000: *mut Parse,
+        __v1001: *mut Token,
+        __v1002: *mut ExprList,
+        __v1003: *mut Select,
+        __v1004: u8,
+    ) -> *mut Cte;
+    fn sqlite3WithAdd(__v1005: *mut Parse, __v1006: *mut With, __v1007: *mut Cte) -> *mut With;
+    fn sqlite3WithDelete(__v1008: *mut sqlite3, __v1009: *mut With);
+    fn sqlite3WithPush(__v1010: *mut Parse, __v1011: *mut With, __v1012: u8) -> *mut With;
+    fn sqlite3UpsertNew(
+        __v1013: *mut sqlite3,
+        __v1014: *mut ExprList,
+        __v1015: *mut Expr,
+        __v1016: *mut ExprList,
+        __v1017: *mut Expr,
+        __v1018: *mut Upsert,
+    ) -> *mut Upsert;
+    fn sqlite3ExprSetHeightAndFlags(pParse: *mut Parse, p: *mut Expr);
+    fn sqlite3ExprSetErrorOffset(__v1021: *mut Expr, __v1022: i32);
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3 {
+    pVfs: *mut sqlite3_vfs,
+    pVdbe: *mut Vdbe,
+    pDfltColl: *mut CollSeq,
+    mutex: *mut sqlite3_mutex,
+    aDb: *mut Db,
+    nDb: i32,
+    mDbFlags: u32,
+    flags: u64,
+    lastRowid: i64,
+    szMmap: i64,
+    nSchemaLock: u32,
+    openFlags: u32,
+    errCode: i32,
+    errByteOffset: i32,
+    errMask: i32,
+    iSysErrno: i32,
+    dbOptFlags: u32,
+    enc: u8,
+    autoCommit: u8,
+    temp_store: u8,
+    mallocFailed: u8,
+    bBenignMalloc: u8,
+    dfltLockMode: u8,
+    nextAutovac: i8,
+    suppressErr: u8,
+    vtabOnConflict: u8,
+    isTransactionSavepoint: u8,
+    mTrace: u8,
+    noSharedCache: u8,
+    nSqlExec: u8,
+    eOpenState: u8,
+    nFpDigit: u8,
+    nextPagesize: i32,
+    nChange: i64,
+    nTotalChange: i64,
+    aLimit: [i32; 15],
+    nMaxSorterMmap: i32,
+    init: sqlite3InitInfo,
+    nVdbeActive: i32,
+    nVdbeRead: i32,
+    nVdbeWrite: i32,
+    nVdbeExec: i32,
+    nVDestroy: i32,
+    nExtension: i32,
+    aExtension: *mut *mut (),
+    trace: __SlateRecord158,
+    pTraceArg: *mut (),
+    xProfile: Option<unsafe extern "C-unwind" fn(*mut (), *const i8, u64)>,
+    pProfileArg: *mut (),
+    pCommitArg: *mut (),
+    xCommitCallback: Option<unsafe extern "C-unwind" fn(*mut ()) -> i32>,
+    pRollbackArg: *mut (),
+    xRollbackCallback: Option<unsafe extern "C-unwind" fn(*mut ())>,
+    pUpdateArg: *mut (),
+    xUpdateCallback: Option<unsafe extern "C-unwind" fn(*mut (), i32, *const i8, *const i8, i64)>,
+    pAutovacPagesArg: *mut (),
+    xAutovacDestr: Option<unsafe extern "C-unwind" fn(*mut ())>,
+    xAutovacPages: Option<unsafe extern "C-unwind" fn(*mut (), *const i8, u32, u32, u32) -> u32>,
+    pParse: *mut Parse,
+    xWalCallback: Option<unsafe extern "C-unwind" fn(*mut (), *mut sqlite3, *const i8, i32) -> i32>,
+    pWalArg: *mut (),
+    xCollNeeded: Option<unsafe extern "C-unwind" fn(*mut (), *mut sqlite3, i32, *const i8)>,
+    xCollNeeded16: Option<unsafe extern "C-unwind" fn(*mut (), *mut sqlite3, i32, *const ())>,
+    pCollNeededArg: *mut (),
+    pErr: *mut sqlite3_value,
+    u1: __SlateRecord159,
+    lookaside: Lookaside,
+    xAuth: Option<
+        unsafe extern "C-unwind" fn(
+            *mut (),
+            i32,
+            *const i8,
+            *const i8,
+            *const i8,
+            *const i8,
+        ) -> i32,
+    >,
+    pAuthArg: *mut (),
+    xProgress: Option<unsafe extern "C-unwind" fn(*mut ()) -> i32>,
+    pProgressArg: *mut (),
+    nProgressOps: u32,
+    nVTrans: i32,
+    aModule: Hash,
+    pVtabCtx: *mut VtabCtx,
+    aVTrans: *mut *mut VTable,
+    pDisconnect: *mut VTable,
+    aFunc: Hash,
+    aCollSeq: Hash,
+    busyHandler: BusyHandler,
+    aDbStatic: [Db; 2],
+    pSavepoint: *mut Savepoint,
+    nAnalysisLimit: i32,
+    busyTimeout: i32,
+    nSavepoint: i32,
+    nStatement: i32,
+    nDeferredCons: i64,
+    nDeferredImmCons: i64,
+    pnBytesFreed: *mut i32,
+    pDbData: *mut DbClientData,
+    nSpill: u64,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_file {
+    pMethods: *const sqlite3_io_methods,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_io_methods {
+    iVersion: i32,
+    xClose: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file) -> i32>,
+    xRead: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, *mut (), i32, i64) -> i32>,
+    xWrite: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, *const (), i32, i64) -> i32>,
+    xTruncate: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i64) -> i32>,
+    xSync: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32) -> i32>,
+    xFileSize: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, *mut i64) -> i32>,
+    xLock: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32) -> i32>,
+    xUnlock: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32) -> i32>,
+    xCheckReservedLock: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, *mut i32) -> i32>,
+    xFileControl: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32, *mut ()) -> i32>,
+    xSectorSize: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file) -> i32>,
+    xDeviceCharacteristics: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file) -> i32>,
+    xShmMap:
+        Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32, i32, i32, *mut *mut ()) -> i32>,
+    xShmLock: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32, i32, i32) -> i32>,
+    xShmBarrier: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file)>,
+    xShmUnmap: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32) -> i32>,
+    xFetch: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i64, i32, *mut *mut ()) -> i32>,
+    xUnfetch: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i64, *mut ()) -> i32>,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_mutex {}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_vfs {
+    iVersion: i32,
+    szOsFile: i32,
+    mxPathname: i32,
+    pNext: *mut sqlite3_vfs,
+    zName: *const i8,
+    pAppData: *mut (),
+    xOpen: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vfs,
+            *const i8,
+            *mut sqlite3_file,
+            i32,
+            *mut i32,
+        ) -> i32,
+    >,
+    xDelete: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8, i32) -> i32>,
+    xAccess: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8, i32, *mut i32) -> i32>,
+    xFullPathname:
+        Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8, i32, *mut i8) -> i32>,
+    xDlOpen: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8) -> *mut ()>,
+    xDlError: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, i32, *mut i8)>,
+    xDlSym: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vfs,
+            *mut (),
+            *const i8,
+        ) -> Option<unsafe extern "C-unwind" fn()>,
+    >,
+    xDlClose: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *mut ())>,
+    xRandomness: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, i32, *mut i8) -> i32>,
+    xSleep: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, i32) -> i32>,
+    xCurrentTime: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *mut f64) -> i32>,
+    xGetLastError: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, i32, *mut i8) -> i32>,
+    xCurrentTimeInt64: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *mut i64) -> i32>,
+    xSetSystemCall: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vfs,
+            *const i8,
+            Option<unsafe extern "C-unwind" fn()>,
+        ) -> i32,
+    >,
+    xGetSystemCall: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vfs,
+            *const i8,
+        ) -> Option<unsafe extern "C-unwind" fn()>,
+    >,
+    xNextSystemCall: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8) -> *const i8>,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_value {}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_context {}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_vtab {
+    pModule: *const sqlite3_module,
+    nRef: i32,
+    zErrMsg: *mut i8,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_index_info {
+    nConstraint: i32,
+    aConstraint: *mut sqlite3_index_constraint,
+    nOrderBy: i32,
+    aOrderBy: *mut sqlite3_index_orderby,
+    aConstraintUsage: *mut sqlite3_index_constraint_usage,
+    idxNum: i32,
+    idxStr: *mut i8,
+    needToFreeIdxStr: i32,
+    orderByConsumed: i32,
+    estimatedCost: f64,
+    estimatedRows: i64,
+    idxFlags: i32,
+    colUsed: u64,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_vtab_cursor {
+    pVtab: *mut sqlite3_vtab,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_module {
+    iVersion: i32,
+    xCreate: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3,
+            *mut (),
+            i32,
+            *const *const i8,
+            *mut *mut sqlite3_vtab,
+            *mut *mut i8,
+        ) -> i32,
+    >,
+    xConnect: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3,
+            *mut (),
+            i32,
+            *const *const i8,
+            *mut *mut sqlite3_vtab,
+            *mut *mut i8,
+        ) -> i32,
+    >,
+    xBestIndex:
+        Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, *mut sqlite3_index_info) -> i32>,
+    xDisconnect: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
+    xDestroy: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
+    xOpen: Option<
+        unsafe extern "C-unwind" fn(*mut sqlite3_vtab, *mut *mut sqlite3_vtab_cursor) -> i32,
+    >,
+    xClose: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor) -> i32>,
+    xFilter: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vtab_cursor,
+            i32,
+            *const i8,
+            i32,
+            *mut *mut sqlite3_value,
+        ) -> i32,
+    >,
+    xNext: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor) -> i32>,
+    xEof: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor) -> i32>,
+    xColumn: Option<
+        unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor, *mut sqlite3_context, i32) -> i32,
+    >,
+    xRowid: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor, *mut i64) -> i32>,
+    xUpdate: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vtab,
+            i32,
+            *mut *mut sqlite3_value,
+            *mut i64,
+        ) -> i32,
+    >,
+    xBegin: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
+    xSync: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
+    xCommit: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
+    xRollback: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
+    xFindFunction: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vtab,
+            i32,
+            *const i8,
+            *mut Option<
+                unsafe extern "C-unwind" fn(*mut sqlite3_context, i32, *mut *mut sqlite3_value),
+            >,
+            *mut *mut (),
+        ) -> i32,
+    >,
+    xRename: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, *const i8) -> i32>,
+    xSavepoint: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, i32) -> i32>,
+    xRelease: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, i32) -> i32>,
+    xRollbackTo: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, i32) -> i32>,
+    xShadowName: Option<unsafe extern "C-unwind" fn(*const i8) -> i32>,
+    xIntegrity: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vtab,
+            *const i8,
+            *const i8,
+            i32,
+            *mut *mut i8,
+        ) -> i32,
+    >,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_index_constraint {
+    iColumn: i32,
+    op: u8,
+    usable: u8,
+    iTermOffset: i32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_index_orderby {
+    iColumn: i32,
+    desc: u8,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_index_constraint_usage {
+    argvIndex: i32,
+    omit: u8,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Hash {
+    htsize: u32,
+    count: u32,
+    first: *mut HashElem,
+    ht: *mut _ht,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct HashElem {
+    next: *mut HashElem,
+    prev: *mut HashElem,
+    data: *mut (),
+    pKey: *const i8,
+    h: u32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct _ht {
+    count: u32,
+    chain: *mut HashElem,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct BusyHandler {
+    xBusyHandler: Option<unsafe extern "C-unwind" fn(*mut (), i32) -> i32>,
+    pBusyArg: *mut (),
+    nBusy: i32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct AggInfo {
+    directMode: u8,
+    useSortingIdx: u8,
+    nSortingColumn: u32,
+    sortingIdx: i32,
+    sortingIdxPTab: i32,
+    iFirstReg: i32,
+    pGroupBy: *mut ExprList,
+    aCol: *mut AggInfo_col,
+    nColumn: i32,
+    nAccumulator: i32,
+    aFunc: *mut AggInfo_func,
+    nFunc: i32,
+    selId: u32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct AutoincInfo {
+    pNext: *mut AutoincInfo,
+    pTab: *mut Table,
+    iDb: i32,
+    regCtr: i32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct CollSeq {
+    zName: *mut i8,
+    enc: u8,
+    pUser: *mut (),
+    xCmp: Option<unsafe extern "C-unwind" fn(*mut (), i32, *const (), i32, *const ()) -> i32>,
+    xDel: Option<unsafe extern "C-unwind" fn(*mut ())>,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Column {
+    zCnName: *mut i8,
+    __slate_bits_0: __slate_bits::__SlateBits61U0,
+    affinity: i8,
+    szEst: u8,
+    hName: u8,
+    iDflt: u16,
+    colFlags: u16,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Cte {
+    zName: *mut i8,
+    pCols: *mut ExprList,
+    pSelect: *mut Select,
+    zCteErr: *const i8,
+    pUse: *mut CteUse,
+    eM10d: u8,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct CteUse {
+    nUse: i32,
+    addrM9e: i32,
+    regRtn: i32,
+    iCur: i32,
+    nRowEst: i16,
+    eM10d: u8,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Db {
+    zDbSName: *mut i8,
+    pBt: *mut Btree,
+    safety_level: u8,
+    bSyncSet: u8,
+    pSchema: *mut Schema,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct DbClientData {
+    pNext: *mut DbClientData,
+    pData: *mut (),
+    xDestructor: Option<unsafe extern "C-unwind" fn(*mut ())>,
+    zName: [i8; 0],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Schema {
+    schema_cookie: i32,
+    iGeneration: i32,
+    tblHash: Hash,
+    idxHash: Hash,
+    trigHash: Hash,
+    fkeyHash: Hash,
+    pSeqTab: *mut Table,
+    file_format: u8,
+    enc: u8,
+    schemaFlags: u16,
+    cache_size: i32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Expr {
+    op: u8,
+    affExpr: i8,
+    op2: u8,
+    flags: u32,
+    u: __SlateRecord169,
+    pLeft: *mut Expr,
+    pRight: *mut Expr,
+    x: __SlateRecord170,
+    nHeight: i32,
+    iTable: i32,
+    iColumn: i16,
+    iAgg: i16,
+    w: __SlateRecord171,
+    pAggInfo: *mut AggInfo,
+    y: __SlateRecord172,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct ExprList {
+    nExpr: i32,
+    nAlloc: i32,
+    a: [ExprList_item; 0],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct FKey {
+    pFrom: *mut Table,
+    pNextFrom: *mut FKey,
+    zTo: *mut i8,
+    pNextTo: *mut FKey,
+    pPrevTo: *mut FKey,
+    nCol: i32,
+    isDeferred: u8,
+    aAction: [u8; 2],
+    apTrigger: [*mut Trigger; 2],
+    aCol: [sColMap; 0],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct FuncDestructor {
+    nRef: i32,
+    xDestroy: Option<unsafe extern "C-unwind" fn(*mut ())>,
+    pUserData: *mut (),
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct FuncDef {
+    nArg: i16,
+    funcFlags: u32,
+    pUserData: *mut (),
+    pNext: *mut FuncDef,
+    xSFunc: Option<unsafe extern "C-unwind" fn(*mut sqlite3_context, i32, *mut *mut sqlite3_value)>,
+    xFinalize: Option<unsafe extern "C-unwind" fn(*mut sqlite3_context)>,
+    xValue: Option<unsafe extern "C-unwind" fn(*mut sqlite3_context)>,
+    xInverse:
+        Option<unsafe extern "C-unwind" fn(*mut sqlite3_context, i32, *mut *mut sqlite3_value)>,
+    zName: *const i8,
+    u: __SlateRecord160,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct IdList {
+    nId: i32,
+    a: [IdList_item; 0],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Index {
+    zName: *mut i8,
+    aiColumn: *mut i16,
+    aiRowLogEst: *mut i16,
+    pTable: *mut Table,
+    zColAff: *mut i8,
+    pNext: *mut Index,
+    pSchema: *mut Schema,
+    aSortOrder: *mut u8,
+    azColl: *mut *const i8,
+    pPartIdxWhere: *mut Expr,
+    aColExpr: *mut ExprList,
+    tnum: u32,
+    szIdxRow: i16,
+    nKeyCol: u16,
+    nColumn: u16,
+    onError: u8,
+    __slate_bits_0: __slate_bits::__SlateBits85U0,
+    colNotIdxed: u64,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct IndexedExpr {
+    pExpr: *mut Expr,
+    iDataCur: i32,
+    iIdxCur: i32,
+    iIdxCol: i32,
+    bMaybeNullRow: u8,
+    aff: u8,
+    pIENext: *mut IndexedExpr,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct KeyInfo {
+    nRef: u32,
+    enc: u8,
+    nKeyField: u16,
+    nAllField: u16,
+    db: *mut sqlite3,
+    aSortFlags: *mut u8,
+    aColl: [*mut CollSeq; 0],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Lookaside {
+    bDisable: u32,
+    sz: u16,
+    szTrue: u16,
+    bMalloced: u8,
+    nSlot: u32,
+    anStat: [u32; 3],
+    pInit: *mut LookasideSlot,
+    pFree: *mut LookasideSlot,
+    pSmallInit: *mut LookasideSlot,
+    pSmallFree: *mut LookasideSlot,
+    pMiddle: *mut (),
+    pStart: *mut (),
+    pEnd: *mut (),
+    pTrueEnd: *mut (),
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct LookasideSlot {
+    pNext: *mut LookasideSlot,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Module {
+    pModule: *const sqlite3_module,
+    zName: *const i8,
+    nRefModule: i32,
+    pAux: *mut (),
+    xDestroy: Option<unsafe extern "C-unwind" fn(*mut ())>,
+    pEpoTab: *mut Table,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct OnOrUsing {
+    pOn: *mut Expr,
+    pUsing: *mut IdList,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Parse {
+    db: *mut sqlite3,
+    zErrMsg: *mut i8,
+    pVdbe: *mut Vdbe,
+    rc: i32,
+    nQueryLoop: i16,
+    nested: u8,
+    nTempReg: u8,
+    isMultiWrite: u8,
+    disableLookaside: u8,
+    prepFlags: u8,
+    withinRJSubrtn: u8,
+    mSubrtnSig: u8,
+    eTriggerOp: u8,
+    eOrconf: u8,
+    __slate_bits_0: __slate_bits::__SlateBits99U0,
+    nRangeReg: i32,
+    iRangeReg: i32,
+    nErr: i32,
+    nTab: i32,
+    nMem: i32,
+    iSelfTab: i32,
+    nNestSel: i32,
+    nLabel: i32,
+    nLabelAlloc: i32,
+    aLabel: *mut i32,
+    pConstExpr: *mut ExprList,
+    pIdxEpr: *mut IndexedExpr,
+    pIdxPartExpr: *mut IndexedExpr,
+    writeMask: u32,
+    cookieMask: u32,
+    nMaxArg: i32,
+    nSelect: i32,
+    nProgressSteps: u32,
+    nTableLock: i32,
+    pToplevel: *mut Parse,
+    pTriggerTab: *mut Table,
+    pTriggerPrg: *mut TriggerPrg,
+    pCleanup: *mut ParseCleanup,
+    aTempReg: [i32; 8],
+    pOuterParse: *mut Parse,
+    sNameToken: Token,
+    oldmask: u32,
+    newmask: u32,
+    u1: __SlateRecord185,
+    pAinc: *mut AutoincInfo,
+    aTableLock: *mut TableLock,
+    sLastToken: Token,
+    nVar: i16,
+    aVnbmc: [u64; 2],
+    iPkSortOrder: u8,
+    explain: u8,
+    eParseMode: u8,
+    nVtabLock: i32,
+    nHeight: i32,
+    addrExplain: i32,
+    pVList: *mut i32,
+    pReprepare: *mut Vdbe,
+    zTail: *const i8,
+    pNewTable: *mut Table,
+    pNewIndex: *mut Index,
+    pNewTrigger: *mut Trigger,
+    zAuthContext: *const i8,
+    sArg: Token,
+    apVtabLock: *mut *mut Table,
+    pWith: *mut With,
+    pRename: *mut RenameToken,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct ParseCleanup {
+    pNext: *mut ParseCleanup,
+    pPtr: *mut (),
+    xCleanup: Option<unsafe extern "C-unwind" fn(*mut sqlite3, *mut ())>,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct RenameToken {}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Returning {
+    pParse: *mut Parse,
+    pReturnEL: *mut ExprList,
+    retTrig: Trigger,
+    retTStep: TriggerStep,
+    iRetCur: i32,
+    nRetCol: i32,
+    iRetReg: i32,
+    zName: [i8; 40],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Savepoint {
+    zName: *mut i8,
+    nDeferredCons: i64,
+    nDeferredImmCons: i64,
+    pNext: *mut Savepoint,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Select {
+    op: u8,
+    nSelectRow: i16,
+    selFlags: u32,
+    iLimit: i32,
+    iOffset: i32,
+    selId: u32,
+    pEList: *mut ExprList,
+    pSrc: *mut SrcList,
+    pWhere: *mut Expr,
+    pGroupBy: *mut ExprList,
+    pHaving: *mut Expr,
+    pOrderBy: *mut ExprList,
+    pPrior: *mut Select,
+    pNext: *mut Select,
+    pLimit: *mut Expr,
+    pWith: *mut With,
+    pWin: *mut Window,
+    pWinDefn: *mut Window,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct SelectDest {
+    eDest: u8,
+    iSDParm: i32,
+    iSDParm2: i32,
+    iSdst: i32,
+    nSdst: i32,
+    zAffSdst: *mut i8,
+    pOrderBy: *mut ExprList,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Subquery {
+    pSelect: *mut Select,
+    addrFillSub: i32,
+    regReturn: i32,
+    regResult: i32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct SrcItem {
+    zName: *mut i8,
+    zAlias: *mut i8,
+    pSTab: *mut Table,
+    fg: __SlateRecord179,
+    iCursor: i32,
+    colUsed: u64,
+    u1: __SlateRecord180,
+    u2: __SlateRecord181,
+    u3: __SlateRecord182,
+    u4: __SlateRecord183,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct SrcList {
+    nSrc: i32,
+    nAlloc: u32,
+    a: [SrcItem; 0],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Table {
+    zName: *mut i8,
+    aCol: *mut Column,
+    pIndex: *mut Index,
+    zColAff: *mut i8,
+    pCheck: *mut ExprList,
+    tnum: u32,
+    nTabRef: u32,
+    tabFlags: u32,
+    iPKey: i16,
+    nCol: i16,
+    nNVCol: i16,
+    nRowLogEst: i16,
+    szTabRow: i16,
+    keyConf: u8,
+    eTabType: u8,
+    u: __SlateRecord161,
+    pTrigger: *mut Trigger,
+    pSchema: *mut Schema,
+    aHx: [u8; 16],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct TableLock {}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Token {
+    z: *const i8,
+    n: u32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Trigger {
+    zName: *mut i8,
+    table: *mut i8,
+    op: u8,
+    tr_tm: u8,
+    bReturning: u8,
+    pWhen: *mut Expr,
+    pColumns: *mut IdList,
+    pSchema: *mut Schema,
+    pTabSchema: *mut Schema,
+    step_list: *mut TriggerStep,
+    pNext: *mut Trigger,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct TriggerPrg {
+    pTrigger: *mut Trigger,
+    pNext: *mut TriggerPrg,
+    pProgram: *mut SubProgram,
+    orconf: i32,
+    aColmask: [u32; 2],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct TriggerStep {
+    op: u8,
+    orconf: u8,
+    pTrig: *mut Trigger,
+    pSelect: *mut Select,
+    pSrc: *mut SrcList,
+    pWhere: *mut Expr,
+    pExprList: *mut ExprList,
+    pIdList: *mut IdList,
+    pUpsert: *mut Upsert,
+    zSpan: *mut i8,
+    pNext: *mut TriggerStep,
+    pLast: *mut TriggerStep,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Upsert {
+    pUpsertTarget: *mut ExprList,
+    pUpsertTargetWhere: *mut Expr,
+    pUpsertSet: *mut ExprList,
+    pUpsertWhere: *mut Expr,
+    pNextUpsert: *mut Upsert,
+    isDoUpdate: u8,
+    isDup: u8,
+    pToFree: *mut (),
+    pUpsertIdx: *mut Index,
+    pUpsertSrc: *mut SrcList,
+    regData: i32,
+    iDataCur: i32,
+    iIdxCur: i32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct VTable {
+    db: *mut sqlite3,
+    pMod: *mut Module,
+    pVtab: *mut sqlite3_vtab,
+    nRef: i32,
+    bConstraint: u8,
+    bAllSchemas: u8,
+    eVtabRisk: u8,
+    iSavepoint: i32,
+    pNext: *mut VTable,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct VtabCtx {}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Window {
+    zName: *mut i8,
+    zBase: *mut i8,
+    pPartition: *mut ExprList,
+    pOrderBy: *mut ExprList,
+    eFrmType: u8,
+    eStart: u8,
+    eEnd: u8,
+    bImplicitFrame: u8,
+    eExclude: u8,
+    pStart: *mut Expr,
+    pEnd: *mut Expr,
+    ppThis: *mut *mut Window,
+    pNextWin: *mut Window,
+    pFilter: *mut Expr,
+    pWFunc: *mut FuncDef,
+    iEphCsr: i32,
+    regAccum: i32,
+    regResult: i32,
+    csrApp: i32,
+    regApp: i32,
+    regPart: i32,
+    pOwner: *mut Expr,
+    nBufferCol: i32,
+    iArgCol: i32,
+    regOne: i32,
+    regStartRowid: i32,
+    regEndRowid: i32,
+    bExprArgs: u8,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct With {
+    nCte: i32,
+    bView: i32,
+    pOuter: *mut With,
+    a: [Cte; 0],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Btree {}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Vdbe {}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct SubProgram {
+    aOp: *mut VdbeOp,
+    nOp: i32,
+    nMem: i32,
+    nCsr: i32,
+    aOnce: *mut u8,
+    token: *mut (),
+    pNext: *mut SubProgram,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct SubrtnSig {
+    selId: i32,
+    bComplete: u8,
+    zAff: *mut i8,
+    iTable: i32,
+    iAddr: i32,
+    regReturn: i32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct VdbeOp {
+    opcode: u8,
+    p4type: i8,
+    p5: u16,
+    p1: i32,
+    p2: i32,
+    p3: i32,
+    p4: p4union,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+union p4union {
+    i: i32,
+    p: *mut (),
+    z: *mut i8,
+    pFunc: *mut FuncDef,
+    pCtx: *mut sqlite3_context,
+    pColl: *mut CollSeq,
+    pMem: *mut sqlite3_value,
+    pVtab: *mut VTable,
+    pKeyInfo: *mut KeyInfo,
+    ai: *mut u32,
+    pProgram: *mut SubProgram,
+    pTab: *mut Table,
+    pSubrtnSig: *mut SubrtnSig,
+    pIdx: *mut Index,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3InitInfo {
+    newTnum: u32,
+    iDb: u8,
+    busy: u8,
+    __slate_bits_0: __slate_bits::__SlateBits157U0,
+    azInit: *mut *const i8,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+union __SlateRecord158 {
+    xLegacy: Option<unsafe extern "C-unwind" fn(*mut (), *const i8)>,
+    xV2: Option<unsafe extern "C-unwind" fn(u32, *mut (), *mut (), *mut ()) -> i32>,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+union __SlateRecord159 {
+    isInterrupted: i32,
+    notUsed1: f64,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+union __SlateRecord160 {
+    pHash: *mut FuncDef,
+    pDestructor: *mut FuncDestructor,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+union __SlateRecord161 {
+    tab: __SlateRecord162,
+    view: __SlateRecord163,
+    vtab: __SlateRecord164,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct __SlateRecord162 {
+    addColOffset: i32,
+    pFKey: *mut FKey,
+    pDfltList: *mut ExprList,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct __SlateRecord163 {
+    pSelect: *mut Select,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct __SlateRecord164 {
+    nArg: i32,
+    azArg: *mut *mut i8,
+    p: *mut VTable,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sColMap {
+    iFrom: i32,
+    zCol: *mut i8,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct AggInfo_col {
+    pTab: *mut Table,
+    pCExpr: *mut Expr,
+    iTable: i32,
+    iColumn: i32,
+    iSorterColumn: i32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct AggInfo_func {
+    pFExpr: *mut Expr,
+    pFunc: *mut FuncDef,
+    iDistinct: i32,
+    iDistAddr: i32,
+    iOBTab: i32,
+    bOBPayload: u8,
+    bOBUnique: u8,
+    bUseSubtype: u8,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+union __SlateRecord169 {
+    zToken: *mut i8,
+    iValue: i32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+union __SlateRecord170 {
+    pList: *mut ExprList,
+    pSelect: *mut Select,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+union __SlateRecord171 {
+    iJoin: i32,
+    iOfst: i32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+union __SlateRecord172 {
+    pTab: *mut Table,
+    pWin: *mut Window,
+    nReg: i32,
+    sub: __SlateRecord173,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct __SlateRecord173 {
+    iAddr: i32,
+    regReturn: i32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct ExprList_item {
+    pExpr: *mut Expr,
+    zEName: *mut i8,
+    fg: __SlateRecord175,
+    u: __SlateRecord176,
+}
+
+#[repr(C, align(4))]
+#[derive(Clone, Copy)]
+struct __SlateRecord175 {
+    sortFlags: u8,
+    __slate_bits_0: __slate_bits::__SlateBits175U0,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+union __SlateRecord176 {
+    x: __SlateRecord177,
+    iConstExprReg: i32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct __SlateRecord177 {
+    iOrderByCol: u16,
+    iAlias: u16,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct IdList_item {
+    zName: *mut i8,
+}
+
+#[repr(C, align(4))]
+#[derive(Clone, Copy)]
+struct __SlateRecord179 {
+    jointype: u8,
+    __slate_bits_0: __slate_bits::__SlateBits179U0,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+union __SlateRecord180 {
+    zIndexedBy: *mut i8,
+    pFuncArg: *mut ExprList,
+    nRow: u32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+union __SlateRecord181 {
+    pIBIndex: *mut Index,
+    pCteUse: *mut CteUse,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+union __SlateRecord182 {
+    pOn: *mut Expr,
+    pUsing: *mut IdList,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+union __SlateRecord183 {
+    pSchema: *mut Schema,
+    zDatabase: *mut i8,
+    pSubq: *mut Subquery,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+union __SlateRecord185 {
+    cr: __SlateRecord186,
+    d: __SlateRecord187,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct __SlateRecord186 {
+    addrCrTab: i32,
+    regRowid: i32,
+    regRoot: i32,
+    constraintName: Token,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct __SlateRecord187 {
+    pReturning: *mut Returning,
+}
+
+// /* This file is automatically generated by Lemon from input grammar
+// ** source file "parse.y".
+// */
+// /*
+// ** 2001-09-15
+// **
+// ** The author disclaims copyright to this source code.  In place of
+// ** a legal notice, here is a blessing:
+// **
+// **    May you do good and not evil.
+// **    May you find forgiveness for yourself and forgive others.
+// **    May you share freely, never taking more than you give.
+// **
+// *************************************************************************
+// ** This file contains SQLite's SQL parser.
+// **
+// ** The canonical source code to this file ("parse.y") is a Lemon grammar
+// ** file that specifies the input grammar and actions to take while parsing.
+// ** That input file is processed by Lemon to generate a C-language
+// ** implementation of a parser for the given grammar.  You might be reading
+// ** this comment as part of the translated C-code.  Edits should be made
+// ** to the original parse.y sources.
+// */
+// /*
+// ** Verify that the pParse->isCreate field is set
+// */
+// /*
+// ** Disable all error recovery processing in the parser push-down
+// ** automaton.
+// */
+// /*
+// ** Make yytestcase() the same as testcase()
+// */
+// /*
+// ** Indicate that sqlite3ParserFree() will never be called with a null
+// ** pointer.
+// */
+// /*
+// ** In the amalgamation, the parse.c file generated by lemon and the
+// ** tokenize.c file are concatenated.  In that case, sqlite3RunParser()
+// ** has access to the the size of the yyParser object and so the parser
+// ** engine can be allocated from stack.  In that case, only the
+// ** sqlite3ParserInit() and sqlite3ParserFinalize() routines are invoked
+// ** and the sqlite3ParserAlloc() and sqlite3ParserFree() routines can be
+// ** omitted.
+// */
+// /*
+// ** Alternative datatype for the argument to the malloc() routine passed
+// ** into sqlite3ParserAlloc().  The default is size_t.
+// */
+// /*
+// ** An instance of the following structure describes the event of a
+// ** TRIGGER.  "a" is the event type, one of TK_UPDATE, TK_INSERT,
+// ** TK_DELETE, or TK_INSTEAD.  If the event is of the form
+// **
+// **      UPDATE ON (a,b,c)
+// **
+// ** Then the "b" IdList records the list "a,b,c".
+// */
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct TrigEvent {
+    a: i32,
+    b: *mut IdList,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct FrameBound {
+    eType: i32,
+    pExpr: *mut Expr,
+}
+
+// /**************** End of %include directives **********************************/
+// /* These constants specify the various numeric values for terminal symbols.
+// ***************** Begin token definitions *************************************/
+// /**************** End token definitions ***************************************/
+// /* The next sections is a series of control #defines.
+// ** various aspects of the generated parser.
+// **    YYCODETYPE         is the data type used to store the integer codes
+// **                       that represent terminal and non-terminal symbols.
+// **                       "unsigned char" is used if there are fewer than
+// **                       256 symbols.  Larger types otherwise.
+// **    YYNOCODE           is a number of type YYCODETYPE that is not used for
+// **                       any terminal or nonterminal symbol.
+// **    YYFALLBACK         If defined, this indicates that one or more tokens
+// **                       (also known as: "terminal symbols") have fall-back
+// **                       values which should be used if the original symbol
+// **                       would not parse.  This permits keywords to sometimes
+// **                       be used as identifiers, for example.
+// **    YYACTIONTYPE       is the data type used for "action codes" - numbers
+// **                       that indicate what to do in response to the next
+// **                       token.
+// **    sqlite3ParserTOKENTYPE     is the data type used for minor type for terminal
+// **                       symbols.  Background: A "minor type" is a semantic
+// **                       value associated with a terminal or non-terminal
+// **                       symbols.  For example, for an "ID" terminal symbol,
+// **                       the minor type might be the name of the identifier.
+// **                       Each non-terminal can have a different minor type.
+// **                       Terminal symbols all have the same minor type, though.
+// **                       This macros defines the minor type for terminal
+// **                       symbols.
+// **    YYMINORTYPE        is the data type used for all minor types.
+// **                       This is typically a union of many types, one of
+// **                       which is sqlite3ParserTOKENTYPE.  The entry in the union
+// **                       for terminal symbols is called "yy0".
+// **    YYSTACKDEPTH       is the maximum depth of the parser's stack.  If
+// **                       zero the stack is dynamically sized using realloc()
+// **    sqlite3ParserARG_SDECL     A static variable declaration for the %extra_argument
+// **    sqlite3ParserARG_PDECL     A parameter declaration for the %extra_argument
+// **    sqlite3ParserARG_PARAM     Code to pass %extra_argument as a subroutine parameter
+// **    sqlite3ParserARG_STORE     Code to store %extra_argument into yypParser
+// **    sqlite3ParserARG_FETCH     Code to extract %extra_argument from yypParser
+// **    sqlite3ParserCTX_*         As sqlite3ParserARG_ except for %extra_context
+// **    YYREALLOC          Name of the realloc() function to use
+// **    YYFREE             Name of the free() function to use
+// **    YYDYNSTACK         True if stack space should be extended on heap
+// **    YYERRORSYMBOL      is the code number of the error symbol.  If not
+// **                       defined, then do no error processing.
+// **    YYNSTATE           the combined number of states.
+// **    YYNRULE            the number of rules in the grammar
+// **    YYNTOKEN           Number of terminal symbols
+// **    YY_MAX_SHIFT       Maximum value for shift actions
+// **    YY_MIN_SHIFTREDUCE Minimum value for shift-reduce actions
+// **    YY_MAX_SHIFTREDUCE Maximum value for shift-reduce actions
+// **    YY_ERROR_ACTION    The yy_action[] code for syntax error
+// **    YY_ACCEPT_ACTION   The yy_action[] code for accept
+// **    YY_NO_ACTION       The yy_action[] code for no-op
+// **    YY_MIN_REDUCE      Minimum value for reduce actions
+// **    YY_MAX_REDUCE      Maximum value for reduce actions
+// **    YY_MIN_DSTRCTR     Minimum symbol value that has a destructor
+// **    YY_MAX_DSTRCTR     Maximum symbol value that has a destructor
+// */
+// /************* Begin control #defines *****************************************/
+#[repr(C)]
+#[derive(Clone, Copy)]
+union __SlateRecord190 {
+    yyinit: i32,
+    yy0: Token,
+    yy14: *mut ExprList,
+    yy59: *mut With,
+    yy67: *mut Cte,
+    yy122: *mut Upsert,
+    yy132: *mut IdList,
+    yy144: i32,
+    yy168: *const i8,
+    yy203: *mut SrcList,
+    yy211: *mut Window,
+    yy269: OnOrUsing,
+    yy286: TrigEvent,
+    yy383: __SlateRecord191,
+    yy391: u32,
+    yy427: *mut TriggerStep,
+    yy454: *mut Expr,
+    yy462: u8,
+    yy509: FrameBound,
+    yy555: *mut Select,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct __SlateRecord191 {
+    value: i32,
+    mask: i32,
+}
+
+// /*          $ => nothing */
+// /*       SEMI => nothing */
+// /*    EXPLAIN => ID */
+// /*      QUERY => ID */
+// /*       PLAN => ID */
+// /*      BEGIN => ID */
+// /* TRANSACTION => nothing */
+// /*   DEFERRED => ID */
+// /*  IMMEDIATE => ID */
+// /*  EXCLUSIVE => ID */
+// /*     COMMIT => nothing */
+// /*        END => ID */
+// /*   ROLLBACK => ID */
+// /*  SAVEPOINT => ID */
+// /*    RELEASE => ID */
+// /*         TO => nothing */
+// /*      TABLE => nothing */
+// /*     CREATE => nothing */
+// /*         IF => ID */
+// /*        NOT => nothing */
+// /*     EXISTS => nothing */
+// /*       TEMP => ID */
+// /*         LP => nothing */
+// /*         RP => nothing */
+// /*         AS => nothing */
+// /*      COMMA => nothing */
+// /*    WITHOUT => ID */
+// /*      ABORT => ID */
+// /*     ACTION => ID */
+// /*      AFTER => ID */
+// /*    ANALYZE => ID */
+// /*        ASC => ID */
+// /*     ATTACH => ID */
+// /*     BEFORE => ID */
+// /*         BY => ID */
+// /*    CASCADE => ID */
+// /*       CAST => ID */
+// /*   CONFLICT => ID */
+// /*   DATABASE => ID */
+// /*       DESC => ID */
+// /*     DETACH => ID */
+// /*       EACH => ID */
+// /*       FAIL => ID */
+// /*         OR => nothing */
+// /*        AND => nothing */
+// /*         IS => nothing */
+// /*      ISNOT => nothing */
+// /*      MATCH => ID */
+// /*    LIKE_KW => ID */
+// /*    BETWEEN => nothing */
+// /*         IN => nothing */
+// /*     ISNULL => nothing */
+// /*    NOTNULL => nothing */
+// /*         NE => nothing */
+// /*         EQ => nothing */
+// /*         GT => nothing */
+// /*         LE => nothing */
+// /*         LT => nothing */
+// /*         GE => nothing */
+// /*     ESCAPE => nothing */
+// /*         ID => nothing */
+// /*   COLUMNKW => ID */
+// /*         DO => ID */
+// /*        FOR => ID */
+// /*     IGNORE => ID */
+// /*  INITIALLY => ID */
+// /*    INSTEAD => ID */
+// /*         NO => ID */
+// /*        KEY => ID */
+// /*         OF => ID */
+// /*     OFFSET => ID */
+// /*     PRAGMA => ID */
+// /*      RAISE => ID */
+// /*  RECURSIVE => ID */
+// /*    REPLACE => ID */
+// /*   RESTRICT => ID */
+// /*        ROW => ID */
+// /*       ROWS => ID */
+// /*    TRIGGER => ID */
+// /*     VACUUM => ID */
+// /*       VIEW => ID */
+// /*    VIRTUAL => ID */
+// /*       WITH => ID */
+// /*      NULLS => ID */
+// /*      FIRST => ID */
+// /*       LAST => ID */
+// /*    CURRENT => ID */
+// /*  FOLLOWING => ID */
+// /*  PARTITION => ID */
+// /*  PRECEDING => ID */
+// /*      RANGE => ID */
+// /*  UNBOUNDED => ID */
+// /*    EXCLUDE => ID */
+// /*     GROUPS => ID */
+// /*     OTHERS => ID */
+// /*       TIES => ID */
+// /*  GENERATED => ID */
+// /*     ALWAYS => ID */
+// /* MATERIALIZED => ID */
+// /*    REINDEX => ID */
+// /*     RENAME => ID */
+// /*   CTIME_KW => ID */
+// /*        ANY => nothing */
+// /*     BITAND => nothing */
+// /*      BITOR => nothing */
+// /*     LSHIFT => nothing */
+// /*     RSHIFT => nothing */
+// /*       PLUS => nothing */
+// /*      MINUS => nothing */
+// /*       STAR => nothing */
+// /*      SLASH => nothing */
+// /*        REM => nothing */
+// /*     CONCAT => nothing */
+// /*        PTR => nothing */
+// /*    COLLATE => nothing */
+// /*     BITNOT => nothing */
+// /*         ON => nothing */
+// /*    INDEXED => nothing */
+// /*     STRING => nothing */
+// /*    JOIN_KW => nothing */
+// /* CONSTRAINT => nothing */
+// /*    DEFAULT => nothing */
+// /*       NULL => nothing */
+// /*    PRIMARY => nothing */
+// /*     UNIQUE => nothing */
+// /*      CHECK => nothing */
+// /* REFERENCES => nothing */
+// /*   AUTOINCR => nothing */
+// /*     INSERT => nothing */
+// /*     DELETE => nothing */
+// /*     UPDATE => nothing */
+// /*        SET => nothing */
+// /* DEFERRABLE => nothing */
+// /*    FOREIGN => nothing */
+// /*       DROP => nothing */
+// /*      UNION => nothing */
+// /*        ALL => nothing */
+// /*     EXCEPT => nothing */
+// /*  INTERSECT => nothing */
+// /*     SELECT => nothing */
+// /*     VALUES => nothing */
+// /*   DISTINCT => nothing */
+// /*        DOT => nothing */
+// /*       FROM => nothing */
+// /*       JOIN => nothing */
+// /*      USING => nothing */
+// /*      ORDER => nothing */
+// /*      GROUP => nothing */
+// /*     HAVING => nothing */
+// /*      LIMIT => nothing */
+// /*      WHERE => nothing */
+// /*  RETURNING => nothing */
+// /*       INTO => nothing */
+// /*    NOTHING => nothing */
+// /*      FLOAT => nothing */
+// /*       BLOB => nothing */
+// /*    INTEGER => nothing */
+// /*   VARIABLE => nothing */
+// /*       CASE => nothing */
+// /*       WHEN => nothing */
+// /*       THEN => nothing */
+// /*       ELSE => nothing */
+// /*      INDEX => nothing */
+// /*      ALTER => nothing */
+// /*        ADD => nothing */
+// /*     WINDOW => nothing */
+// /*       OVER => nothing */
+// /*     FILTER => nothing */
+// /*     COLUMN => nothing */
+// /* AGG_FUNCTION => nothing */
+// /* AGG_COLUMN => nothing */
+// /*  TRUEFALSE => nothing */
+// /*   FUNCTION => nothing */
+// /*      UPLUS => nothing */
+// /*     UMINUS => nothing */
+// /*      TRUTH => nothing */
+// /*   REGISTER => nothing */
+// /*     VECTOR => nothing */
+// /* SELECT_COLUMN => nothing */
+// /* IF_NULL_ROW => nothing */
+// /*   ASTERISK => nothing */
+// /*       SPAN => nothing */
+// /*      ERROR => nothing */
+// /*    QNUMBER => nothing */
+// /*      SPACE => nothing */
+// /*    COMMENT => nothing */
+// /*    ILLEGAL => nothing */
+// /* YYFALLBACK */
+// /* The following structure represents a single element of the
+// ** parser's stack.  Information stored includes:
+// **
+// **   +  The state number for the parser at this level of the stack.
+// **
+// **   +  The value of the token stored at this level of the stack.
+// **      (In other words, the "major" token.)
+// **
+// **   +  The semantic value stored at this level of the stack.  This is
+// **      the information used by the action routines in the grammar.
+// **      It is sometimes called the "minor" token.
+// **
+// ** After the "shift" half of a SHIFTREDUCE action, the stateno field
+// ** actually contains the reduce action for the second half of the
+// ** SHIFTREDUCE.
+// */
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct yyStackEntry {
+    stateno: u16,
+    // /* The state-number, or reduce action in SHIFTREDUCE */
+    major: u16,
+    // /* The major token value.  This is the code
+    //                          ** number for the token at this stack level */
+    minor: __SlateRecord190,
+    // /* The user-supplied minor token value.  This
+    //                          ** is the value of the token  */
+}
+
+// /* The state of the parser is completely contained in an instance of
+// ** the following structure */
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct yyParser {
+    yytos: *mut yyStackEntry,
+    // /* Pointer to top element of the stack */
+    // /* A place to hold %extra_argument */
+    // /* A place to hold %extra_context */
+    pParse: *mut Parse,
+    yystackEnd: *mut yyStackEntry,
+    // /* Last entry in the stack */
+    yystack: *mut yyStackEntry,
+    // /* The parser stack */
+    yystk0: [yyStackEntry; 50],
+    // /* Initial stack space */
+}
+
+#[repr(C, align(16))]
+struct __SlateAlign16<T>(T);
+
+mod __slate_bits {
+    #[bitfields::bitfield(
+        u8,
+        c_names = true,
+        new = false,
+        from_into_bits = false,
+        from_traits = false,
+        default = false,
+        debug = false,
+        builder = false,
+        bit_ops = false
+    )]
+    pub struct __SlateBits61U0 {
+        #[bits(4)]
+        pub notNull: u32,
+        #[bits(4)]
+        pub eCType: u32,
+    }
+    #[bitfields::bitfield([u8; 2], c_names = true, new = false, from_into_bits = false, from_traits = false, default = false, debug = false, builder = false, bit_ops = false)]
+    pub struct __SlateBits85U0 {
+        #[bits(2)]
+        pub idxType: u32,
+        #[bits(1)]
+        pub bUnordered: u32,
+        #[bits(1)]
+        pub uniqNotNull: u32,
+        #[bits(1)]
+        pub isResized: u32,
+        #[bits(1)]
+        pub isCovering: u32,
+        #[bits(1)]
+        pub noSkipScan: u32,
+        #[bits(1)]
+        pub hasStat1: u32,
+        #[bits(1)]
+        pub bNoQuery: u32,
+        #[bits(1)]
+        pub bAscKeyBug: u32,
+        #[bits(1)]
+        pub bHasVCol: u32,
+        #[bits(1)]
+        pub bHasExpr: u32,
+        #[bits(4, access = na)]
+        pub __slate_pad_11: u8,
+    }
+    #[bitfields::bitfield([u8; 3], c_names = true, new = false, from_into_bits = false, from_traits = false, default = false, debug = false, builder = false, bit_ops = false)]
+    pub struct __SlateBits179U0 {
+        #[bits(1)]
+        pub notIndexed: u32,
+        #[bits(1)]
+        pub isIndexedBy: u32,
+        #[bits(1)]
+        pub isSubquery: u32,
+        #[bits(1)]
+        pub isTabFunc: u32,
+        #[bits(1)]
+        pub isCorrelated: u32,
+        #[bits(1)]
+        pub isMaterialized: u32,
+        #[bits(1)]
+        pub viaCoroutine: u32,
+        #[bits(1)]
+        pub isRecursive: u32,
+        #[bits(1)]
+        pub fromDDL: u32,
+        #[bits(1)]
+        pub isCte: u32,
+        #[bits(1)]
+        pub notCte: u32,
+        #[bits(1)]
+        pub isUsing: u32,
+        #[bits(1)]
+        pub isOn: u32,
+        #[bits(1)]
+        pub isSynthUsing: u32,
+        #[bits(1)]
+        pub isNestedFrom: u32,
+        #[bits(1)]
+        pub rowidUsed: u32,
+        #[bits(1)]
+        pub fixedSchema: u32,
+        #[bits(1)]
+        pub hadSchema: u32,
+        #[bits(1)]
+        pub fromExists: u32,
+        #[bits(5, access = na)]
+        pub __slate_pad_19: u8,
+    }
+    #[bitfields::bitfield(
+        u8,
+        c_names = true,
+        new = false,
+        from_into_bits = false,
+        from_traits = false,
+        default = false,
+        debug = false,
+        builder = false,
+        bit_ops = false
+    )]
+    pub struct __SlateBits157U0 {
+        #[bits(1)]
+        pub orphanTrigger: u32,
+        #[bits(2)]
+        pub imposterTable: u32,
+        #[bits(1)]
+        pub reopenMemdb: u32,
+        #[bits(4, access = na)]
+        pub __slate_pad_3: u8,
+    }
+    #[bitfields::bitfield([u8; 2], c_names = true, new = false, from_into_bits = false, from_traits = false, default = false, debug = false, builder = false, bit_ops = false)]
+    pub struct __SlateBits99U0 {
+        #[bits(1)]
+        pub disableTriggers: u32,
+        #[bits(1)]
+        pub mayAbort: u32,
+        #[bits(1)]
+        pub hasCompound: u32,
+        #[bits(1)]
+        pub bReturning: u32,
+        #[bits(1)]
+        pub bHasExists: u32,
+        #[bits(1)]
+        pub colNamesSet: u32,
+        #[bits(1)]
+        pub bHasWith: u32,
+        #[bits(1)]
+        pub okConstFactor: u32,
+        #[bits(1)]
+        pub checkSchema: u32,
+        #[bits(1)]
+        pub usesAinc: u32,
+        #[bits(6, access = na)]
+        pub __slate_pad_10: u8,
+    }
+    #[bitfields::bitfield([u8; 2], c_names = true, new = false, from_into_bits = false, from_traits = false, default = false, debug = false, builder = false, bit_ops = false)]
+    pub struct __SlateBits175U0 {
+        #[bits(2)]
+        pub eEName: u32,
+        #[bits(1)]
+        pub done: u32,
+        #[bits(1)]
+        pub reusable: u32,
+        #[bits(1)]
+        pub bSorterRef: u32,
+        #[bits(1)]
+        pub bNulls: u32,
+        #[bits(1)]
+        pub bUsed: u32,
+        #[bits(1)]
+        pub bUsingTerm: u32,
+        #[bits(1)]
+        pub bNoExpand: u32,
+        #[bits(7, access = na)]
+        pub __slate_pad_8: u8,
+    }
+}
+
+// /************* End control #defines *******************************************/
+// /* Define the yytestcase() macro to be a no-op if is not already defined
+// ** otherwise.
+// **
+// ** Applications can choose to define yytestcase() in the %include section
+// ** to a macro that can assist in verifying code coverage.  For production
+// ** code the yytestcase() macro should be turned off.  But it is useful
+// ** for testing.
+// */
+// /* Macro to determine if stack space has the ability to grow using
+// ** heap memory.
+// */
+// /* Guarantee a minimum number of initial stack slots.
+// */
+// /* Next are the tables used to determine what action to take based on the
+// ** current state and lookahead token.  These tables are used to implement
+// ** functions that take a state number and lookahead value and return an
+// ** action integer.
+// **
+// ** Suppose the action integer is N.  Then the action is determined as
+// ** follows
+// **
+// **   0 <= N <= YY_MAX_SHIFT             Shift N.  That is, push the lookahead
+// **                                      token onto the stack and goto state N.
+// **
+// **   N between YY_MIN_SHIFTREDUCE       Shift to an arbitrary state then
+// **     and YY_MAX_SHIFTREDUCE           reduce by rule N-YY_MIN_SHIFTREDUCE.
+// **
+// **   N == YY_ERROR_ACTION               A syntax error has occurred.
+// **
+// **   N == YY_ACCEPT_ACTION              The parser accepts its input.
+// **
+// **   N == YY_NO_ACTION                  No such action.  Denotes unused
+// **                                      slots in the yy_action[] table.
+// **
+// **   N between YY_MIN_REDUCE            Reduce by rule N-YY_MIN_REDUCE
+// **     and YY_MAX_REDUCE
+// **
+// ** The action table is constructed as a single large table named yy_action[].
+// ** Given state S and lookahead X, the action is computed as either:
+// **
+// **    (A)   N = yy_action[ yy_shift_ofst[S] + X ]
+// **    (B)   N = yy_default[S]
+// **
+// ** The (A) formula is preferred.  The B formula is used instead if
+// ** yy_lookahead[yy_shift_ofst[S]+X] is not equal to X.
+// **
+// ** The formulas above are for computing the action when the lookahead is
+// ** a terminal symbol.  If the lookahead is a non-terminal (as occurs after
+// ** a reduce action) then the yy_reduce_ofst[] array is used in place of
+// ** the yy_shift_ofst[] array.
+// **
+// ** The following are the tables generated in this section:
+// **
+// **  yy_action[]        A single table containing all actions.
+// **  yy_lookahead[]     A table containing the lookahead for each entry in
+// **                     yy_action.  Used to detect hash collisions.
+// **  yy_shift_ofst[]    For each state, the offset into yy_action for
+// **                     shifting terminals.
+// **  yy_reduce_ofst[]   For each state, the offset into yy_action for
+// **                     shifting non-terminals after a reduce.
+// **  yy_default[]       Default action for each state.
+// **
+// *********** Begin parsing tables **********************************************/
+static mut yy_action: __SlateAlign16<[u16; 2379]> = __SlateAlign16([
+    ((134 as i32) as i16) as u16,
+    ((131 as i32) as i16) as u16,
+    ((238 as i32) as i16) as u16,
+    ((290 as i32) as i16) as u16,
+    ((290 as i32) as i16) as u16,
+    ((1353 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((1332 as i32) as i16) as u16,
+    ((478 as i32) as i16) as u16,
+    ((1606 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((1315 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((7 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((1353 as i32) as i16) as u16,
+    ((590 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((579 as i32) as i16) as u16,
+    ((424 as i32) as i16) as u16,
+    ((1566 as i32) as i16) as u16,
+    ((134 as i32) as i16) as u16,
+    ((131 as i32) as i16) as u16,
+    ((238 as i32) as i16) as u16,
+    ((1318 as i32) as i16) as u16,
+    ((541 as i32) as i16) as u16,
+    ((478 as i32) as i16) as u16,
+    ((477 as i32) as i16) as u16,
+    ((575 as i32) as i16) as u16,
+    ((84 as i32) as i16) as u16,
+    ((84 as i32) as i16) as u16,
+    ((1005 as i32) as i16) as u16,
+    ((303 as i32) as i16) as u16,
+    ((84 as i32) as i16) as u16,
+    ((84 as i32) as i16) as u16,
+    ((51 as i32) as i16) as u16,
+    ((51 as i32) as i16) as u16,
+    ((63 as i32) as i16) as u16,
+    ((63 as i32) as i16) as u16,
+    ((1006 as i32) as i16) as u16,
+    ((84 as i32) as i16) as u16,
+    ((84 as i32) as i16) as u16,
+    ((498 as i32) as i16) as u16,
+    ((141 as i32) as i16) as u16,
+    ((142 as i32) as i16) as u16,
+    ((93 as i32) as i16) as u16,
+    ((442 as i32) as i16) as u16,
+    ((1254 as i32) as i16) as u16,
+    ((1254 as i32) as i16) as u16,
+    ((1085 as i32) as i16) as u16,
+    ((1088 as i32) as i16) as u16,
+    ((1075 as i32) as i16) as u16,
+    ((1075 as i32) as i16) as u16,
+    ((139 as i32) as i16) as u16,
+    ((139 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((424 as i32) as i16) as u16,
+    ((296 as i32) as i16) as u16,
+    ((296 as i32) as i16) as u16,
+    ((498 as i32) as i16) as u16,
+    ((296 as i32) as i16) as u16,
+    ((296 as i32) as i16) as u16,
+    ((567 as i32) as i16) as u16,
+    ((553 as i32) as i16) as u16,
+    ((296 as i32) as i16) as u16,
+    ((296 as i32) as i16) as u16,
+    ((1306 as i32) as i16) as u16,
+    ((574 as i32) as i16) as u16,
+    ((1358 as i32) as i16) as u16,
+    ((1358 as i32) as i16) as u16,
+    ((590 as i32) as i16) as u16,
+    ((542 as i32) as i16) as u16,
+    ((579 as i32) as i16) as u16,
+    ((590 as i32) as i16) as u16,
+    ((574 as i32) as i16) as u16,
+    ((579 as i32) as i16) as u16,
+    ((548 as i32) as i16) as u16,
+    ((590 as i32) as i16) as u16,
+    ((1304 as i32) as i16) as u16,
+    ((579 as i32) as i16) as u16,
+    ((141 as i32) as i16) as u16,
+    ((142 as i32) as i16) as u16,
+    ((93 as i32) as i16) as u16,
+    ((576 as i32) as i16) as u16,
+    ((1254 as i32) as i16) as u16,
+    ((1254 as i32) as i16) as u16,
+    ((1085 as i32) as i16) as u16,
+    ((1088 as i32) as i16) as u16,
+    ((1075 as i32) as i16) as u16,
+    ((1075 as i32) as i16) as u16,
+    ((139 as i32) as i16) as u16,
+    ((139 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((399 as i32) as i16) as u16,
+    ((478 as i32) as i16) as u16,
+    ((395 as i32) as i16) as u16,
+    ((6 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((137 as i32) as i16) as u16,
+    ((137 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((135 as i32) as i16) as u16,
+    ((132 as i32) as i16) as u16,
+    ((463 as i32) as i16) as u16,
+    ((44 as i32) as i16) as u16,
+    ((342 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((305 as i32) as i16) as u16,
+    ((1127 as i32) as i16) as u16,
+    ((1280 as i32) as i16) as u16,
+    ((1 as i32) as i16) as u16,
+    ((1 as i32) as i16) as u16,
+    ((599 as i32) as i16) as u16,
+    ((2 as i32) as i16) as u16,
+    ((1284 as i32) as i16) as u16,
+    ((598 as i32) as i16) as u16,
+    ((1200 as i32) as i16) as u16,
+    ((1284 as i32) as i16) as u16,
+    ((1200 as i32) as i16) as u16,
+    ((330 as i32) as i16) as u16,
+    ((424 as i32) as i16) as u16,
+    ((158 as i32) as i16) as u16,
+    ((330 as i32) as i16) as u16,
+    ((1613 as i32) as i16) as u16,
+    ((158 as i32) as i16) as u16,
+    ((390 as i32) as i16) as u16,
+    ((116 as i32) as i16) as u16,
+    ((308 as i32) as i16) as u16,
+    ((1366 as i32) as i16) as u16,
+    ((51 as i32) as i16) as u16,
+    ((51 as i32) as i16) as u16,
+    ((1366 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((137 as i32) as i16) as u16,
+    ((137 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((135 as i32) as i16) as u16,
+    ((132 as i32) as i16) as u16,
+    ((463 as i32) as i16) as u16,
+    ((141 as i32) as i16) as u16,
+    ((142 as i32) as i16) as u16,
+    ((93 as i32) as i16) as u16,
+    ((515 as i32) as i16) as u16,
+    ((1254 as i32) as i16) as u16,
+    ((1254 as i32) as i16) as u16,
+    ((1085 as i32) as i16) as u16,
+    ((1088 as i32) as i16) as u16,
+    ((1075 as i32) as i16) as u16,
+    ((1075 as i32) as i16) as u16,
+    ((139 as i32) as i16) as u16,
+    ((139 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((1230 as i32) as i16) as u16,
+    ((329 as i32) as i16) as u16,
+    ((584 as i32) as i16) as u16,
+    ((296 as i32) as i16) as u16,
+    ((296 as i32) as i16) as u16,
+    ((212 as i32) as i16) as u16,
+    ((296 as i32) as i16) as u16,
+    ((296 as i32) as i16) as u16,
+    ((568 as i32) as i16) as u16,
+    ((568 as i32) as i16) as u16,
+    ((488 as i32) as i16) as u16,
+    ((143 as i32) as i16) as u16,
+    ((1072 as i32) as i16) as u16,
+    ((1072 as i32) as i16) as u16,
+    ((1086 as i32) as i16) as u16,
+    ((1089 as i32) as i16) as u16,
+    ((590 as i32) as i16) as u16,
+    ((1195 as i32) as i16) as u16,
+    ((579 as i32) as i16) as u16,
+    ((590 as i32) as i16) as u16,
+    ((340 as i32) as i16) as u16,
+    ((579 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((133 as i32) as i16) as u16,
+    ((392 as i32) as i16) as u16,
+    ((564 as i32) as i16) as u16,
+    ((536 as i32) as i16) as u16,
+    ((1195 as i32) as i16) as u16,
+    ((250 as i32) as i16) as u16,
+    ((425 as i32) as i16) as u16,
+    ((1195 as i32) as i16) as u16,
+    ((250 as i32) as i16) as u16,
+    ((137 as i32) as i16) as u16,
+    ((137 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((135 as i32) as i16) as u16,
+    ((132 as i32) as i16) as u16,
+    ((463 as i32) as i16) as u16,
+    ((291 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((137 as i32) as i16) as u16,
+    ((137 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((135 as i32) as i16) as u16,
+    ((132 as i32) as i16) as u16,
+    ((463 as i32) as i16) as u16,
+    ((966 as i32) as i16) as u16,
+    ((1230 as i32) as i16) as u16,
+    ((1231 as i32) as i16) as u16,
+    ((1230 as i32) as i16) as u16,
+    ((412 as i32) as i16) as u16,
+    ((965 as i32) as i16) as u16,
+    ((467 as i32) as i16) as u16,
+    ((412 as i32) as i16) as u16,
+    ((424 as i32) as i16) as u16,
+    ((467 as i32) as i16) as u16,
+    ((489 as i32) as i16) as u16,
+    ((357 as i32) as i16) as u16,
+    ((1611 as i32) as i16) as u16,
+    ((391 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((137 as i32) as i16) as u16,
+    ((137 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((135 as i32) as i16) as u16,
+    ((132 as i32) as i16) as u16,
+    ((463 as i32) as i16) as u16,
+    ((463 as i32) as i16) as u16,
+    ((134 as i32) as i16) as u16,
+    ((131 as i32) as i16) as u16,
+    ((238 as i32) as i16) as u16,
+    ((555 as i32) as i16) as u16,
+    ((1076 as i32) as i16) as u16,
+    ((141 as i32) as i16) as u16,
+    ((142 as i32) as i16) as u16,
+    ((93 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((1254 as i32) as i16) as u16,
+    ((1254 as i32) as i16) as u16,
+    ((1085 as i32) as i16) as u16,
+    ((1088 as i32) as i16) as u16,
+    ((1075 as i32) as i16) as u16,
+    ((1075 as i32) as i16) as u16,
+    ((139 as i32) as i16) as u16,
+    ((139 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((1317 as i32) as i16) as u16,
+    ((134 as i32) as i16) as u16,
+    ((131 as i32) as i16) as u16,
+    ((238 as i32) as i16) as u16,
+    ((424 as i32) as i16) as u16,
+    ((549 as i32) as i16) as u16,
+    ((1597 as i32) as i16) as u16,
+    ((1531 as i32) as i16) as u16,
+    ((333 as i32) as i16) as u16,
+    ((97 as i32) as i16) as u16,
+    ((83 as i32) as i16) as u16,
+    ((83 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((137 as i32) as i16) as u16,
+    ((137 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((135 as i32) as i16) as u16,
+    ((132 as i32) as i16) as u16,
+    ((463 as i32) as i16) as u16,
+    ((141 as i32) as i16) as u16,
+    ((142 as i32) as i16) as u16,
+    ((93 as i32) as i16) as u16,
+    ((1657 as i32) as i16) as u16,
+    ((1254 as i32) as i16) as u16,
+    ((1254 as i32) as i16) as u16,
+    ((1085 as i32) as i16) as u16,
+    ((1088 as i32) as i16) as u16,
+    ((1075 as i32) as i16) as u16,
+    ((1075 as i32) as i16) as u16,
+    ((139 as i32) as i16) as u16,
+    ((139 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((137 as i32) as i16) as u16,
+    ((137 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((135 as i32) as i16) as u16,
+    ((132 as i32) as i16) as u16,
+    ((463 as i32) as i16) as u16,
+    ((591 as i32) as i16) as u16,
+    ((1230 as i32) as i16) as u16,
+    ((958 as i32) as i16) as u16,
+    ((958 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((137 as i32) as i16) as u16,
+    ((137 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((135 as i32) as i16) as u16,
+    ((132 as i32) as i16) as u16,
+    ((463 as i32) as i16) as u16,
+    ((44 as i32) as i16) as u16,
+    ((398 as i32) as i16) as u16,
+    ((547 as i32) as i16) as u16,
+    ((1306 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((135 as i32) as i16) as u16,
+    ((132 as i32) as i16) as u16,
+    ((463 as i32) as i16) as u16,
+    ((386 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((442 as i32) as i16) as u16,
+    ((595 as i32) as i16) as u16,
+    ((145 as i32) as i16) as u16,
+    ((595 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((137 as i32) as i16) as u16,
+    ((137 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((135 as i32) as i16) as u16,
+    ((132 as i32) as i16) as u16,
+    ((463 as i32) as i16) as u16,
+    ((500 as i32) as i16) as u16,
+    ((1230 as i32) as i16) as u16,
+    ((112 as i32) as i16) as u16,
+    ((550 as i32) as i16) as u16,
+    ((460 as i32) as i16) as u16,
+    ((459 as i32) as i16) as u16,
+    ((51 as i32) as i16) as u16,
+    ((51 as i32) as i16) as u16,
+    ((424 as i32) as i16) as u16,
+    ((296 as i32) as i16) as u16,
+    ((296 as i32) as i16) as u16,
+    ((479 as i32) as i16) as u16,
+    ((334 as i32) as i16) as u16,
+    ((1259 as i32) as i16) as u16,
+    ((1230 as i32) as i16) as u16,
+    ((1231 as i32) as i16) as u16,
+    ((1230 as i32) as i16) as u16,
+    ((1599 as i32) as i16) as u16,
+    ((1261 as i32) as i16) as u16,
+    ((388 as i32) as i16) as u16,
+    ((312 as i32) as i16) as u16,
+    ((444 as i32) as i16) as u16,
+    ((590 as i32) as i16) as u16,
+    ((246 as i32) as i16) as u16,
+    ((579 as i32) as i16) as u16,
+    ((546 as i32) as i16) as u16,
+    ((1260 as i32) as i16) as u16,
+    ((271 as i32) as i16) as u16,
+    ((235 as i32) as i16) as u16,
+    ((329 as i32) as i16) as u16,
+    ((584 as i32) as i16) as u16,
+    ((551 as i32) as i16) as u16,
+    ((141 as i32) as i16) as u16,
+    ((142 as i32) as i16) as u16,
+    ((93 as i32) as i16) as u16,
+    ((429 as i32) as i16) as u16,
+    ((1254 as i32) as i16) as u16,
+    ((1254 as i32) as i16) as u16,
+    ((1085 as i32) as i16) as u16,
+    ((1088 as i32) as i16) as u16,
+    ((1075 as i32) as i16) as u16,
+    ((1075 as i32) as i16) as u16,
+    ((139 as i32) as i16) as u16,
+    ((139 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((22 as i32) as i16) as u16,
+    ((22 as i32) as i16) as u16,
+    ((1230 as i32) as i16) as u16,
+    ((1262 as i32) as i16) as u16,
+    ((424 as i32) as i16) as u16,
+    ((1262 as i32) as i16) as u16,
+    ((216 as i32) as i16) as u16,
+    ((296 as i32) as i16) as u16,
+    ((296 as i32) as i16) as u16,
+    ((98 as i32) as i16) as u16,
+    ((1230 as i32) as i16) as u16,
+    ((1231 as i32) as i16) as u16,
+    ((1230 as i32) as i16) as u16,
+    ((264 as i32) as i16) as u16,
+    ((884 as i32) as i16) as u16,
+    ((45 as i32) as i16) as u16,
+    ((528 as i32) as i16) as u16,
+    ((525 as i32) as i16) as u16,
+    ((524 as i32) as i16) as u16,
+    ((1041 as i32) as i16) as u16,
+    ((590 as i32) as i16) as u16,
+    ((1269 as i32) as i16) as u16,
+    ((579 as i32) as i16) as u16,
+    ((421 as i32) as i16) as u16,
+    ((420 as i32) as i16) as u16,
+    ((393 as i32) as i16) as u16,
+    ((523 as i32) as i16) as u16,
+    ((44 as i32) as i16) as u16,
+    ((141 as i32) as i16) as u16,
+    ((142 as i32) as i16) as u16,
+    ((93 as i32) as i16) as u16,
+    ((498 as i32) as i16) as u16,
+    ((1254 as i32) as i16) as u16,
+    ((1254 as i32) as i16) as u16,
+    ((1085 as i32) as i16) as u16,
+    ((1088 as i32) as i16) as u16,
+    ((1075 as i32) as i16) as u16,
+    ((1075 as i32) as i16) as u16,
+    ((139 as i32) as i16) as u16,
+    ((139 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((137 as i32) as i16) as u16,
+    ((137 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((135 as i32) as i16) as u16,
+    ((132 as i32) as i16) as u16,
+    ((463 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((1611 as i32) as i16) as u16,
+    ((561 as i32) as i16) as u16,
+    ((1230 as i32) as i16) as u16,
+    ((1231 as i32) as i16) as u16,
+    ((1230 as i32) as i16) as u16,
+    ((23 as i32) as i16) as u16,
+    ((264 as i32) as i16) as u16,
+    ((515 as i32) as i16) as u16,
+    ((200 as i32) as i16) as u16,
+    ((528 as i32) as i16) as u16,
+    ((525 as i32) as i16) as u16,
+    ((524 as i32) as i16) as u16,
+    ((127 as i32) as i16) as u16,
+    ((585 as i32) as i16) as u16,
+    ((509 as i32) as i16) as u16,
+    ((4 as i32) as i16) as u16,
+    ((355 as i32) as i16) as u16,
+    ((487 as i32) as i16) as u16,
+    ((506 as i32) as i16) as u16,
+    ((523 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((498 as i32) as i16) as u16,
+    ((84 as i32) as i16) as u16,
+    ((84 as i32) as i16) as u16,
+    ((134 as i32) as i16) as u16,
+    ((131 as i32) as i16) as u16,
+    ((238 as i32) as i16) as u16,
+    ((329 as i32) as i16) as u16,
+    ((584 as i32) as i16) as u16,
+    ((588 as i32) as i16) as u16,
+    ((1627 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((137 as i32) as i16) as u16,
+    ((137 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((135 as i32) as i16) as u16,
+    ((132 as i32) as i16) as u16,
+    ((463 as i32) as i16) as u16,
+    ((19 as i32) as i16) as u16,
+    ((19 as i32) as i16) as u16,
+    ((435 as i32) as i16) as u16,
+    ((1230 as i32) as i16) as u16,
+    ((1460 as i32) as i16) as u16,
+    ((297 as i32) as i16) as u16,
+    ((297 as i32) as i16) as u16,
+    ((311 as i32) as i16) as u16,
+    ((424 as i32) as i16) as u16,
+    ((1565 as i32) as i16) as u16,
+    ((464 as i32) as i16) as u16,
+    ((1631 as i32) as i16) as u16,
+    ((599 as i32) as i16) as u16,
+    ((2 as i32) as i16) as u16,
+    ((1284 as i32) as i16) as u16,
+    ((437 as i32) as i16) as u16,
+    ((574 as i32) as i16) as u16,
+    ((1107 as i32) as i16) as u16,
+    ((590 as i32) as i16) as u16,
+    ((330 as i32) as i16) as u16,
+    ((579 as i32) as i16) as u16,
+    ((158 as i32) as i16) as u16,
+    ((582 as i32) as i16) as u16,
+    ((489 as i32) as i16) as u16,
+    ((357 as i32) as i16) as u16,
+    ((573 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((592 as i32) as i16) as u16,
+    ((1366 as i32) as i16) as u16,
+    ((409 as i32) as i16) as u16,
+    ((1274 as i32) as i16) as u16,
+    ((1230 as i32) as i16) as u16,
+    ((141 as i32) as i16) as u16,
+    ((142 as i32) as i16) as u16,
+    ((93 as i32) as i16) as u16,
+    ((1364 as i32) as i16) as u16,
+    ((1254 as i32) as i16) as u16,
+    ((1254 as i32) as i16) as u16,
+    ((1085 as i32) as i16) as u16,
+    ((1088 as i32) as i16) as u16,
+    ((1075 as i32) as i16) as u16,
+    ((1075 as i32) as i16) as u16,
+    ((139 as i32) as i16) as u16,
+    ((139 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((389 as i32) as i16) as u16,
+    ((84 as i32) as i16) as u16,
+    ((84 as i32) as i16) as u16,
+    ((1062 as i32) as i16) as u16,
+    ((567 as i32) as i16) as u16,
+    ((1230 as i32) as i16) as u16,
+    ((313 as i32) as i16) as u16,
+    ((1523 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((125 as i32) as i16) as u16,
+    ((125 as i32) as i16) as u16,
+    ((970 as i32) as i16) as u16,
+    ((1230 as i32) as i16) as u16,
+    ((1231 as i32) as i16) as u16,
+    ((1230 as i32) as i16) as u16,
+    ((296 as i32) as i16) as u16,
+    ((296 as i32) as i16) as u16,
+    ((126 as i32) as i16) as u16,
+    ((46 as i32) as i16) as u16,
+    ((464 as i32) as i16) as u16,
+    ((594 as i32) as i16) as u16,
+    ((464 as i32) as i16) as u16,
+    ((296 as i32) as i16) as u16,
+    ((296 as i32) as i16) as u16,
+    ((1050 as i32) as i16) as u16,
+    ((1230 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((439 as i32) as i16) as u16,
+    ((590 as i32) as i16) as u16,
+    ((1604 as i32) as i16) as u16,
+    ((579 as i32) as i16) as u16,
+    ((84 as i32) as i16) as u16,
+    ((84 as i32) as i16) as u16,
+    ((7 as i32) as i16) as u16,
+    ((403 as i32) as i16) as u16,
+    ((590 as i32) as i16) as u16,
+    ((515 as i32) as i16) as u16,
+    ((579 as i32) as i16) as u16,
+    ((325 as i32) as i16) as u16,
+    ((417 as i32) as i16) as u16,
+    ((1230 as i32) as i16) as u16,
+    ((1231 as i32) as i16) as u16,
+    ((1230 as i32) as i16) as u16,
+    ((250 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((137 as i32) as i16) as u16,
+    ((137 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((135 as i32) as i16) as u16,
+    ((132 as i32) as i16) as u16,
+    ((463 as i32) as i16) as u16,
+    ((1050 as i32) as i16) as u16,
+    ((1050 as i32) as i16) as u16,
+    ((1052 as i32) as i16) as u16,
+    ((1053 as i32) as i16) as u16,
+    ((35 as i32) as i16) as u16,
+    ((1275 as i32) as i16) as u16,
+    ((1230 as i32) as i16) as u16,
+    ((1231 as i32) as i16) as u16,
+    ((1230 as i32) as i16) as u16,
+    ((424 as i32) as i16) as u16,
+    ((1370 as i32) as i16) as u16,
+    ((993 as i32) as i16) as u16,
+    ((574 as i32) as i16) as u16,
+    ((371 as i32) as i16) as u16,
+    ((414 as i32) as i16) as u16,
+    ((274 as i32) as i16) as u16,
+    ((412 as i32) as i16) as u16,
+    ((1597 as i32) as i16) as u16,
+    ((467 as i32) as i16) as u16,
+    ((1302 as i32) as i16) as u16,
+    ((552 as i32) as i16) as u16,
+    ((451 as i32) as i16) as u16,
+    ((590 as i32) as i16) as u16,
+    ((543 as i32) as i16) as u16,
+    ((579 as i32) as i16) as u16,
+    ((1530 as i32) as i16) as u16,
+    ((1230 as i32) as i16) as u16,
+    ((1231 as i32) as i16) as u16,
+    ((1230 as i32) as i16) as u16,
+    ((1214 as i32) as i16) as u16,
+    ((201 as i32) as i16) as u16,
+    ((409 as i32) as i16) as u16,
+    ((1174 as i32) as i16) as u16,
+    ((141 as i32) as i16) as u16,
+    ((142 as i32) as i16) as u16,
+    ((93 as i32) as i16) as u16,
+    ((223 as i32) as i16) as u16,
+    ((1254 as i32) as i16) as u16,
+    ((1254 as i32) as i16) as u16,
+    ((1085 as i32) as i16) as u16,
+    ((1088 as i32) as i16) as u16,
+    ((1075 as i32) as i16) as u16,
+    ((1075 as i32) as i16) as u16,
+    ((139 as i32) as i16) as u16,
+    ((139 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((296 as i32) as i16) as u16,
+    ((296 as i32) as i16) as u16,
+    ((1250 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((424 as i32) as i16) as u16,
+    ((296 as i32) as i16) as u16,
+    ((296 as i32) as i16) as u16,
+    ((236 as i32) as i16) as u16,
+    ((529 as i32) as i16) as u16,
+    ((296 as i32) as i16) as u16,
+    ((296 as i32) as i16) as u16,
+    ((515 as i32) as i16) as u16,
+    ((100 as i32) as i16) as u16,
+    ((590 as i32) as i16) as u16,
+    ((1600 as i32) as i16) as u16,
+    ((579 as i32) as i16) as u16,
+    ((48 as i32) as i16) as u16,
+    ((1605 as i32) as i16) as u16,
+    ((590 as i32) as i16) as u16,
+    ((1230 as i32) as i16) as u16,
+    ((579 as i32) as i16) as u16,
+    ((7 as i32) as i16) as u16,
+    ((590 as i32) as i16) as u16,
+    ((577 as i32) as i16) as u16,
+    ((579 as i32) as i16) as u16,
+    ((904 as i32) as i16) as u16,
+    ((84 as i32) as i16) as u16,
+    ((84 as i32) as i16) as u16,
+    ((141 as i32) as i16) as u16,
+    ((142 as i32) as i16) as u16,
+    ((93 as i32) as i16) as u16,
+    ((496 as i32) as i16) as u16,
+    ((1254 as i32) as i16) as u16,
+    ((1254 as i32) as i16) as u16,
+    ((1085 as i32) as i16) as u16,
+    ((1088 as i32) as i16) as u16,
+    ((1075 as i32) as i16) as u16,
+    ((1075 as i32) as i16) as u16,
+    ((139 as i32) as i16) as u16,
+    ((139 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((137 as i32) as i16) as u16,
+    ((137 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((135 as i32) as i16) as u16,
+    ((132 as i32) as i16) as u16,
+    ((463 as i32) as i16) as u16,
+    ((1365 as i32) as i16) as u16,
+    ((1230 as i32) as i16) as u16,
+    ((296 as i32) as i16) as u16,
+    ((296 as i32) as i16) as u16,
+    ((1250 as i32) as i16) as u16,
+    ((115 as i32) as i16) as u16,
+    ((1275 as i32) as i16) as u16,
+    ((326 as i32) as i16) as u16,
+    ((233 as i32) as i16) as u16,
+    ((539 as i32) as i16) as u16,
+    ((1062 as i32) as i16) as u16,
+    ((40 as i32) as i16) as u16,
+    ((282 as i32) as i16) as u16,
+    ((127 as i32) as i16) as u16,
+    ((585 as i32) as i16) as u16,
+    ((590 as i32) as i16) as u16,
+    ((4 as i32) as i16) as u16,
+    ((579 as i32) as i16) as u16,
+    ((329 as i32) as i16) as u16,
+    ((584 as i32) as i16) as u16,
+    ((1230 as i32) as i16) as u16,
+    ((1231 as i32) as i16) as u16,
+    ((1230 as i32) as i16) as u16,
+    ((1598 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((388 as i32) as i16) as u16,
+    ((904 as i32) as i16) as u16,
+    ((1051 as i32) as i16) as u16,
+    ((1356 as i32) as i16) as u16,
+    ((1356 as i32) as i16) as u16,
+    ((588 as i32) as i16) as u16,
+    ((1050 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((137 as i32) as i16) as u16,
+    ((137 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((135 as i32) as i16) as u16,
+    ((132 as i32) as i16) as u16,
+    ((463 as i32) as i16) as u16,
+    ((185 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((1230 as i32) as i16) as u16,
+    ((19 as i32) as i16) as u16,
+    ((19 as i32) as i16) as u16,
+    ((1230 as i32) as i16) as u16,
+    ((971 as i32) as i16) as u16,
+    ((1597 as i32) as i16) as u16,
+    ((424 as i32) as i16) as u16,
+    ((1651 as i32) as i16) as u16,
+    ((464 as i32) as i16) as u16,
+    ((129 as i32) as i16) as u16,
+    ((908 as i32) as i16) as u16,
+    ((1195 as i32) as i16) as u16,
+    ((1230 as i32) as i16) as u16,
+    ((1231 as i32) as i16) as u16,
+    ((1230 as i32) as i16) as u16,
+    ((1325 as i32) as i16) as u16,
+    ((443 as i32) as i16) as u16,
+    ((1050 as i32) as i16) as u16,
+    ((1050 as i32) as i16) as u16,
+    ((1052 as i32) as i16) as u16,
+    ((582 as i32) as i16) as u16,
+    ((1603 as i32) as i16) as u16,
+    ((149 as i32) as i16) as u16,
+    ((149 as i32) as i16) as u16,
+    ((1195 as i32) as i16) as u16,
+    ((7 as i32) as i16) as u16,
+    ((5 as i32) as i16) as u16,
+    ((1195 as i32) as i16) as u16,
+    ((1687 as i32) as i16) as u16,
+    ((410 as i32) as i16) as u16,
+    ((141 as i32) as i16) as u16,
+    ((142 as i32) as i16) as u16,
+    ((93 as i32) as i16) as u16,
+    ((1536 as i32) as i16) as u16,
+    ((1254 as i32) as i16) as u16,
+    ((1254 as i32) as i16) as u16,
+    ((1085 as i32) as i16) as u16,
+    ((1088 as i32) as i16) as u16,
+    ((1075 as i32) as i16) as u16,
+    ((1075 as i32) as i16) as u16,
+    ((139 as i32) as i16) as u16,
+    ((139 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((1214 as i32) as i16) as u16,
+    ((397 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((1062 as i32) as i16) as u16,
+    ((424 as i32) as i16) as u16,
+    ((1536 as i32) as i16) as u16,
+    ((1538 as i32) as i16) as u16,
+    ((50 as i32) as i16) as u16,
+    ((901 as i32) as i16) as u16,
+    ((125 as i32) as i16) as u16,
+    ((125 as i32) as i16) as u16,
+    ((1230 as i32) as i16) as u16,
+    ((1231 as i32) as i16) as u16,
+    ((1230 as i32) as i16) as u16,
+    ((1230 as i32) as i16) as u16,
+    ((1231 as i32) as i16) as u16,
+    ((1230 as i32) as i16) as u16,
+    ((126 as i32) as i16) as u16,
+    ((1230 as i32) as i16) as u16,
+    ((464 as i32) as i16) as u16,
+    ((594 as i32) as i16) as u16,
+    ((464 as i32) as i16) as u16,
+    ((515 as i32) as i16) as u16,
+    ((1230 as i32) as i16) as u16,
+    ((1050 as i32) as i16) as u16,
+    ((84 as i32) as i16) as u16,
+    ((84 as i32) as i16) as u16,
+    ((3 as i32) as i16) as u16,
+    ((141 as i32) as i16) as u16,
+    ((142 as i32) as i16) as u16,
+    ((93 as i32) as i16) as u16,
+    ((924 as i32) as i16) as u16,
+    ((1254 as i32) as i16) as u16,
+    ((1254 as i32) as i16) as u16,
+    ((1085 as i32) as i16) as u16,
+    ((1088 as i32) as i16) as u16,
+    ((1075 as i32) as i16) as u16,
+    ((1075 as i32) as i16) as u16,
+    ((139 as i32) as i16) as u16,
+    ((139 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((137 as i32) as i16) as u16,
+    ((137 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((135 as i32) as i16) as u16,
+    ((132 as i32) as i16) as u16,
+    ((463 as i32) as i16) as u16,
+    ((1050 as i32) as i16) as u16,
+    ((1050 as i32) as i16) as u16,
+    ((1052 as i32) as i16) as u16,
+    ((1053 as i32) as i16) as u16,
+    ((35 as i32) as i16) as u16,
+    ((442 as i32) as i16) as u16,
+    ((457 as i32) as i16) as u16,
+    ((532 as i32) as i16) as u16,
+    ((433 as i32) as i16) as u16,
+    ((1230 as i32) as i16) as u16,
+    ((1062 as i32) as i16) as u16,
+    ((1361 as i32) as i16) as u16,
+    ((540 as i32) as i16) as u16,
+    ((540 as i32) as i16) as u16,
+    ((1598 as i32) as i16) as u16,
+    ((925 as i32) as i16) as u16,
+    ((388 as i32) as i16) as u16,
+    ((7 as i32) as i16) as u16,
+    ((1129 as i32) as i16) as u16,
+    ((1230 as i32) as i16) as u16,
+    ((1231 as i32) as i16) as u16,
+    ((1230 as i32) as i16) as u16,
+    ((1129 as i32) as i16) as u16,
+    ((1536 as i32) as i16) as u16,
+    ((1230 as i32) as i16) as u16,
+    ((1231 as i32) as i16) as u16,
+    ((1230 as i32) as i16) as u16,
+    ((1051 as i32) as i16) as u16,
+    ((570 as i32) as i16) as u16,
+    ((1214 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((1050 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((137 as i32) as i16) as u16,
+    ((137 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((135 as i32) as i16) as u16,
+    ((132 as i32) as i16) as u16,
+    ((463 as i32) as i16) as u16,
+    ((6 as i32) as i16) as u16,
+    ((185 as i32) as i16) as u16,
+    ((1195 as i32) as i16) as u16,
+    ((1230 as i32) as i16) as u16,
+    ((231 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((382 as i32) as i16) as u16,
+    ((992 as i32) as i16) as u16,
+    ((424 as i32) as i16) as u16,
+    ((151 as i32) as i16) as u16,
+    ((151 as i32) as i16) as u16,
+    ((510 as i32) as i16) as u16,
+    ((1213 as i32) as i16) as u16,
+    ((557 as i32) as i16) as u16,
+    ((482 as i32) as i16) as u16,
+    ((1195 as i32) as i16) as u16,
+    ((381 as i32) as i16) as u16,
+    ((160 as i32) as i16) as u16,
+    ((1195 as i32) as i16) as u16,
+    ((1050 as i32) as i16) as u16,
+    ((1050 as i32) as i16) as u16,
+    ((1052 as i32) as i16) as u16,
+    ((1230 as i32) as i16) as u16,
+    ((1231 as i32) as i16) as u16,
+    ((1230 as i32) as i16) as u16,
+    ((422 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((447 as i32) as i16) as u16,
+    ((84 as i32) as i16) as u16,
+    ((84 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((217 as i32) as i16) as u16,
+    ((141 as i32) as i16) as u16,
+    ((142 as i32) as i16) as u16,
+    ((93 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((1254 as i32) as i16) as u16,
+    ((1254 as i32) as i16) as u16,
+    ((1085 as i32) as i16) as u16,
+    ((1088 as i32) as i16) as u16,
+    ((1075 as i32) as i16) as u16,
+    ((1075 as i32) as i16) as u16,
+    ((139 as i32) as i16) as u16,
+    ((139 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((1214 as i32) as i16) as u16,
+    ((19 as i32) as i16) as u16,
+    ((19 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((424 as i32) as i16) as u16,
+    ((19 as i32) as i16) as u16,
+    ((19 as i32) as i16) as u16,
+    ((442 as i32) as i16) as u16,
+    ((1063 as i32) as i16) as u16,
+    ((442 as i32) as i16) as u16,
+    ((19 as i32) as i16) as u16,
+    ((19 as i32) as i16) as u16,
+    ((1230 as i32) as i16) as u16,
+    ((1231 as i32) as i16) as u16,
+    ((1230 as i32) as i16) as u16,
+    ((515 as i32) as i16) as u16,
+    ((445 as i32) as i16) as u16,
+    ((458 as i32) as i16) as u16,
+    ((1597 as i32) as i16) as u16,
+    ((386 as i32) as i16) as u16,
+    ((315 as i32) as i16) as u16,
+    ((1175 as i32) as i16) as u16,
+    ((1685 as i32) as i16) as u16,
+    ((556 as i32) as i16) as u16,
+    ((1685 as i32) as i16) as u16,
+    ((450 as i32) as i16) as u16,
+    ((84 as i32) as i16) as u16,
+    ((84 as i32) as i16) as u16,
+    ((141 as i32) as i16) as u16,
+    ((142 as i32) as i16) as u16,
+    ((93 as i32) as i16) as u16,
+    ((505 as i32) as i16) as u16,
+    ((1254 as i32) as i16) as u16,
+    ((1254 as i32) as i16) as u16,
+    ((1085 as i32) as i16) as u16,
+    ((1088 as i32) as i16) as u16,
+    ((1075 as i32) as i16) as u16,
+    ((1075 as i32) as i16) as u16,
+    ((139 as i32) as i16) as u16,
+    ((139 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((137 as i32) as i16) as u16,
+    ((137 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((135 as i32) as i16) as u16,
+    ((132 as i32) as i16) as u16,
+    ((463 as i32) as i16) as u16,
+    ((442 as i32) as i16) as u16,
+    ((1147 as i32) as i16) as u16,
+    ((454 as i32) as i16) as u16,
+    ((1597 as i32) as i16) as u16,
+    ((362 as i32) as i16) as u16,
+    ((1041 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((462 as i32) as i16) as u16,
+    ((1460 as i32) as i16) as u16,
+    ((1233 as i32) as i16) as u16,
+    ((47 as i32) as i16) as u16,
+    ((1393 as i32) as i16) as u16,
+    ((324 as i32) as i16) as u16,
+    ((565 as i32) as i16) as u16,
+    ((565 as i32) as i16) as u16,
+    ((115 as i32) as i16) as u16,
+    ((1148 as i32) as i16) as u16,
+    ((449 as i32) as i16) as u16,
+    ((7 as i32) as i16) as u16,
+    ((460 as i32) as i16) as u16,
+    ((459 as i32) as i16) as u16,
+    ((307 as i32) as i16) as u16,
+    ((375 as i32) as i16) as u16,
+    ((354 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((113 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((329 as i32) as i16) as u16,
+    ((584 as i32) as i16) as u16,
+    ((19 as i32) as i16) as u16,
+    ((19 as i32) as i16) as u16,
+    ((1149 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((137 as i32) as i16) as u16,
+    ((137 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((135 as i32) as i16) as u16,
+    ((132 as i32) as i16) as u16,
+    ((463 as i32) as i16) as u16,
+    ((209 as i32) as i16) as u16,
+    ((1173 as i32) as i16) as u16,
+    ((563 as i32) as i16) as u16,
+    ((19 as i32) as i16) as u16,
+    ((19 as i32) as i16) as u16,
+    ((19 as i32) as i16) as u16,
+    ((19 as i32) as i16) as u16,
+    ((49 as i32) as i16) as u16,
+    ((424 as i32) as i16) as u16,
+    ((944 as i32) as i16) as u16,
+    ((1175 as i32) as i16) as u16,
+    ((1686 as i32) as i16) as u16,
+    ((1046 as i32) as i16) as u16,
+    ((1686 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((355 as i32) as i16) as u16,
+    ((484 as i32) as i16) as u16,
+    ((343 as i32) as i16) as u16,
+    ((210 as i32) as i16) as u16,
+    ((945 as i32) as i16) as u16,
+    ((569 as i32) as i16) as u16,
+    ((562 as i32) as i16) as u16,
+    ((1262 as i32) as i16) as u16,
+    ((1233 as i32) as i16) as u16,
+    ((1262 as i32) as i16) as u16,
+    ((490 as i32) as i16) as u16,
+    ((314 as i32) as i16) as u16,
+    ((423 as i32) as i16) as u16,
+    ((424 as i32) as i16) as u16,
+    ((1598 as i32) as i16) as u16,
+    ((1206 as i32) as i16) as u16,
+    ((388 as i32) as i16) as u16,
+    ((141 as i32) as i16) as u16,
+    ((142 as i32) as i16) as u16,
+    ((93 as i32) as i16) as u16,
+    ((440 as i32) as i16) as u16,
+    ((1254 as i32) as i16) as u16,
+    ((1254 as i32) as i16) as u16,
+    ((1085 as i32) as i16) as u16,
+    ((1088 as i32) as i16) as u16,
+    ((1075 as i32) as i16) as u16,
+    ((1075 as i32) as i16) as u16,
+    ((139 as i32) as i16) as u16,
+    ((139 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((352 as i32) as i16) as u16,
+    ((316 as i32) as i16) as u16,
+    ((531 as i32) as i16) as u16,
+    ((316 as i32) as i16) as u16,
+    ((141 as i32) as i16) as u16,
+    ((142 as i32) as i16) as u16,
+    ((93 as i32) as i16) as u16,
+    ((549 as i32) as i16) as u16,
+    ((1254 as i32) as i16) as u16,
+    ((1254 as i32) as i16) as u16,
+    ((1085 as i32) as i16) as u16,
+    ((1088 as i32) as i16) as u16,
+    ((1075 as i32) as i16) as u16,
+    ((1075 as i32) as i16) as u16,
+    ((139 as i32) as i16) as u16,
+    ((139 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((446 as i32) as i16) as u16,
+    ((10 as i32) as i16) as u16,
+    ((1598 as i32) as i16) as u16,
+    ((274 as i32) as i16) as u16,
+    ((388 as i32) as i16) as u16,
+    ((915 as i32) as i16) as u16,
+    ((281 as i32) as i16) as u16,
+    ((299 as i32) as i16) as u16,
+    ((383 as i32) as i16) as u16,
+    ((534 as i32) as i16) as u16,
+    ((378 as i32) as i16) as u16,
+    ((533 as i32) as i16) as u16,
+    ((269 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((1206 as i32) as i16) as u16,
+    ((587 as i32) as i16) as u16,
+    ((587 as i32) as i16) as u16,
+    ((587 as i32) as i16) as u16,
+    ((374 as i32) as i16) as u16,
+    ((293 as i32) as i16) as u16,
+    ((1579 as i32) as i16) as u16,
+    ((991 as i32) as i16) as u16,
+    ((1173 as i32) as i16) as u16,
+    ((302 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((137 as i32) as i16) as u16,
+    ((137 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((135 as i32) as i16) as u16,
+    ((132 as i32) as i16) as u16,
+    ((463 as i32) as i16) as u16,
+    ((53 as i32) as i16) as u16,
+    ((53 as i32) as i16) as u16,
+    ((520 as i32) as i16) as u16,
+    ((1250 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((1147 as i32) as i16) as u16,
+    ((1576 as i32) as i16) as u16,
+    ((431 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((137 as i32) as i16) as u16,
+    ((137 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((135 as i32) as i16) as u16,
+    ((132 as i32) as i16) as u16,
+    ((463 as i32) as i16) as u16,
+    ((1148 as i32) as i16) as u16,
+    ((301 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((1577 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((1307 as i32) as i16) as u16,
+    ((431 as i32) as i16) as u16,
+    ((54 as i32) as i16) as u16,
+    ((54 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((268 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((461 as i32) as i16) as u16,
+    ((461 as i32) as i16) as u16,
+    ((461 as i32) as i16) as u16,
+    ((1149 as i32) as i16) as u16,
+    ((347 as i32) as i16) as u16,
+    ((492 as i32) as i16) as u16,
+    ((424 as i32) as i16) as u16,
+    ((135 as i32) as i16) as u16,
+    ((132 as i32) as i16) as u16,
+    ((463 as i32) as i16) as u16,
+    ((1146 as i32) as i16) as u16,
+    ((1195 as i32) as i16) as u16,
+    ((474 as i32) as i16) as u16,
+    ((68 as i32) as i16) as u16,
+    ((68 as i32) as i16) as u16,
+    ((69 as i32) as i16) as u16,
+    ((69 as i32) as i16) as u16,
+    ((550 as i32) as i16) as u16,
+    ((332 as i32) as i16) as u16,
+    ((287 as i32) as i16) as u16,
+    ((21 as i32) as i16) as u16,
+    ((21 as i32) as i16) as u16,
+    ((55 as i32) as i16) as u16,
+    ((55 as i32) as i16) as u16,
+    ((1195 as i32) as i16) as u16,
+    ((581 as i32) as i16) as u16,
+    ((424 as i32) as i16) as u16,
+    ((1195 as i32) as i16) as u16,
+    ((309 as i32) as i16) as u16,
+    ((1250 as i32) as i16) as u16,
+    ((141 as i32) as i16) as u16,
+    ((142 as i32) as i16) as u16,
+    ((93 as i32) as i16) as u16,
+    ((119 as i32) as i16) as u16,
+    ((1254 as i32) as i16) as u16,
+    ((1254 as i32) as i16) as u16,
+    ((1085 as i32) as i16) as u16,
+    ((1088 as i32) as i16) as u16,
+    ((1075 as i32) as i16) as u16,
+    ((1075 as i32) as i16) as u16,
+    ((139 as i32) as i16) as u16,
+    ((139 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((237 as i32) as i16) as u16,
+    ((480 as i32) as i16) as u16,
+    ((1476 as i32) as i16) as u16,
+    ((141 as i32) as i16) as u16,
+    ((142 as i32) as i16) as u16,
+    ((93 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((1254 as i32) as i16) as u16,
+    ((1254 as i32) as i16) as u16,
+    ((1085 as i32) as i16) as u16,
+    ((1088 as i32) as i16) as u16,
+    ((1075 as i32) as i16) as u16,
+    ((1075 as i32) as i16) as u16,
+    ((139 as i32) as i16) as u16,
+    ((139 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((344 as i32) as i16) as u16,
+    ((430 as i32) as i16) as u16,
+    ((346 as i32) as i16) as u16,
+    ((70 as i32) as i16) as u16,
+    ((70 as i32) as i16) as u16,
+    ((494 as i32) as i16) as u16,
+    ((991 as i32) as i16) as u16,
+    ((1132 as i32) as i16) as u16,
+    ((1132 as i32) as i16) as u16,
+    ((512 as i32) as i16) as u16,
+    ((56 as i32) as i16) as u16,
+    ((56 as i32) as i16) as u16,
+    ((1269 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((268 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((369 as i32) as i16) as u16,
+    ((374 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((481 as i32) as i16) as u16,
+    ((215 as i32) as i16) as u16,
+    ((384 as i32) as i16) as u16,
+    ((1624 as i32) as i16) as u16,
+    ((481 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((137 as i32) as i16) as u16,
+    ((137 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((135 as i32) as i16) as u16,
+    ((132 as i32) as i16) as u16,
+    ((463 as i32) as i16) as u16,
+    ((71 as i32) as i16) as u16,
+    ((71 as i32) as i16) as u16,
+    ((72 as i32) as i16) as u16,
+    ((72 as i32) as i16) as u16,
+    ((225 as i32) as i16) as u16,
+    ((73 as i32) as i16) as u16,
+    ((73 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((137 as i32) as i16) as u16,
+    ((137 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((135 as i32) as i16) as u16,
+    ((132 as i32) as i16) as u16,
+    ((463 as i32) as i16) as u16,
+    ((586 as i32) as i16) as u16,
+    ((431 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((872 as i32) as i16) as u16,
+    ((873 as i32) as i16) as u16,
+    ((874 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((911 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((1602 as i32) as i16) as u16,
+    ((74 as i32) as i16) as u16,
+    ((74 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((7 as i32) as i16) as u16,
+    ((1460 as i32) as i16) as u16,
+    ((242 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((306 as i32) as i16) as u16,
+    ((424 as i32) as i16) as u16,
+    ((1578 as i32) as i16) as u16,
+    ((472 as i32) as i16) as u16,
+    ((306 as i32) as i16) as u16,
+    ((364 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((367 as i32) as i16) as u16,
+    ((75 as i32) as i16) as u16,
+    ((75 as i32) as i16) as u16,
+    ((430 as i32) as i16) as u16,
+    ((345 as i32) as i16) as u16,
+    ((57 as i32) as i16) as u16,
+    ((57 as i32) as i16) as u16,
+    ((58 as i32) as i16) as u16,
+    ((58 as i32) as i16) as u16,
+    ((432 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((59 as i32) as i16) as u16,
+    ((59 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((424 as i32) as i16) as u16,
+    ((61 as i32) as i16) as u16,
+    ((61 as i32) as i16) as u16,
+    ((1475 as i32) as i16) as u16,
+    ((141 as i32) as i16) as u16,
+    ((142 as i32) as i16) as u16,
+    ((93 as i32) as i16) as u16,
+    ((123 as i32) as i16) as u16,
+    ((1254 as i32) as i16) as u16,
+    ((1254 as i32) as i16) as u16,
+    ((1085 as i32) as i16) as u16,
+    ((1088 as i32) as i16) as u16,
+    ((1075 as i32) as i16) as u16,
+    ((1075 as i32) as i16) as u16,
+    ((139 as i32) as i16) as u16,
+    ((139 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((424 as i32) as i16) as u16,
+    ((570 as i32) as i16) as u16,
+    ((62 as i32) as i16) as u16,
+    ((62 as i32) as i16) as u16,
+    ((141 as i32) as i16) as u16,
+    ((142 as i32) as i16) as u16,
+    ((93 as i32) as i16) as u16,
+    ((911 as i32) as i16) as u16,
+    ((1254 as i32) as i16) as u16,
+    ((1254 as i32) as i16) as u16,
+    ((1085 as i32) as i16) as u16,
+    ((1088 as i32) as i16) as u16,
+    ((1075 as i32) as i16) as u16,
+    ((1075 as i32) as i16) as u16,
+    ((139 as i32) as i16) as u16,
+    ((139 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((161 as i32) as i16) as u16,
+    ((384 as i32) as i16) as u16,
+    ((1624 as i32) as i16) as u16,
+    ((1474 as i32) as i16) as u16,
+    ((141 as i32) as i16) as u16,
+    ((130 as i32) as i16) as u16,
+    ((93 as i32) as i16) as u16,
+    ((441 as i32) as i16) as u16,
+    ((1254 as i32) as i16) as u16,
+    ((1254 as i32) as i16) as u16,
+    ((1085 as i32) as i16) as u16,
+    ((1088 as i32) as i16) as u16,
+    ((1075 as i32) as i16) as u16,
+    ((1075 as i32) as i16) as u16,
+    ((139 as i32) as i16) as u16,
+    ((139 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((267 as i32) as i16) as u16,
+    ((266 as i32) as i16) as u16,
+    ((265 as i32) as i16) as u16,
+    ((1460 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((137 as i32) as i16) as u16,
+    ((137 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((135 as i32) as i16) as u16,
+    ((132 as i32) as i16) as u16,
+    ((463 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((1336 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((1269 as i32) as i16) as u16,
+    ((1460 as i32) as i16) as u16,
+    ((384 as i32) as i16) as u16,
+    ((1624 as i32) as i16) as u16,
+    ((231 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((137 as i32) as i16) as u16,
+    ((137 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((135 as i32) as i16) as u16,
+    ((132 as i32) as i16) as u16,
+    ((463 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((163 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((76 as i32) as i16) as u16,
+    ((76 as i32) as i16) as u16,
+    ((77 as i32) as i16) as u16,
+    ((77 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((137 as i32) as i16) as u16,
+    ((137 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((135 as i32) as i16) as u16,
+    ((132 as i32) as i16) as u16,
+    ((463 as i32) as i16) as u16,
+    ((475 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((483 as i32) as i16) as u16,
+    ((78 as i32) as i16) as u16,
+    ((78 as i32) as i16) as u16,
+    ((20 as i32) as i16) as u16,
+    ((20 as i32) as i16) as u16,
+    ((1249 as i32) as i16) as u16,
+    ((424 as i32) as i16) as u16,
+    ((491 as i32) as i16) as u16,
+    ((79 as i32) as i16) as u16,
+    ((79 as i32) as i16) as u16,
+    ((495 as i32) as i16) as u16,
+    ((422 as i32) as i16) as u16,
+    ((295 as i32) as i16) as u16,
+    ((235 as i32) as i16) as u16,
+    ((1574 as i32) as i16) as u16,
+    ((38 as i32) as i16) as u16,
+    ((511 as i32) as i16) as u16,
+    ((896 as i32) as i16) as u16,
+    ((422 as i32) as i16) as u16,
+    ((335 as i32) as i16) as u16,
+    ((240 as i32) as i16) as u16,
+    ((422 as i32) as i16) as u16,
+    ((147 as i32) as i16) as u16,
+    ((147 as i32) as i16) as u16,
+    ((112 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((424 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((101 as i32) as i16) as u16,
+    ((222 as i32) as i16) as u16,
+    ((991 as i32) as i16) as u16,
+    ((142 as i32) as i16) as u16,
+    ((93 as i32) as i16) as u16,
+    ((455 as i32) as i16) as u16,
+    ((1254 as i32) as i16) as u16,
+    ((1254 as i32) as i16) as u16,
+    ((1085 as i32) as i16) as u16,
+    ((1088 as i32) as i16) as u16,
+    ((1075 as i32) as i16) as u16,
+    ((1075 as i32) as i16) as u16,
+    ((139 as i32) as i16) as u16,
+    ((139 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((39 as i32) as i16) as u16,
+    ((148 as i32) as i16) as u16,
+    ((148 as i32) as i16) as u16,
+    ((80 as i32) as i16) as u16,
+    ((80 as i32) as i16) as u16,
+    ((93 as i32) as i16) as u16,
+    ((551 as i32) as i16) as u16,
+    ((1254 as i32) as i16) as u16,
+    ((1254 as i32) as i16) as u16,
+    ((1085 as i32) as i16) as u16,
+    ((1088 as i32) as i16) as u16,
+    ((1075 as i32) as i16) as u16,
+    ((1075 as i32) as i16) as u16,
+    ((139 as i32) as i16) as u16,
+    ((139 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((328 as i32) as i16) as u16,
+    ((923 as i32) as i16) as u16,
+    ((922 as i32) as i16) as u16,
+    ((64 as i32) as i16) as u16,
+    ((64 as i32) as i16) as u16,
+    ((502 as i32) as i16) as u16,
+    ((1656 as i32) as i16) as u16,
+    ((1005 as i32) as i16) as u16,
+    ((933 as i32) as i16) as u16,
+    ((896 as i32) as i16) as u16,
+    ((124 as i32) as i16) as u16,
+    ((422 as i32) as i16) as u16,
+    ((121 as i32) as i16) as u16,
+    ((254 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((1006 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((226 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((127 as i32) as i16) as u16,
+    ((585 as i32) as i16) as u16,
+    ((164 as i32) as i16) as u16,
+    ((4 as i32) as i16) as u16,
+    ((16 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((137 as i32) as i16) as u16,
+    ((137 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((135 as i32) as i16) as u16,
+    ((132 as i32) as i16) as u16,
+    ((463 as i32) as i16) as u16,
+    ((588 as i32) as i16) as u16,
+    ((81 as i32) as i16) as u16,
+    ((81 as i32) as i16) as u16,
+    ((65 as i32) as i16) as u16,
+    ((65 as i32) as i16) as u16,
+    ((82 as i32) as i16) as u16,
+    ((82 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((137 as i32) as i16) as u16,
+    ((137 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((135 as i32) as i16) as u16,
+    ((132 as i32) as i16) as u16,
+    ((463 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((226 as i32) as i16) as u16,
+    ((237 as i32) as i16) as u16,
+    ((966 as i32) as i16) as u16,
+    ((464 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((298 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((965 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((66 as i32) as i16) as u16,
+    ((66 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((1170 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((411 as i32) as i16) as u16,
+    ((582 as i32) as i16) as u16,
+    ((353 as i32) as i16) as u16,
+    ((469 as i32) as i16) as u16,
+    ((115 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((471 as i32) as i16) as u16,
+    ((169 as i32) as i16) as u16,
+    ((173 as i32) as i16) as u16,
+    ((173 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((44 as i32) as i16) as u16,
+    ((991 as i32) as i16) as u16,
+    ((174 as i32) as i16) as u16,
+    ((174 as i32) as i16) as u16,
+    ((89 as i32) as i16) as u16,
+    ((89 as i32) as i16) as u16,
+    ((67 as i32) as i16) as u16,
+    ((67 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((85 as i32) as i16) as u16,
+    ((85 as i32) as i16) as u16,
+    ((150 as i32) as i16) as u16,
+    ((150 as i32) as i16) as u16,
+    ((1114 as i32) as i16) as u16,
+    ((1043 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((273 as i32) as i16) as u16,
+    ((86 as i32) as i16) as u16,
+    ((86 as i32) as i16) as u16,
+    ((1062 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((503 as i32) as i16) as u16,
+    ((171 as i32) as i16) as u16,
+    ((171 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((125 as i32) as i16) as u16,
+    ((125 as i32) as i16) as u16,
+    ((497 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((273 as i32) as i16) as u16,
+    ((336 as i32) as i16) as u16,
+    ((152 as i32) as i16) as u16,
+    ((152 as i32) as i16) as u16,
+    ((126 as i32) as i16) as u16,
+    ((1335 as i32) as i16) as u16,
+    ((464 as i32) as i16) as u16,
+    ((594 as i32) as i16) as u16,
+    ((464 as i32) as i16) as u16,
+    ((146 as i32) as i16) as u16,
+    ((146 as i32) as i16) as u16,
+    ((1050 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((545 as i32) as i16) as u16,
+    ((172 as i32) as i16) as u16,
+    ((172 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((1054 as i32) as i16) as u16,
+    ((165 as i32) as i16) as u16,
+    ((165 as i32) as i16) as u16,
+    ((256 as i32) as i16) as u16,
+    ((339 as i32) as i16) as u16,
+    ((156 as i32) as i16) as u16,
+    ((156 as i32) as i16) as u16,
+    ((127 as i32) as i16) as u16,
+    ((585 as i32) as i16) as u16,
+    ((1586 as i32) as i16) as u16,
+    ((4 as i32) as i16) as u16,
+    ((329 as i32) as i16) as u16,
+    ((584 as i32) as i16) as u16,
+    ((499 as i32) as i16) as u16,
+    ((358 as i32) as i16) as u16,
+    ((273 as i32) as i16) as u16,
+    ((115 as i32) as i16) as u16,
+    ((348 as i32) as i16) as u16,
+    ((155 as i32) as i16) as u16,
+    ((155 as i32) as i16) as u16,
+    ((930 as i32) as i16) as u16,
+    ((931 as i32) as i16) as u16,
+    ((153 as i32) as i16) as u16,
+    ((153 as i32) as i16) as u16,
+    ((588 as i32) as i16) as u16,
+    ((1114 as i32) as i16) as u16,
+    ((1050 as i32) as i16) as u16,
+    ((1050 as i32) as i16) as u16,
+    ((1052 as i32) as i16) as u16,
+    ((1053 as i32) as i16) as u16,
+    ((35 as i32) as i16) as u16,
+    ((1554 as i32) as i16) as u16,
+    ((521 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((270 as i32) as i16) as u16,
+    ((1008 as i32) as i16) as u16,
+    ((1009 as i32) as i16) as u16,
+    ((9 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((372 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((115 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((168 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((115 as i32) as i16) as u16,
+    ((593 as i32) as i16) as u16,
+    ((1110 as i32) as i16) as u16,
+    ((464 as i32) as i16) as u16,
+    ((270 as i32) as i16) as u16,
+    ((996 as i32) as i16) as u16,
+    ((964 as i32) as i16) as u16,
+    ((273 as i32) as i16) as u16,
+    ((129 as i32) as i16) as u16,
+    ((1645 as i32) as i16) as u16,
+    ((1214 as i32) as i16) as u16,
+    ((154 as i32) as i16) as u16,
+    ((154 as i32) as i16) as u16,
+    ((1054 as i32) as i16) as u16,
+    ((1404 as i32) as i16) as u16,
+    ((582 as i32) as i16) as u16,
+    ((88 as i32) as i16) as u16,
+    ((88 as i32) as i16) as u16,
+    ((90 as i32) as i16) as u16,
+    ((90 as i32) as i16) as u16,
+    ((87 as i32) as i16) as u16,
+    ((87 as i32) as i16) as u16,
+    ((52 as i32) as i16) as u16,
+    ((52 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((1405 as i32) as i16) as u16,
+    ((504 as i32) as i16) as u16,
+    ((537 as i32) as i16) as u16,
+    ((559 as i32) as i16) as u16,
+    ((1179 as i32) as i16) as u16,
+    ((961 as i32) as i16) as u16,
+    ((507 as i32) as i16) as u16,
+    ((129 as i32) as i16) as u16,
+    ((558 as i32) as i16) as u16,
+    ((127 as i32) as i16) as u16,
+    ((585 as i32) as i16) as u16,
+    ((1126 as i32) as i16) as u16,
+    ((4 as i32) as i16) as u16,
+    ((1126 as i32) as i16) as u16,
+    ((1125 as i32) as i16) as u16,
+    ((894 as i32) as i16) as u16,
+    ((1125 as i32) as i16) as u16,
+    ((162 as i32) as i16) as u16,
+    ((1062 as i32) as i16) as u16,
+    ((963 as i32) as i16) as u16,
+    ((359 as i32) as i16) as u16,
+    ((129 as i32) as i16) as u16,
+    ((1401 as i32) as i16) as u16,
+    ((363 as i32) as i16) as u16,
+    ((125 as i32) as i16) as u16,
+    ((125 as i32) as i16) as u16,
+    ((588 as i32) as i16) as u16,
+    ((366 as i32) as i16) as u16,
+    ((368 as i32) as i16) as u16,
+    ((370 as i32) as i16) as u16,
+    ((1349 as i32) as i16) as u16,
+    ((1334 as i32) as i16) as u16,
+    ((126 as i32) as i16) as u16,
+    ((1333 as i32) as i16) as u16,
+    ((464 as i32) as i16) as u16,
+    ((594 as i32) as i16) as u16,
+    ((464 as i32) as i16) as u16,
+    ((377 as i32) as i16) as u16,
+    ((387 as i32) as i16) as u16,
+    ((1050 as i32) as i16) as u16,
+    ((1391 as i32) as i16) as u16,
+    ((1414 as i32) as i16) as u16,
+    ((1618 as i32) as i16) as u16,
+    ((1459 as i32) as i16) as u16,
+    ((1387 as i32) as i16) as u16,
+    ((1399 as i32) as i16) as u16,
+    ((208 as i32) as i16) as u16,
+    ((580 as i32) as i16) as u16,
+    ((1464 as i32) as i16) as u16,
+    ((1314 as i32) as i16) as u16,
+    ((464 as i32) as i16) as u16,
+    ((243 as i32) as i16) as u16,
+    ((516 as i32) as i16) as u16,
+    ((1305 as i32) as i16) as u16,
+    ((1293 as i32) as i16) as u16,
+    ((1384 as i32) as i16) as u16,
+    ((1292 as i32) as i16) as u16,
+    ((1294 as i32) as i16) as u16,
+    ((1638 as i32) as i16) as u16,
+    ((288 as i32) as i16) as u16,
+    ((170 as i32) as i16) as u16,
+    ((228 as i32) as i16) as u16,
+    ((582 as i32) as i16) as u16,
+    ((12 as i32) as i16) as u16,
+    ((408 as i32) as i16) as u16,
+    ((321 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((241 as i32) as i16) as u16,
+    ((323 as i32) as i16) as u16,
+    ((245 as i32) as i16) as u16,
+    ((1446 as i32) as i16) as u16,
+    ((1050 as i32) as i16) as u16,
+    ((1050 as i32) as i16) as u16,
+    ((1052 as i32) as i16) as u16,
+    ((1053 as i32) as i16) as u16,
+    ((35 as i32) as i16) as u16,
+    ((559 as i32) as i16) as u16,
+    ((304 as i32) as i16) as u16,
+    ((350 as i32) as i16) as u16,
+    ((351 as i32) as i16) as u16,
+    ((501 as i32) as i16) as u16,
+    ((560 as i32) as i16) as u16,
+    ((127 as i32) as i16) as u16,
+    ((585 as i32) as i16) as u16,
+    ((1441 as i32) as i16) as u16,
+    ((4 as i32) as i16) as u16,
+    ((1451 as i32) as i16) as u16,
+    ((1434 as i32) as i16) as u16,
+    ((310 as i32) as i16) as u16,
+    ((1450 as i32) as i16) as u16,
+    ((526 as i32) as i16) as u16,
+    ((1062 as i32) as i16) as u16,
+    ((1332 as i32) as i16) as u16,
+    ((415 as i32) as i16) as u16,
+    ((380 as i32) as i16) as u16,
+    ((232 as i32) as i16) as u16,
+    ((1527 as i32) as i16) as u16,
+    ((125 as i32) as i16) as u16,
+    ((125 as i32) as i16) as u16,
+    ((588 as i32) as i16) as u16,
+    ((1214 as i32) as i16) as u16,
+    ((1396 as i32) as i16) as u16,
+    ((356 as i32) as i16) as u16,
+    ((1526 as i32) as i16) as u16,
+    ((583 as i32) as i16) as u16,
+    ((126 as i32) as i16) as u16,
+    ((1397 as i32) as i16) as u16,
+    ((464 as i32) as i16) as u16,
+    ((594 as i32) as i16) as u16,
+    ((464 as i32) as i16) as u16,
+    ((1641 as i32) as i16) as u16,
+    ((535 as i32) as i16) as u16,
+    ((1050 as i32) as i16) as u16,
+    ((1581 as i32) as i16) as u16,
+    ((1395 as i32) as i16) as u16,
+    ((1269 as i32) as i16) as u16,
+    ((1583 as i32) as i16) as u16,
+    ((1582 as i32) as i16) as u16,
+    ((213 as i32) as i16) as u16,
+    ((402 as i32) as i16) as u16,
+    ((277 as i32) as i16) as u16,
+    ((214 as i32) as i16) as u16,
+    ((227 as i32) as i16) as u16,
+    ((464 as i32) as i16) as u16,
+    ((1573 as i32) as i16) as u16,
+    ((239 as i32) as i16) as u16,
+    ((1571 as i32) as i16) as u16,
+    ((1266 as i32) as i16) as u16,
+    ((1394 as i32) as i16) as u16,
+    ((434 as i32) as i16) as u16,
+    ((198 as i32) as i16) as u16,
+    ((100 as i32) as i16) as u16,
+    ((224 as i32) as i16) as u16,
+    ((96 as i32) as i16) as u16,
+    ((183 as i32) as i16) as u16,
+    ((582 as i32) as i16) as u16,
+    ((191 as i32) as i16) as u16,
+    ((485 as i32) as i16) as u16,
+    ((193 as i32) as i16) as u16,
+    ((486 as i32) as i16) as u16,
+    ((194 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((196 as i32) as i16) as u16,
+    ((519 as i32) as i16) as u16,
+    ((1050 as i32) as i16) as u16,
+    ((1050 as i32) as i16) as u16,
+    ((1052 as i32) as i16) as u16,
+    ((1053 as i32) as i16) as u16,
+    ((35 as i32) as i16) as u16,
+    ((559 as i32) as i16) as u16,
+    ((113 as i32) as i16) as u16,
+    ((252 as i32) as i16) as u16,
+    ((413 as i32) as i16) as u16,
+    ((1447 as i32) as i16) as u16,
+    ((558 as i32) as i16) as u16,
+    ((493 as i32) as i16) as u16,
+    ((13 as i32) as i16) as u16,
+    ((1455 as i32) as i16) as u16,
+    ((416 as i32) as i16) as u16,
+    ((1453 as i32) as i16) as u16,
+    ((1452 as i32) as i16) as u16,
+    ((14 as i32) as i16) as u16,
+    ((202 as i32) as i16) as u16,
+    ((1521 as i32) as i16) as u16,
+    ((1062 as i32) as i16) as u16,
+    ((1532 as i32) as i16) as u16,
+    ((508 as i32) as i16) as u16,
+    ((258 as i32) as i16) as u16,
+    ((106 as i32) as i16) as u16,
+    ((514 as i32) as i16) as u16,
+    ((125 as i32) as i16) as u16,
+    ((125 as i32) as i16) as u16,
+    ((99 as i32) as i16) as u16,
+    ((1214 as i32) as i16) as u16,
+    ((1543 as i32) as i16) as u16,
+    ((289 as i32) as i16) as u16,
+    ((260 as i32) as i16) as u16,
+    ((206 as i32) as i16) as u16,
+    ((126 as i32) as i16) as u16,
+    ((365 as i32) as i16) as u16,
+    ((464 as i32) as i16) as u16,
+    ((594 as i32) as i16) as u16,
+    ((464 as i32) as i16) as u16,
+    ((361 as i32) as i16) as u16,
+    ((517 as i32) as i16) as u16,
+    ((1050 as i32) as i16) as u16,
+    ((261 as i32) as i16) as u16,
+    ((448 as i32) as i16) as u16,
+    ((1295 as i32) as i16) as u16,
+    ((262 as i32) as i16) as u16,
+    ((418 as i32) as i16) as u16,
+    ((1352 as i32) as i16) as u16,
+    ((1351 as i32) as i16) as u16,
+    ((108 as i32) as i16) as u16,
+    ((1350 as i32) as i16) as u16,
+    ((1655 as i32) as i16) as u16,
+    ((1654 as i32) as i16) as u16,
+    ((1343 as i32) as i16) as u16,
+    ((915 as i32) as i16) as u16,
+    ((419 as i32) as i16) as u16,
+    ((1322 as i32) as i16) as u16,
+    ((233 as i32) as i16) as u16,
+    ((452 as i32) as i16) as u16,
+    ((319 as i32) as i16) as u16,
+    ((379 as i32) as i16) as u16,
+    ((1321 as i32) as i16) as u16,
+    ((453 as i32) as i16) as u16,
+    ((1623 as i32) as i16) as u16,
+    ((320 as i32) as i16) as u16,
+    ((1320 as i32) as i16) as u16,
+    ((275 as i32) as i16) as u16,
+    ((1653 as i32) as i16) as u16,
+    ((544 as i32) as i16) as u16,
+    ((276 as i32) as i16) as u16,
+    ((1609 as i32) as i16) as u16,
+    ((1608 as i32) as i16) as u16,
+    ((1342 as i32) as i16) as u16,
+    ((1050 as i32) as i16) as u16,
+    ((1050 as i32) as i16) as u16,
+    ((1052 as i32) as i16) as u16,
+    ((1053 as i32) as i16) as u16,
+    ((35 as i32) as i16) as u16,
+    ((1630 as i32) as i16) as u16,
+    ((1218 as i32) as i16) as u16,
+    ((466 as i32) as i16) as u16,
+    ((385 as i32) as i16) as u16,
+    ((456 as i32) as i16) as u16,
+    ((300 as i32) as i16) as u16,
+    ((1419 as i32) as i16) as u16,
+    ((144 as i32) as i16) as u16,
+    ((1418 as i32) as i16) as u16,
+    ((570 as i32) as i16) as u16,
+    ((407 as i32) as i16) as u16,
+    ((407 as i32) as i16) as u16,
+    ((406 as i32) as i16) as u16,
+    ((284 as i32) as i16) as u16,
+    ((404 as i32) as i16) as u16,
+    ((11 as i32) as i16) as u16,
+    ((1508 as i32) as i16) as u16,
+    ((881 as i32) as i16) as u16,
+    ((396 as i32) as i16) as u16,
+    ((120 as i32) as i16) as u16,
+    ((127 as i32) as i16) as u16,
+    ((585 as i32) as i16) as u16,
+    ((394 as i32) as i16) as u16,
+    ((4 as i32) as i16) as u16,
+    ((1214 as i32) as i16) as u16,
+    ((327 as i32) as i16) as u16,
+    ((114 as i32) as i16) as u16,
+    ((1375 as i32) as i16) as u16,
+    ((1374 as i32) as i16) as u16,
+    ((220 as i32) as i16) as u16,
+    ((247 as i32) as i16) as u16,
+    ((400 as i32) as i16) as u16,
+    ((338 as i32) as i16) as u16,
+    ((401 as i32) as i16) as u16,
+    ((554 as i32) as i16) as u16,
+    ((42 as i32) as i16) as u16,
+    ((1224 as i32) as i16) as u16,
+    ((588 as i32) as i16) as u16,
+    ((596 as i32) as i16) as u16,
+    ((283 as i32) as i16) as u16,
+    ((337 as i32) as i16) as u16,
+    ((285 as i32) as i16) as u16,
+    ((286 as i32) as i16) as u16,
+    ((188 as i32) as i16) as u16,
+    ((597 as i32) as i16) as u16,
+    ((1290 as i32) as i16) as u16,
+    ((1285 as i32) as i16) as u16,
+    ((175 as i32) as i16) as u16,
+    ((1558 as i32) as i16) as u16,
+    ((176 as i32) as i16) as u16,
+    ((1559 as i32) as i16) as u16,
+    ((1557 as i32) as i16) as u16,
+    ((1556 as i32) as i16) as u16,
+    ((159 as i32) as i16) as u16,
+    ((317 as i32) as i16) as u16,
+    ((229 as i32) as i16) as u16,
+    ((177 as i32) as i16) as u16,
+    ((868 as i32) as i16) as u16,
+    ((230 as i32) as i16) as u16,
+    ((91 as i32) as i16) as u16,
+    ((465 as i32) as i16) as u16,
+    ((464 as i32) as i16) as u16,
+    ((221 as i32) as i16) as u16,
+    ((331 as i32) as i16) as u16,
+    ((468 as i32) as i16) as u16,
+    ((1165 as i32) as i16) as u16,
+    ((470 as i32) as i16) as u16,
+    ((473 as i32) as i16) as u16,
+    ((94 as i32) as i16) as u16,
+    ((244 as i32) as i16) as u16,
+    ((95 as i32) as i16) as u16,
+    ((249 as i32) as i16) as u16,
+    ((189 as i32) as i16) as u16,
+    ((582 as i32) as i16) as u16,
+    ((1124 as i32) as i16) as u16,
+    ((1122 as i32) as i16) as u16,
+    ((341 as i32) as i16) as u16,
+    ((427 as i32) as i16) as u16,
+    ((190 as i32) as i16) as u16,
+    ((178 as i32) as i16) as u16,
+    ((1249 as i32) as i16) as u16,
+    ((179 as i32) as i16) as u16,
+    ((43 as i32) as i16) as u16,
+    ((192 as i32) as i16) as u16,
+    ((947 as i32) as i16) as u16,
+    ((349 as i32) as i16) as u16,
+    ((428 as i32) as i16) as u16,
+    ((1138 as i32) as i16) as u16,
+    ((197 as i32) as i16) as u16,
+    ((251 as i32) as i16) as u16,
+    ((180 as i32) as i16) as u16,
+    ((181 as i32) as i16) as u16,
+    ((436 as i32) as i16) as u16,
+    ((102 as i32) as i16) as u16,
+    ((182 as i32) as i16) as u16,
+    ((438 as i32) as i16) as u16,
+    ((103 as i32) as i16) as u16,
+    ((104 as i32) as i16) as u16,
+    ((199 as i32) as i16) as u16,
+    ((248 as i32) as i16) as u16,
+    ((1140 as i32) as i16) as u16,
+    ((253 as i32) as i16) as u16,
+    ((1062 as i32) as i16) as u16,
+    ((105 as i32) as i16) as u16,
+    ((255 as i32) as i16) as u16,
+    ((1137 as i32) as i16) as u16,
+    ((166 as i32) as i16) as u16,
+    ((24 as i32) as i16) as u16,
+    ((125 as i32) as i16) as u16,
+    ((125 as i32) as i16) as u16,
+    ((257 as i32) as i16) as u16,
+    ((1264 as i32) as i16) as u16,
+    ((273 as i32) as i16) as u16,
+    ((360 as i32) as i16) as u16,
+    ((513 as i32) as i16) as u16,
+    ((259 as i32) as i16) as u16,
+    ((126 as i32) as i16) as u16,
+    ((15 as i32) as i16) as u16,
+    ((464 as i32) as i16) as u16,
+    ((594 as i32) as i16) as u16,
+    ((464 as i32) as i16) as u16,
+    ((204 as i32) as i16) as u16,
+    ((883 as i32) as i16) as u16,
+    ((1050 as i32) as i16) as u16,
+    ((518 as i32) as i16) as u16,
+    ((263 as i32) as i16) as u16,
+    ((373 as i32) as i16) as u16,
+    ((381 as i32) as i16) as u16,
+    ((92 as i32) as i16) as u16,
+    ((585 as i32) as i16) as u16,
+    ((1130 as i32) as i16) as u16,
+    ((4 as i32) as i16) as u16,
+    ((203 as i32) as i16) as u16,
+    ((205 as i32) as i16) as u16,
+    ((426 as i32) as i16) as u16,
+    ((107 as i32) as i16) as u16,
+    ((522 as i32) as i16) as u16,
+    ((25 as i32) as i16) as u16,
+    ((26 as i32) as i16) as u16,
+    ((329 as i32) as i16) as u16,
+    ((584 as i32) as i16) as u16,
+    ((913 as i32) as i16) as u16,
+    ((572 as i32) as i16) as u16,
+    ((527 as i32) as i16) as u16,
+    ((376 as i32) as i16) as u16,
+    ((588 as i32) as i16) as u16,
+    ((926 as i32) as i16) as u16,
+    ((530 as i32) as i16) as u16,
+    ((109 as i32) as i16) as u16,
+    ((184 as i32) as i16) as u16,
+    ((318 as i32) as i16) as u16,
+    ((167 as i32) as i16) as u16,
+    ((110 as i32) as i16) as u16,
+    ((27 as i32) as i16) as u16,
+    ((538 as i32) as i16) as u16,
+    ((1050 as i32) as i16) as u16,
+    ((1050 as i32) as i16) as u16,
+    ((1052 as i32) as i16) as u16,
+    ((1053 as i32) as i16) as u16,
+    ((35 as i32) as i16) as u16,
+    ((1211 as i32) as i16) as u16,
+    ((1091 as i32) as i16) as u16,
+    ((17 as i32) as i16) as u16,
+    ((476 as i32) as i16) as u16,
+    ((111 as i32) as i16) as u16,
+    ((1181 as i32) as i16) as u16,
+    ((234 as i32) as i16) as u16,
+    ((292 as i32) as i16) as u16,
+    ((1180 as i32) as i16) as u16,
+    ((464 as i32) as i16) as u16,
+    ((294 as i32) as i16) as u16,
+    ((207 as i32) as i16) as u16,
+    ((994 as i32) as i16) as u16,
+    ((129 as i32) as i16) as u16,
+    ((1201 as i32) as i16) as u16,
+    ((272 as i32) as i16) as u16,
+    ((1000 as i32) as i16) as u16,
+    ((28 as i32) as i16) as u16,
+    ((1197 as i32) as i16) as u16,
+    ((29 as i32) as i16) as u16,
+    ((30 as i32) as i16) as u16,
+    ((582 as i32) as i16) as u16,
+    ((1199 as i32) as i16) as u16,
+    ((1205 as i32) as i16) as u16,
+    ((1214 as i32) as i16) as u16,
+    ((31 as i32) as i16) as u16,
+    ((1204 as i32) as i16) as u16,
+    ((32 as i32) as i16) as u16,
+    ((1186 as i32) as i16) as u16,
+    ((41 as i32) as i16) as u16,
+    ((566 as i32) as i16) as u16,
+    ((33 as i32) as i16) as u16,
+    ((1105 as i32) as i16) as u16,
+    ((211 as i32) as i16) as u16,
+    ((8 as i32) as i16) as u16,
+    ((115 as i32) as i16) as u16,
+    ((1092 as i32) as i16) as u16,
+    ((1090 as i32) as i16) as u16,
+    ((1094 as i32) as i16) as u16,
+    ((34 as i32) as i16) as u16,
+    ((278 as i32) as i16) as u16,
+    ((578 as i32) as i16) as u16,
+    ((1095 as i32) as i16) as u16,
+    ((117 as i32) as i16) as u16,
+    ((122 as i32) as i16) as u16,
+    ((118 as i32) as i16) as u16,
+    ((1145 as i32) as i16) as u16,
+    ((36 as i32) as i16) as u16,
+    ((18 as i32) as i16) as u16,
+    ((128 as i32) as i16) as u16,
+    ((1062 as i32) as i16) as u16,
+    ((1055 as i32) as i16) as u16,
+    ((895 as i32) as i16) as u16,
+    ((957 as i32) as i16) as u16,
+    ((37 as i32) as i16) as u16,
+    ((589 as i32) as i16) as u16,
+    ((125 as i32) as i16) as u16,
+    ((125 as i32) as i16) as u16,
+    ((279 as i32) as i16) as u16,
+    ((186 as i32) as i16) as u16,
+    ((280 as i32) as i16) as u16,
+    ((1646 as i32) as i16) as u16,
+    ((157 as i32) as i16) as u16,
+    ((405 as i32) as i16) as u16,
+    ((126 as i32) as i16) as u16,
+    ((1220 as i32) as i16) as u16,
+    ((464 as i32) as i16) as u16,
+    ((594 as i32) as i16) as u16,
+    ((464 as i32) as i16) as u16,
+    ((1218 as i32) as i16) as u16,
+    ((466 as i32) as i16) as u16,
+    ((1050 as i32) as i16) as u16,
+    ((1219 as i32) as i16) as u16,
+    ((300 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((407 as i32) as i16) as u16,
+    ((407 as i32) as i16) as u16,
+    ((406 as i32) as i16) as u16,
+    ((284 as i32) as i16) as u16,
+    ((404 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((881 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((300 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((571 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((407 as i32) as i16) as u16,
+    ((407 as i32) as i16) as u16,
+    ((406 as i32) as i16) as u16,
+    ((284 as i32) as i16) as u16,
+    ((404 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((247 as i32) as i16) as u16,
+    ((881 as i32) as i16) as u16,
+    ((338 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1050 as i32) as i16) as u16,
+    ((1050 as i32) as i16) as u16,
+    ((1052 as i32) as i16) as u16,
+    ((1053 as i32) as i16) as u16,
+    ((35 as i32) as i16) as u16,
+    ((337 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((247 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((338 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((337 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1214 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((249 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((178 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((43 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((249 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((178 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((43 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((248 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((248 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((426 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((329 as i32) as i16) as u16,
+    ((584 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((426 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((329 as i32) as i16) as u16,
+    ((584 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((476 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((1281 as i32) as i16) as u16,
+    ((476 as i32) as i16) as u16,
+]);
+
+// /*     0 */
+// /*    10 */
+// /*    20 */
+// /*    30 */
+// /*    40 */
+// /*    50 */
+// /*    60 */
+// /*    70 */
+// /*    80 */
+// /*    90 */
+// /*   100 */
+// /*   110 */
+// /*   120 */
+// /*   130 */
+// /*   140 */
+// /*   150 */
+// /*   160 */
+// /*   170 */
+// /*   180 */
+// /*   190 */
+// /*   200 */
+// /*   210 */
+// /*   220 */
+// /*   230 */
+// /*   240 */
+// /*   250 */
+// /*   260 */
+// /*   270 */
+// /*   280 */
+// /*   290 */
+// /*   300 */
+// /*   310 */
+// /*   320 */
+// /*   330 */
+// /*   340 */
+// /*   350 */
+// /*   360 */
+// /*   370 */
+// /*   380 */
+// /*   390 */
+// /*   400 */
+// /*   410 */
+// /*   420 */
+// /*   430 */
+// /*   440 */
+// /*   450 */
+// /*   460 */
+// /*   470 */
+// /*   480 */
+// /*   490 */
+// /*   500 */
+// /*   510 */
+// /*   520 */
+// /*   530 */
+// /*   540 */
+// /*   550 */
+// /*   560 */
+// /*   570 */
+// /*   580 */
+// /*   590 */
+// /*   600 */
+// /*   610 */
+// /*   620 */
+// /*   630 */
+// /*   640 */
+// /*   650 */
+// /*   660 */
+// /*   670 */
+// /*   680 */
+// /*   690 */
+// /*   700 */
+// /*   710 */
+// /*   720 */
+// /*   730 */
+// /*   740 */
+// /*   750 */
+// /*   760 */
+// /*   770 */
+// /*   780 */
+// /*   790 */
+// /*   800 */
+// /*   810 */
+// /*   820 */
+// /*   830 */
+// /*   840 */
+// /*   850 */
+// /*   860 */
+// /*   870 */
+// /*   880 */
+// /*   890 */
+// /*   900 */
+// /*   910 */
+// /*   920 */
+// /*   930 */
+// /*   940 */
+// /*   950 */
+// /*   960 */
+// /*   970 */
+// /*   980 */
+// /*   990 */
+// /*  1000 */
+// /*  1010 */
+// /*  1020 */
+// /*  1030 */
+// /*  1040 */
+// /*  1050 */
+// /*  1060 */
+// /*  1070 */
+// /*  1080 */
+// /*  1090 */
+// /*  1100 */
+// /*  1110 */
+// /*  1120 */
+// /*  1130 */
+// /*  1140 */
+// /*  1150 */
+// /*  1160 */
+// /*  1170 */
+// /*  1180 */
+// /*  1190 */
+// /*  1200 */
+// /*  1210 */
+// /*  1220 */
+// /*  1230 */
+// /*  1240 */
+// /*  1250 */
+// /*  1260 */
+// /*  1270 */
+// /*  1280 */
+// /*  1290 */
+// /*  1300 */
+// /*  1310 */
+// /*  1320 */
+// /*  1330 */
+// /*  1340 */
+// /*  1350 */
+// /*  1360 */
+// /*  1370 */
+// /*  1380 */
+// /*  1390 */
+// /*  1400 */
+// /*  1410 */
+// /*  1420 */
+// /*  1430 */
+// /*  1440 */
+// /*  1450 */
+// /*  1460 */
+// /*  1470 */
+// /*  1480 */
+// /*  1490 */
+// /*  1500 */
+// /*  1510 */
+// /*  1520 */
+// /*  1530 */
+// /*  1540 */
+// /*  1550 */
+// /*  1560 */
+// /*  1570 */
+// /*  1580 */
+// /*  1590 */
+// /*  1600 */
+// /*  1610 */
+// /*  1620 */
+// /*  1630 */
+// /*  1640 */
+// /*  1650 */
+// /*  1660 */
+// /*  1670 */
+// /*  1680 */
+// /*  1690 */
+// /*  1700 */
+// /*  1710 */
+// /*  1720 */
+// /*  1730 */
+// /*  1740 */
+// /*  1750 */
+// /*  1760 */
+// /*  1770 */
+// /*  1780 */
+// /*  1790 */
+// /*  1800 */
+// /*  1810 */
+// /*  1820 */
+// /*  1830 */
+// /*  1840 */
+// /*  1850 */
+// /*  1860 */
+// /*  1870 */
+// /*  1880 */
+// /*  1890 */
+// /*  1900 */
+// /*  1910 */
+// /*  1920 */
+// /*  1930 */
+// /*  1940 */
+// /*  1950 */
+// /*  1960 */
+// /*  1970 */
+// /*  1980 */
+// /*  1990 */
+// /*  2000 */
+// /*  2010 */
+// /*  2020 */
+// /*  2030 */
+// /*  2040 */
+// /*  2050 */
+// /*  2060 */
+// /*  2070 */
+// /*  2080 */
+// /*  2090 */
+// /*  2100 */
+// /*  2110 */
+// /*  2120 */
+// /*  2130 */
+// /*  2140 */
+// /*  2150 */
+// /*  2160 */
+// /*  2170 */
+// /*  2180 */
+// /*  2190 */
+// /*  2200 */
+// /*  2210 */
+// /*  2220 */
+// /*  2230 */
+// /*  2240 */
+// /*  2250 */
+// /*  2260 */
+// /*  2270 */
+// /*  2280 */
+// /*  2290 */
+// /*  2300 */
+// /*  2310 */
+// /*  2320 */
+// /*  2330 */
+// /*  2340 */
+// /*  2350 */
+// /*  2360 */
+// /*  2370 */
+static mut yy_lookahead: __SlateAlign16<[u16; 2566]> = __SlateAlign16([
+    ((277 as i32) as i16) as u16,
+    ((278 as i32) as i16) as u16,
+    ((279 as i32) as i16) as u16,
+    ((241 as i32) as i16) as u16,
+    ((242 as i32) as i16) as u16,
+    ((225 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((227 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((312 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((316 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((235 as i32) as i16) as u16,
+    ((254 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((256 as i32) as i16) as u16,
+    ((19 as i32) as i16) as u16,
+    ((297 as i32) as i16) as u16,
+    ((277 as i32) as i16) as u16,
+    ((278 as i32) as i16) as u16,
+    ((279 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((206 as i32) as i16) as u16,
+    ((213 as i32) as i16) as u16,
+    ((214 as i32) as i16) as u16,
+    ((206 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((31 as i32) as i16) as u16,
+    ((206 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((39 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((43 as i32) as i16) as u16,
+    ((44 as i32) as i16) as u16,
+    ((45 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((47 as i32) as i16) as u16,
+    ((48 as i32) as i16) as u16,
+    ((49 as i32) as i16) as u16,
+    ((50 as i32) as i16) as u16,
+    ((51 as i32) as i16) as u16,
+    ((52 as i32) as i16) as u16,
+    ((53 as i32) as i16) as u16,
+    ((54 as i32) as i16) as u16,
+    ((55 as i32) as i16) as u16,
+    ((56 as i32) as i16) as u16,
+    ((57 as i32) as i16) as u16,
+    ((58 as i32) as i16) as u16,
+    ((19 as i32) as i16) as u16,
+    ((241 as i32) as i16) as u16,
+    ((242 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((241 as i32) as i16) as u16,
+    ((242 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((255 as i32) as i16) as u16,
+    ((241 as i32) as i16) as u16,
+    ((242 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((255 as i32) as i16) as u16,
+    ((237 as i32) as i16) as u16,
+    ((238 as i32) as i16) as u16,
+    ((254 as i32) as i16) as u16,
+    ((255 as i32) as i16) as u16,
+    ((256 as i32) as i16) as u16,
+    ((254 as i32) as i16) as u16,
+    ((255 as i32) as i16) as u16,
+    ((256 as i32) as i16) as u16,
+    ((264 as i32) as i16) as u16,
+    ((254 as i32) as i16) as u16,
+    ((207 as i32) as i16) as u16,
+    ((256 as i32) as i16) as u16,
+    ((43 as i32) as i16) as u16,
+    ((44 as i32) as i16) as u16,
+    ((45 as i32) as i16) as u16,
+    ((264 as i32) as i16) as u16,
+    ((47 as i32) as i16) as u16,
+    ((48 as i32) as i16) as u16,
+    ((49 as i32) as i16) as u16,
+    ((50 as i32) as i16) as u16,
+    ((51 as i32) as i16) as u16,
+    ((52 as i32) as i16) as u16,
+    ((53 as i32) as i16) as u16,
+    ((54 as i32) as i16) as u16,
+    ((55 as i32) as i16) as u16,
+    ((56 as i32) as i16) as u16,
+    ((57 as i32) as i16) as u16,
+    ((58 as i32) as i16) as u16,
+    ((251 as i32) as i16) as u16,
+    ((287 as i32) as i16) as u16,
+    ((253 as i32) as i16) as u16,
+    ((215 as i32) as i16) as u16,
+    ((103 as i32) as i16) as u16,
+    ((104 as i32) as i16) as u16,
+    ((105 as i32) as i16) as u16,
+    ((106 as i32) as i16) as u16,
+    ((107 as i32) as i16) as u16,
+    ((108 as i32) as i16) as u16,
+    ((109 as i32) as i16) as u16,
+    ((110 as i32) as i16) as u16,
+    ((111 as i32) as i16) as u16,
+    ((112 as i32) as i16) as u16,
+    ((113 as i32) as i16) as u16,
+    ((114 as i32) as i16) as u16,
+    ((82 as i32) as i16) as u16,
+    ((265 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((271 as i32) as i16) as u16,
+    ((11 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((188 as i32) as i16) as u16,
+    ((189 as i32) as i16) as u16,
+    ((190 as i32) as i16) as u16,
+    ((191 as i32) as i16) as u16,
+    ((192 as i32) as i16) as u16,
+    ((190 as i32) as i16) as u16,
+    ((87 as i32) as i16) as u16,
+    ((192 as i32) as i16) as u16,
+    ((89 as i32) as i16) as u16,
+    ((197 as i32) as i16) as u16,
+    ((19 as i32) as i16) as u16,
+    ((199 as i32) as i16) as u16,
+    ((197 as i32) as i16) as u16,
+    ((317 as i32) as i16) as u16,
+    ((199 as i32) as i16) as u16,
+    ((319 as i32) as i16) as u16,
+    ((25 as i32) as i16) as u16,
+    ((271 as i32) as i16) as u16,
+    ((206 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((206 as i32) as i16) as u16,
+    ((103 as i32) as i16) as u16,
+    ((104 as i32) as i16) as u16,
+    ((105 as i32) as i16) as u16,
+    ((106 as i32) as i16) as u16,
+    ((107 as i32) as i16) as u16,
+    ((108 as i32) as i16) as u16,
+    ((109 as i32) as i16) as u16,
+    ((110 as i32) as i16) as u16,
+    ((111 as i32) as i16) as u16,
+    ((112 as i32) as i16) as u16,
+    ((113 as i32) as i16) as u16,
+    ((114 as i32) as i16) as u16,
+    ((43 as i32) as i16) as u16,
+    ((44 as i32) as i16) as u16,
+    ((45 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((47 as i32) as i16) as u16,
+    ((48 as i32) as i16) as u16,
+    ((49 as i32) as i16) as u16,
+    ((50 as i32) as i16) as u16,
+    ((51 as i32) as i16) as u16,
+    ((52 as i32) as i16) as u16,
+    ((53 as i32) as i16) as u16,
+    ((54 as i32) as i16) as u16,
+    ((55 as i32) as i16) as u16,
+    ((56 as i32) as i16) as u16,
+    ((57 as i32) as i16) as u16,
+    ((58 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((139 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((241 as i32) as i16) as u16,
+    ((242 as i32) as i16) as u16,
+    ((289 as i32) as i16) as u16,
+    ((241 as i32) as i16) as u16,
+    ((242 as i32) as i16) as u16,
+    ((309 as i32) as i16) as u16,
+    ((310 as i32) as i16) as u16,
+    ((294 as i32) as i16) as u16,
+    ((70 as i32) as i16) as u16,
+    ((47 as i32) as i16) as u16,
+    ((48 as i32) as i16) as u16,
+    ((49 as i32) as i16) as u16,
+    ((50 as i32) as i16) as u16,
+    ((254 as i32) as i16) as u16,
+    ((77 as i32) as i16) as u16,
+    ((256 as i32) as i16) as u16,
+    ((254 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((256 as i32) as i16) as u16,
+    ((55 as i32) as i16) as u16,
+    ((56 as i32) as i16) as u16,
+    ((57 as i32) as i16) as u16,
+    ((58 as i32) as i16) as u16,
+    ((59 as i32) as i16) as u16,
+    ((221 as i32) as i16) as u16,
+    ((88 as i32) as i16) as u16,
+    ((109 as i32) as i16) as u16,
+    ((90 as i32) as i16) as u16,
+    ((269 as i32) as i16) as u16,
+    ((240 as i32) as i16) as u16,
+    ((93 as i32) as i16) as u16,
+    ((269 as i32) as i16) as u16,
+    ((107 as i32) as i16) as u16,
+    ((108 as i32) as i16) as u16,
+    ((109 as i32) as i16) as u16,
+    ((110 as i32) as i16) as u16,
+    ((111 as i32) as i16) as u16,
+    ((112 as i32) as i16) as u16,
+    ((113 as i32) as i16) as u16,
+    ((114 as i32) as i16) as u16,
+    ((215 as i32) as i16) as u16,
+    ((103 as i32) as i16) as u16,
+    ((104 as i32) as i16) as u16,
+    ((105 as i32) as i16) as u16,
+    ((106 as i32) as i16) as u16,
+    ((107 as i32) as i16) as u16,
+    ((108 as i32) as i16) as u16,
+    ((109 as i32) as i16) as u16,
+    ((110 as i32) as i16) as u16,
+    ((111 as i32) as i16) as u16,
+    ((112 as i32) as i16) as u16,
+    ((113 as i32) as i16) as u16,
+    ((114 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((117 as i32) as i16) as u16,
+    ((118 as i32) as i16) as u16,
+    ((119 as i32) as i16) as u16,
+    ((298 as i32) as i16) as u16,
+    ((141 as i32) as i16) as u16,
+    ((300 as i32) as i16) as u16,
+    ((298 as i32) as i16) as u16,
+    ((19 as i32) as i16) as u16,
+    ((300 as i32) as i16) as u16,
+    ((129 as i32) as i16) as u16,
+    ((130 as i32) as i16) as u16,
+    ((317 as i32) as i16) as u16,
+    ((318 as i32) as i16) as u16,
+    ((103 as i32) as i16) as u16,
+    ((104 as i32) as i16) as u16,
+    ((105 as i32) as i16) as u16,
+    ((106 as i32) as i16) as u16,
+    ((107 as i32) as i16) as u16,
+    ((108 as i32) as i16) as u16,
+    ((109 as i32) as i16) as u16,
+    ((110 as i32) as i16) as u16,
+    ((111 as i32) as i16) as u16,
+    ((112 as i32) as i16) as u16,
+    ((113 as i32) as i16) as u16,
+    ((114 as i32) as i16) as u16,
+    ((114 as i32) as i16) as u16,
+    ((277 as i32) as i16) as u16,
+    ((278 as i32) as i16) as u16,
+    ((279 as i32) as i16) as u16,
+    ((146 as i32) as i16) as u16,
+    ((122 as i32) as i16) as u16,
+    ((43 as i32) as i16) as u16,
+    ((44 as i32) as i16) as u16,
+    ((45 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((47 as i32) as i16) as u16,
+    ((48 as i32) as i16) as u16,
+    ((49 as i32) as i16) as u16,
+    ((50 as i32) as i16) as u16,
+    ((51 as i32) as i16) as u16,
+    ((52 as i32) as i16) as u16,
+    ((53 as i32) as i16) as u16,
+    ((54 as i32) as i16) as u16,
+    ((55 as i32) as i16) as u16,
+    ((56 as i32) as i16) as u16,
+    ((57 as i32) as i16) as u16,
+    ((58 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((277 as i32) as i16) as u16,
+    ((278 as i32) as i16) as u16,
+    ((279 as i32) as i16) as u16,
+    ((19 as i32) as i16) as u16,
+    ((19 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((286 as i32) as i16) as u16,
+    ((23 as i32) as i16) as u16,
+    ((68 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((55 as i32) as i16) as u16,
+    ((56 as i32) as i16) as u16,
+    ((57 as i32) as i16) as u16,
+    ((58 as i32) as i16) as u16,
+    ((103 as i32) as i16) as u16,
+    ((104 as i32) as i16) as u16,
+    ((105 as i32) as i16) as u16,
+    ((106 as i32) as i16) as u16,
+    ((107 as i32) as i16) as u16,
+    ((108 as i32) as i16) as u16,
+    ((109 as i32) as i16) as u16,
+    ((110 as i32) as i16) as u16,
+    ((111 as i32) as i16) as u16,
+    ((112 as i32) as i16) as u16,
+    ((113 as i32) as i16) as u16,
+    ((114 as i32) as i16) as u16,
+    ((43 as i32) as i16) as u16,
+    ((44 as i32) as i16) as u16,
+    ((45 as i32) as i16) as u16,
+    ((232 as i32) as i16) as u16,
+    ((47 as i32) as i16) as u16,
+    ((48 as i32) as i16) as u16,
+    ((49 as i32) as i16) as u16,
+    ((50 as i32) as i16) as u16,
+    ((51 as i32) as i16) as u16,
+    ((52 as i32) as i16) as u16,
+    ((53 as i32) as i16) as u16,
+    ((54 as i32) as i16) as u16,
+    ((55 as i32) as i16) as u16,
+    ((56 as i32) as i16) as u16,
+    ((57 as i32) as i16) as u16,
+    ((58 as i32) as i16) as u16,
+    ((103 as i32) as i16) as u16,
+    ((104 as i32) as i16) as u16,
+    ((105 as i32) as i16) as u16,
+    ((106 as i32) as i16) as u16,
+    ((107 as i32) as i16) as u16,
+    ((108 as i32) as i16) as u16,
+    ((109 as i32) as i16) as u16,
+    ((110 as i32) as i16) as u16,
+    ((111 as i32) as i16) as u16,
+    ((112 as i32) as i16) as u16,
+    ((113 as i32) as i16) as u16,
+    ((114 as i32) as i16) as u16,
+    ((135 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((137 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((103 as i32) as i16) as u16,
+    ((104 as i32) as i16) as u16,
+    ((105 as i32) as i16) as u16,
+    ((106 as i32) as i16) as u16,
+    ((107 as i32) as i16) as u16,
+    ((108 as i32) as i16) as u16,
+    ((109 as i32) as i16) as u16,
+    ((110 as i32) as i16) as u16,
+    ((111 as i32) as i16) as u16,
+    ((112 as i32) as i16) as u16,
+    ((113 as i32) as i16) as u16,
+    ((114 as i32) as i16) as u16,
+    ((82 as i32) as i16) as u16,
+    ((281 as i32) as i16) as u16,
+    ((206 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((109 as i32) as i16) as u16,
+    ((110 as i32) as i16) as u16,
+    ((111 as i32) as i16) as u16,
+    ((112 as i32) as i16) as u16,
+    ((113 as i32) as i16) as u16,
+    ((114 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((205 as i32) as i16) as u16,
+    ((22 as i32) as i16) as u16,
+    ((207 as i32) as i16) as u16,
+    ((103 as i32) as i16) as u16,
+    ((104 as i32) as i16) as u16,
+    ((105 as i32) as i16) as u16,
+    ((106 as i32) as i16) as u16,
+    ((107 as i32) as i16) as u16,
+    ((108 as i32) as i16) as u16,
+    ((109 as i32) as i16) as u16,
+    ((110 as i32) as i16) as u16,
+    ((111 as i32) as i16) as u16,
+    ((112 as i32) as i16) as u16,
+    ((113 as i32) as i16) as u16,
+    ((114 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((116 as i32) as i16) as u16,
+    ((117 as i32) as i16) as u16,
+    ((107 as i32) as i16) as u16,
+    ((108 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((19 as i32) as i16) as u16,
+    ((241 as i32) as i16) as u16,
+    ((242 as i32) as i16) as u16,
+    ((121 as i32) as i16) as u16,
+    ((23 as i32) as i16) as u16,
+    ((116 as i32) as i16) as u16,
+    ((117 as i32) as i16) as u16,
+    ((118 as i32) as i16) as u16,
+    ((119 as i32) as i16) as u16,
+    ((306 as i32) as i16) as u16,
+    ((121 as i32) as i16) as u16,
+    ((308 as i32) as i16) as u16,
+    ((206 as i32) as i16) as u16,
+    ((234 as i32) as i16) as u16,
+    ((254 as i32) as i16) as u16,
+    ((15 as i32) as i16) as u16,
+    ((256 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((129 as i32) as i16) as u16,
+    ((259 as i32) as i16) as u16,
+    ((260 as i32) as i16) as u16,
+    ((139 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((145 as i32) as i16) as u16,
+    ((43 as i32) as i16) as u16,
+    ((44 as i32) as i16) as u16,
+    ((45 as i32) as i16) as u16,
+    ((200 as i32) as i16) as u16,
+    ((47 as i32) as i16) as u16,
+    ((48 as i32) as i16) as u16,
+    ((49 as i32) as i16) as u16,
+    ((50 as i32) as i16) as u16,
+    ((51 as i32) as i16) as u16,
+    ((52 as i32) as i16) as u16,
+    ((53 as i32) as i16) as u16,
+    ((54 as i32) as i16) as u16,
+    ((55 as i32) as i16) as u16,
+    ((56 as i32) as i16) as u16,
+    ((57 as i32) as i16) as u16,
+    ((58 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((154 as i32) as i16) as u16,
+    ((19 as i32) as i16) as u16,
+    ((156 as i32) as i16) as u16,
+    ((265 as i32) as i16) as u16,
+    ((241 as i32) as i16) as u16,
+    ((242 as i32) as i16) as u16,
+    ((24 as i32) as i16) as u16,
+    ((117 as i32) as i16) as u16,
+    ((118 as i32) as i16) as u16,
+    ((119 as i32) as i16) as u16,
+    ((120 as i32) as i16) as u16,
+    ((21 as i32) as i16) as u16,
+    ((73 as i32) as i16) as u16,
+    ((123 as i32) as i16) as u16,
+    ((124 as i32) as i16) as u16,
+    ((125 as i32) as i16) as u16,
+    ((74 as i32) as i16) as u16,
+    ((254 as i32) as i16) as u16,
+    ((61 as i32) as i16) as u16,
+    ((256 as i32) as i16) as u16,
+    ((107 as i32) as i16) as u16,
+    ((108 as i32) as i16) as u16,
+    ((221 as i32) as i16) as u16,
+    ((133 as i32) as i16) as u16,
+    ((82 as i32) as i16) as u16,
+    ((43 as i32) as i16) as u16,
+    ((44 as i32) as i16) as u16,
+    ((45 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((47 as i32) as i16) as u16,
+    ((48 as i32) as i16) as u16,
+    ((49 as i32) as i16) as u16,
+    ((50 as i32) as i16) as u16,
+    ((51 as i32) as i16) as u16,
+    ((52 as i32) as i16) as u16,
+    ((53 as i32) as i16) as u16,
+    ((54 as i32) as i16) as u16,
+    ((55 as i32) as i16) as u16,
+    ((56 as i32) as i16) as u16,
+    ((57 as i32) as i16) as u16,
+    ((58 as i32) as i16) as u16,
+    ((103 as i32) as i16) as u16,
+    ((104 as i32) as i16) as u16,
+    ((105 as i32) as i16) as u16,
+    ((106 as i32) as i16) as u16,
+    ((107 as i32) as i16) as u16,
+    ((108 as i32) as i16) as u16,
+    ((109 as i32) as i16) as u16,
+    ((110 as i32) as i16) as u16,
+    ((111 as i32) as i16) as u16,
+    ((112 as i32) as i16) as u16,
+    ((113 as i32) as i16) as u16,
+    ((114 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((317 as i32) as i16) as u16,
+    ((318 as i32) as i16) as u16,
+    ((117 as i32) as i16) as u16,
+    ((118 as i32) as i16) as u16,
+    ((119 as i32) as i16) as u16,
+    ((22 as i32) as i16) as u16,
+    ((120 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((22 as i32) as i16) as u16,
+    ((123 as i32) as i16) as u16,
+    ((124 as i32) as i16) as u16,
+    ((125 as i32) as i16) as u16,
+    ((19 as i32) as i16) as u16,
+    ((20 as i32) as i16) as u16,
+    ((284 as i32) as i16) as u16,
+    ((22 as i32) as i16) as u16,
+    ((128 as i32) as i16) as u16,
+    ((81 as i32) as i16) as u16,
+    ((288 as i32) as i16) as u16,
+    ((133 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((277 as i32) as i16) as u16,
+    ((278 as i32) as i16) as u16,
+    ((279 as i32) as i16) as u16,
+    ((139 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((36 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((103 as i32) as i16) as u16,
+    ((104 as i32) as i16) as u16,
+    ((105 as i32) as i16) as u16,
+    ((106 as i32) as i16) as u16,
+    ((107 as i32) as i16) as u16,
+    ((108 as i32) as i16) as u16,
+    ((109 as i32) as i16) as u16,
+    ((110 as i32) as i16) as u16,
+    ((111 as i32) as i16) as u16,
+    ((112 as i32) as i16) as u16,
+    ((113 as i32) as i16) as u16,
+    ((114 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((62 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((241 as i32) as i16) as u16,
+    ((242 as i32) as i16) as u16,
+    ((271 as i32) as i16) as u16,
+    ((19 as i32) as i16) as u16,
+    ((240 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((189 as i32) as i16) as u16,
+    ((190 as i32) as i16) as u16,
+    ((191 as i32) as i16) as u16,
+    ((192 as i32) as i16) as u16,
+    ((233 as i32) as i16) as u16,
+    ((255 as i32) as i16) as u16,
+    ((124 as i32) as i16) as u16,
+    ((254 as i32) as i16) as u16,
+    ((197 as i32) as i16) as u16,
+    ((256 as i32) as i16) as u16,
+    ((199 as i32) as i16) as u16,
+    ((72 as i32) as i16) as u16,
+    ((129 as i32) as i16) as u16,
+    ((130 as i32) as i16) as u16,
+    ((264 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((206 as i32) as i16) as u16,
+    ((22 as i32) as i16) as u16,
+    ((23 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((43 as i32) as i16) as u16,
+    ((44 as i32) as i16) as u16,
+    ((45 as i32) as i16) as u16,
+    ((206 as i32) as i16) as u16,
+    ((47 as i32) as i16) as u16,
+    ((48 as i32) as i16) as u16,
+    ((49 as i32) as i16) as u16,
+    ((50 as i32) as i16) as u16,
+    ((51 as i32) as i16) as u16,
+    ((52 as i32) as i16) as u16,
+    ((53 as i32) as i16) as u16,
+    ((54 as i32) as i16) as u16,
+    ((55 as i32) as i16) as u16,
+    ((56 as i32) as i16) as u16,
+    ((57 as i32) as i16) as u16,
+    ((58 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((101 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((271 as i32) as i16) as u16,
+    ((162 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((107 as i32) as i16) as u16,
+    ((108 as i32) as i16) as u16,
+    ((109 as i32) as i16) as u16,
+    ((117 as i32) as i16) as u16,
+    ((118 as i32) as i16) as u16,
+    ((119 as i32) as i16) as u16,
+    ((241 as i32) as i16) as u16,
+    ((242 as i32) as i16) as u16,
+    ((115 as i32) as i16) as u16,
+    ((73 as i32) as i16) as u16,
+    ((117 as i32) as i16) as u16,
+    ((118 as i32) as i16) as u16,
+    ((119 as i32) as i16) as u16,
+    ((241 as i32) as i16) as u16,
+    ((242 as i32) as i16) as u16,
+    ((122 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((266 as i32) as i16) as u16,
+    ((254 as i32) as i16) as u16,
+    ((312 as i32) as i16) as u16,
+    ((256 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((316 as i32) as i16) as u16,
+    ((203 as i32) as i16) as u16,
+    ((254 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((256 as i32) as i16) as u16,
+    ((255 as i32) as i16) as u16,
+    ((208 as i32) as i16) as u16,
+    ((117 as i32) as i16) as u16,
+    ((118 as i32) as i16) as u16,
+    ((119 as i32) as i16) as u16,
+    ((269 as i32) as i16) as u16,
+    ((103 as i32) as i16) as u16,
+    ((104 as i32) as i16) as u16,
+    ((105 as i32) as i16) as u16,
+    ((106 as i32) as i16) as u16,
+    ((107 as i32) as i16) as u16,
+    ((108 as i32) as i16) as u16,
+    ((109 as i32) as i16) as u16,
+    ((110 as i32) as i16) as u16,
+    ((111 as i32) as i16) as u16,
+    ((112 as i32) as i16) as u16,
+    ((113 as i32) as i16) as u16,
+    ((114 as i32) as i16) as u16,
+    ((154 as i32) as i16) as u16,
+    ((155 as i32) as i16) as u16,
+    ((156 as i32) as i16) as u16,
+    ((157 as i32) as i16) as u16,
+    ((158 as i32) as i16) as u16,
+    ((102 as i32) as i16) as u16,
+    ((117 as i32) as i16) as u16,
+    ((118 as i32) as i16) as u16,
+    ((119 as i32) as i16) as u16,
+    ((19 as i32) as i16) as u16,
+    ((242 as i32) as i16) as u16,
+    ((144 as i32) as i16) as u16,
+    ((255 as i32) as i16) as u16,
+    ((23 as i32) as i16) as u16,
+    ((206 as i32) as i16) as u16,
+    ((24 as i32) as i16) as u16,
+    ((298 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((300 as i32) as i16) as u16,
+    ((206 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((264 as i32) as i16) as u16,
+    ((254 as i32) as i16) as u16,
+    ((206 as i32) as i16) as u16,
+    ((256 as i32) as i16) as u16,
+    ((240 as i32) as i16) as u16,
+    ((117 as i32) as i16) as u16,
+    ((118 as i32) as i16) as u16,
+    ((119 as i32) as i16) as u16,
+    ((183 as i32) as i16) as u16,
+    ((22 as i32) as i16) as u16,
+    ((22 as i32) as i16) as u16,
+    ((23 as i32) as i16) as u16,
+    ((43 as i32) as i16) as u16,
+    ((44 as i32) as i16) as u16,
+    ((45 as i32) as i16) as u16,
+    ((151 as i32) as i16) as u16,
+    ((47 as i32) as i16) as u16,
+    ((48 as i32) as i16) as u16,
+    ((49 as i32) as i16) as u16,
+    ((50 as i32) as i16) as u16,
+    ((51 as i32) as i16) as u16,
+    ((52 as i32) as i16) as u16,
+    ((53 as i32) as i16) as u16,
+    ((54 as i32) as i16) as u16,
+    ((55 as i32) as i16) as u16,
+    ((56 as i32) as i16) as u16,
+    ((57 as i32) as i16) as u16,
+    ((58 as i32) as i16) as u16,
+    ((241 as i32) as i16) as u16,
+    ((242 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((19 as i32) as i16) as u16,
+    ((241 as i32) as i16) as u16,
+    ((242 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((23 as i32) as i16) as u16,
+    ((241 as i32) as i16) as u16,
+    ((242 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((152 as i32) as i16) as u16,
+    ((254 as i32) as i16) as u16,
+    ((310 as i32) as i16) as u16,
+    ((256 as i32) as i16) as u16,
+    ((243 as i32) as i16) as u16,
+    ((312 as i32) as i16) as u16,
+    ((254 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((256 as i32) as i16) as u16,
+    ((316 as i32) as i16) as u16,
+    ((254 as i32) as i16) as u16,
+    ((206 as i32) as i16) as u16,
+    ((256 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((43 as i32) as i16) as u16,
+    ((44 as i32) as i16) as u16,
+    ((45 as i32) as i16) as u16,
+    ((272 as i32) as i16) as u16,
+    ((47 as i32) as i16) as u16,
+    ((48 as i32) as i16) as u16,
+    ((49 as i32) as i16) as u16,
+    ((50 as i32) as i16) as u16,
+    ((51 as i32) as i16) as u16,
+    ((52 as i32) as i16) as u16,
+    ((53 as i32) as i16) as u16,
+    ((54 as i32) as i16) as u16,
+    ((55 as i32) as i16) as u16,
+    ((56 as i32) as i16) as u16,
+    ((57 as i32) as i16) as u16,
+    ((58 as i32) as i16) as u16,
+    ((103 as i32) as i16) as u16,
+    ((104 as i32) as i16) as u16,
+    ((105 as i32) as i16) as u16,
+    ((106 as i32) as i16) as u16,
+    ((107 as i32) as i16) as u16,
+    ((108 as i32) as i16) as u16,
+    ((109 as i32) as i16) as u16,
+    ((110 as i32) as i16) as u16,
+    ((111 as i32) as i16) as u16,
+    ((112 as i32) as i16) as u16,
+    ((113 as i32) as i16) as u16,
+    ((114 as i32) as i16) as u16,
+    ((240 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((241 as i32) as i16) as u16,
+    ((242 as i32) as i16) as u16,
+    ((118 as i32) as i16) as u16,
+    ((25 as i32) as i16) as u16,
+    ((102 as i32) as i16) as u16,
+    ((255 as i32) as i16) as u16,
+    ((166 as i32) as i16) as u16,
+    ((167 as i32) as i16) as u16,
+    ((101 as i32) as i16) as u16,
+    ((22 as i32) as i16) as u16,
+    ((26 as i32) as i16) as u16,
+    ((19 as i32) as i16) as u16,
+    ((20 as i32) as i16) as u16,
+    ((254 as i32) as i16) as u16,
+    ((22 as i32) as i16) as u16,
+    ((256 as i32) as i16) as u16,
+    ((139 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((117 as i32) as i16) as u16,
+    ((118 as i32) as i16) as u16,
+    ((119 as i32) as i16) as u16,
+    ((306 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((308 as i32) as i16) as u16,
+    ((117 as i32) as i16) as u16,
+    ((118 as i32) as i16) as u16,
+    ((237 as i32) as i16) as u16,
+    ((238 as i32) as i16) as u16,
+    ((36 as i32) as i16) as u16,
+    ((122 as i32) as i16) as u16,
+    ((103 as i32) as i16) as u16,
+    ((104 as i32) as i16) as u16,
+    ((105 as i32) as i16) as u16,
+    ((106 as i32) as i16) as u16,
+    ((107 as i32) as i16) as u16,
+    ((108 as i32) as i16) as u16,
+    ((109 as i32) as i16) as u16,
+    ((110 as i32) as i16) as u16,
+    ((111 as i32) as i16) as u16,
+    ((112 as i32) as i16) as u16,
+    ((113 as i32) as i16) as u16,
+    ((114 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((109 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((19 as i32) as i16) as u16,
+    ((217 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((25 as i32) as i16) as u16,
+    ((23 as i32) as i16) as u16,
+    ((77 as i32) as i16) as u16,
+    ((117 as i32) as i16) as u16,
+    ((118 as i32) as i16) as u16,
+    ((119 as i32) as i16) as u16,
+    ((225 as i32) as i16) as u16,
+    ((233 as i32) as i16) as u16,
+    ((154 as i32) as i16) as u16,
+    ((155 as i32) as i16) as u16,
+    ((156 as i32) as i16) as u16,
+    ((72 as i32) as i16) as u16,
+    ((312 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((90 as i32) as i16) as u16,
+    ((316 as i32) as i16) as u16,
+    ((22 as i32) as i16) as u16,
+    ((93 as i32) as i16) as u16,
+    ((303 as i32) as i16) as u16,
+    ((304 as i32) as i16) as u16,
+    ((43 as i32) as i16) as u16,
+    ((44 as i32) as i16) as u16,
+    ((45 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((47 as i32) as i16) as u16,
+    ((48 as i32) as i16) as u16,
+    ((49 as i32) as i16) as u16,
+    ((50 as i32) as i16) as u16,
+    ((51 as i32) as i16) as u16,
+    ((52 as i32) as i16) as u16,
+    ((53 as i32) as i16) as u16,
+    ((54 as i32) as i16) as u16,
+    ((55 as i32) as i16) as u16,
+    ((56 as i32) as i16) as u16,
+    ((57 as i32) as i16) as u16,
+    ((58 as i32) as i16) as u16,
+    ((183 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((101 as i32) as i16) as u16,
+    ((19 as i32) as i16) as u16,
+    ((213 as i32) as i16) as u16,
+    ((214 as i32) as i16) as u16,
+    ((243 as i32) as i16) as u16,
+    ((23 as i32) as i16) as u16,
+    ((107 as i32) as i16) as u16,
+    ((108 as i32) as i16) as u16,
+    ((117 as i32) as i16) as u16,
+    ((118 as i32) as i16) as u16,
+    ((119 as i32) as i16) as u16,
+    ((117 as i32) as i16) as u16,
+    ((118 as i32) as i16) as u16,
+    ((119 as i32) as i16) as u16,
+    ((115 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((117 as i32) as i16) as u16,
+    ((118 as i32) as i16) as u16,
+    ((119 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((122 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((22 as i32) as i16) as u16,
+    ((43 as i32) as i16) as u16,
+    ((44 as i32) as i16) as u16,
+    ((45 as i32) as i16) as u16,
+    ((35 as i32) as i16) as u16,
+    ((47 as i32) as i16) as u16,
+    ((48 as i32) as i16) as u16,
+    ((49 as i32) as i16) as u16,
+    ((50 as i32) as i16) as u16,
+    ((51 as i32) as i16) as u16,
+    ((52 as i32) as i16) as u16,
+    ((53 as i32) as i16) as u16,
+    ((54 as i32) as i16) as u16,
+    ((55 as i32) as i16) as u16,
+    ((56 as i32) as i16) as u16,
+    ((57 as i32) as i16) as u16,
+    ((58 as i32) as i16) as u16,
+    ((103 as i32) as i16) as u16,
+    ((104 as i32) as i16) as u16,
+    ((105 as i32) as i16) as u16,
+    ((106 as i32) as i16) as u16,
+    ((107 as i32) as i16) as u16,
+    ((108 as i32) as i16) as u16,
+    ((109 as i32) as i16) as u16,
+    ((110 as i32) as i16) as u16,
+    ((111 as i32) as i16) as u16,
+    ((112 as i32) as i16) as u16,
+    ((113 as i32) as i16) as u16,
+    ((114 as i32) as i16) as u16,
+    ((154 as i32) as i16) as u16,
+    ((155 as i32) as i16) as u16,
+    ((156 as i32) as i16) as u16,
+    ((157 as i32) as i16) as u16,
+    ((158 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((255 as i32) as i16) as u16,
+    ((67 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((101 as i32) as i16) as u16,
+    ((240 as i32) as i16) as u16,
+    ((311 as i32) as i16) as u16,
+    ((312 as i32) as i16) as u16,
+    ((306 as i32) as i16) as u16,
+    ((75 as i32) as i16) as u16,
+    ((308 as i32) as i16) as u16,
+    ((316 as i32) as i16) as u16,
+    ((29 as i32) as i16) as u16,
+    ((117 as i32) as i16) as u16,
+    ((118 as i32) as i16) as u16,
+    ((119 as i32) as i16) as u16,
+    ((33 as i32) as i16) as u16,
+    ((287 as i32) as i16) as u16,
+    ((117 as i32) as i16) as u16,
+    ((118 as i32) as i16) as u16,
+    ((119 as i32) as i16) as u16,
+    ((118 as i32) as i16) as u16,
+    ((146 as i32) as i16) as u16,
+    ((183 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((122 as i32) as i16) as u16,
+    ((103 as i32) as i16) as u16,
+    ((104 as i32) as i16) as u16,
+    ((105 as i32) as i16) as u16,
+    ((106 as i32) as i16) as u16,
+    ((107 as i32) as i16) as u16,
+    ((108 as i32) as i16) as u16,
+    ((109 as i32) as i16) as u16,
+    ((110 as i32) as i16) as u16,
+    ((111 as i32) as i16) as u16,
+    ((112 as i32) as i16) as u16,
+    ((113 as i32) as i16) as u16,
+    ((114 as i32) as i16) as u16,
+    ((215 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((77 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((25 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((122 as i32) as i16) as u16,
+    ((144 as i32) as i16) as u16,
+    ((19 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((66 as i32) as i16) as u16,
+    ((23 as i32) as i16) as u16,
+    ((88 as i32) as i16) as u16,
+    ((246 as i32) as i16) as u16,
+    ((90 as i32) as i16) as u16,
+    ((132 as i32) as i16) as u16,
+    ((25 as i32) as i16) as u16,
+    ((93 as i32) as i16) as u16,
+    ((154 as i32) as i16) as u16,
+    ((155 as i32) as i16) as u16,
+    ((156 as i32) as i16) as u16,
+    ((117 as i32) as i16) as u16,
+    ((118 as i32) as i16) as u16,
+    ((119 as i32) as i16) as u16,
+    ((257 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((131 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((265 as i32) as i16) as u16,
+    ((43 as i32) as i16) as u16,
+    ((44 as i32) as i16) as u16,
+    ((45 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((47 as i32) as i16) as u16,
+    ((48 as i32) as i16) as u16,
+    ((49 as i32) as i16) as u16,
+    ((50 as i32) as i16) as u16,
+    ((51 as i32) as i16) as u16,
+    ((52 as i32) as i16) as u16,
+    ((53 as i32) as i16) as u16,
+    ((54 as i32) as i16) as u16,
+    ((55 as i32) as i16) as u16,
+    ((56 as i32) as i16) as u16,
+    ((57 as i32) as i16) as u16,
+    ((58 as i32) as i16) as u16,
+    ((183 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((19 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((23 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((117 as i32) as i16) as u16,
+    ((118 as i32) as i16) as u16,
+    ((119 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((233 as i32) as i16) as u16,
+    ((255 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((233 as i32) as i16) as u16,
+    ((22 as i32) as i16) as u16,
+    ((23 as i32) as i16) as u16,
+    ((146 as i32) as i16) as u16,
+    ((25 as i32) as i16) as u16,
+    ((233 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((43 as i32) as i16) as u16,
+    ((44 as i32) as i16) as u16,
+    ((45 as i32) as i16) as u16,
+    ((294 as i32) as i16) as u16,
+    ((47 as i32) as i16) as u16,
+    ((48 as i32) as i16) as u16,
+    ((49 as i32) as i16) as u16,
+    ((50 as i32) as i16) as u16,
+    ((51 as i32) as i16) as u16,
+    ((52 as i32) as i16) as u16,
+    ((53 as i32) as i16) as u16,
+    ((54 as i32) as i16) as u16,
+    ((55 as i32) as i16) as u16,
+    ((56 as i32) as i16) as u16,
+    ((57 as i32) as i16) as u16,
+    ((58 as i32) as i16) as u16,
+    ((103 as i32) as i16) as u16,
+    ((104 as i32) as i16) as u16,
+    ((105 as i32) as i16) as u16,
+    ((106 as i32) as i16) as u16,
+    ((107 as i32) as i16) as u16,
+    ((108 as i32) as i16) as u16,
+    ((109 as i32) as i16) as u16,
+    ((110 as i32) as i16) as u16,
+    ((111 as i32) as i16) as u16,
+    ((112 as i32) as i16) as u16,
+    ((113 as i32) as i16) as u16,
+    ((114 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((12 as i32) as i16) as u16,
+    ((234 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((240 as i32) as i16) as u16,
+    ((74 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((255 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((243 as i32) as i16) as u16,
+    ((262 as i32) as i16) as u16,
+    ((263 as i32) as i16) as u16,
+    ((311 as i32) as i16) as u16,
+    ((312 as i32) as i16) as u16,
+    ((25 as i32) as i16) as u16,
+    ((27 as i32) as i16) as u16,
+    ((19 as i32) as i16) as u16,
+    ((316 as i32) as i16) as u16,
+    ((107 as i32) as i16) as u16,
+    ((108 as i32) as i16) as u16,
+    ((265 as i32) as i16) as u16,
+    ((24 as i32) as i16) as u16,
+    ((265 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((150 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((139 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((42 as i32) as i16) as u16,
+    ((103 as i32) as i16) as u16,
+    ((104 as i32) as i16) as u16,
+    ((105 as i32) as i16) as u16,
+    ((106 as i32) as i16) as u16,
+    ((107 as i32) as i16) as u16,
+    ((108 as i32) as i16) as u16,
+    ((109 as i32) as i16) as u16,
+    ((110 as i32) as i16) as u16,
+    ((111 as i32) as i16) as u16,
+    ((112 as i32) as i16) as u16,
+    ((113 as i32) as i16) as u16,
+    ((114 as i32) as i16) as u16,
+    ((233 as i32) as i16) as u16,
+    ((102 as i32) as i16) as u16,
+    ((67 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((243 as i32) as i16) as u16,
+    ((19 as i32) as i16) as u16,
+    ((64 as i32) as i16) as u16,
+    ((22 as i32) as i16) as u16,
+    ((23 as i32) as i16) as u16,
+    ((23 as i32) as i16) as u16,
+    ((25 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((128 as i32) as i16) as u16,
+    ((129 as i32) as i16) as u16,
+    ((130 as i32) as i16) as u16,
+    ((233 as i32) as i16) as u16,
+    ((74 as i32) as i16) as u16,
+    ((233 as i32) as i16) as u16,
+    ((86 as i32) as i16) as u16,
+    ((154 as i32) as i16) as u16,
+    ((118 as i32) as i16) as u16,
+    ((156 as i32) as i16) as u16,
+    ((130 as i32) as i16) as u16,
+    ((265 as i32) as i16) as u16,
+    ((208 as i32) as i16) as u16,
+    ((19 as i32) as i16) as u16,
+    ((306 as i32) as i16) as u16,
+    ((95 as i32) as i16) as u16,
+    ((308 as i32) as i16) as u16,
+    ((43 as i32) as i16) as u16,
+    ((44 as i32) as i16) as u16,
+    ((45 as i32) as i16) as u16,
+    ((266 as i32) as i16) as u16,
+    ((47 as i32) as i16) as u16,
+    ((48 as i32) as i16) as u16,
+    ((49 as i32) as i16) as u16,
+    ((50 as i32) as i16) as u16,
+    ((51 as i32) as i16) as u16,
+    ((52 as i32) as i16) as u16,
+    ((53 as i32) as i16) as u16,
+    ((54 as i32) as i16) as u16,
+    ((55 as i32) as i16) as u16,
+    ((56 as i32) as i16) as u16,
+    ((57 as i32) as i16) as u16,
+    ((58 as i32) as i16) as u16,
+    ((153 as i32) as i16) as u16,
+    ((230 as i32) as i16) as u16,
+    ((96 as i32) as i16) as u16,
+    ((232 as i32) as i16) as u16,
+    ((43 as i32) as i16) as u16,
+    ((44 as i32) as i16) as u16,
+    ((45 as i32) as i16) as u16,
+    ((19 as i32) as i16) as u16,
+    ((47 as i32) as i16) as u16,
+    ((48 as i32) as i16) as u16,
+    ((49 as i32) as i16) as u16,
+    ((50 as i32) as i16) as u16,
+    ((51 as i32) as i16) as u16,
+    ((52 as i32) as i16) as u16,
+    ((53 as i32) as i16) as u16,
+    ((54 as i32) as i16) as u16,
+    ((55 as i32) as i16) as u16,
+    ((56 as i32) as i16) as u16,
+    ((57 as i32) as i16) as u16,
+    ((58 as i32) as i16) as u16,
+    ((114 as i32) as i16) as u16,
+    ((22 as i32) as i16) as u16,
+    ((306 as i32) as i16) as u16,
+    ((24 as i32) as i16) as u16,
+    ((308 as i32) as i16) as u16,
+    ((127 as i32) as i16) as u16,
+    ((120 as i32) as i16) as u16,
+    ((121 as i32) as i16) as u16,
+    ((122 as i32) as i16) as u16,
+    ((123 as i32) as i16) as u16,
+    ((124 as i32) as i16) as u16,
+    ((125 as i32) as i16) as u16,
+    ((126 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((147 as i32) as i16) as u16,
+    ((212 as i32) as i16) as u16,
+    ((213 as i32) as i16) as u16,
+    ((214 as i32) as i16) as u16,
+    ((132 as i32) as i16) as u16,
+    ((23 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((25 as i32) as i16) as u16,
+    ((102 as i32) as i16) as u16,
+    ((100 as i32) as i16) as u16,
+    ((103 as i32) as i16) as u16,
+    ((104 as i32) as i16) as u16,
+    ((105 as i32) as i16) as u16,
+    ((106 as i32) as i16) as u16,
+    ((107 as i32) as i16) as u16,
+    ((108 as i32) as i16) as u16,
+    ((109 as i32) as i16) as u16,
+    ((110 as i32) as i16) as u16,
+    ((111 as i32) as i16) as u16,
+    ((112 as i32) as i16) as u16,
+    ((113 as i32) as i16) as u16,
+    ((114 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((19 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((12 as i32) as i16) as u16,
+    ((210 as i32) as i16) as u16,
+    ((211 as i32) as i16) as u16,
+    ((103 as i32) as i16) as u16,
+    ((104 as i32) as i16) as u16,
+    ((105 as i32) as i16) as u16,
+    ((106 as i32) as i16) as u16,
+    ((107 as i32) as i16) as u16,
+    ((108 as i32) as i16) as u16,
+    ((109 as i32) as i16) as u16,
+    ((110 as i32) as i16) as u16,
+    ((111 as i32) as i16) as u16,
+    ((112 as i32) as i16) as u16,
+    ((113 as i32) as i16) as u16,
+    ((114 as i32) as i16) as u16,
+    ((27 as i32) as i16) as u16,
+    ((134 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((210 as i32) as i16) as u16,
+    ((211 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((47 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((212 as i32) as i16) as u16,
+    ((213 as i32) as i16) as u16,
+    ((214 as i32) as i16) as u16,
+    ((42 as i32) as i16) as u16,
+    ((16 as i32) as i16) as u16,
+    ((130 as i32) as i16) as u16,
+    ((19 as i32) as i16) as u16,
+    ((112 as i32) as i16) as u16,
+    ((113 as i32) as i16) as u16,
+    ((114 as i32) as i16) as u16,
+    ((23 as i32) as i16) as u16,
+    ((77 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((117 as i32) as i16) as u16,
+    ((163 as i32) as i16) as u16,
+    ((164 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((90 as i32) as i16) as u16,
+    ((64 as i32) as i16) as u16,
+    ((19 as i32) as i16) as u16,
+    ((93 as i32) as i16) as u16,
+    ((153 as i32) as i16) as u16,
+    ((118 as i32) as i16) as u16,
+    ((43 as i32) as i16) as u16,
+    ((44 as i32) as i16) as u16,
+    ((45 as i32) as i16) as u16,
+    ((160 as i32) as i16) as u16,
+    ((47 as i32) as i16) as u16,
+    ((48 as i32) as i16) as u16,
+    ((49 as i32) as i16) as u16,
+    ((50 as i32) as i16) as u16,
+    ((51 as i32) as i16) as u16,
+    ((52 as i32) as i16) as u16,
+    ((53 as i32) as i16) as u16,
+    ((54 as i32) as i16) as u16,
+    ((55 as i32) as i16) as u16,
+    ((56 as i32) as i16) as u16,
+    ((57 as i32) as i16) as u16,
+    ((58 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((119 as i32) as i16) as u16,
+    ((272 as i32) as i16) as u16,
+    ((276 as i32) as i16) as u16,
+    ((43 as i32) as i16) as u16,
+    ((44 as i32) as i16) as u16,
+    ((45 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((47 as i32) as i16) as u16,
+    ((48 as i32) as i16) as u16,
+    ((49 as i32) as i16) as u16,
+    ((50 as i32) as i16) as u16,
+    ((51 as i32) as i16) as u16,
+    ((52 as i32) as i16) as u16,
+    ((53 as i32) as i16) as u16,
+    ((54 as i32) as i16) as u16,
+    ((55 as i32) as i16) as u16,
+    ((56 as i32) as i16) as u16,
+    ((57 as i32) as i16) as u16,
+    ((58 as i32) as i16) as u16,
+    ((78 as i32) as i16) as u16,
+    ((116 as i32) as i16) as u16,
+    ((80 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((116 as i32) as i16) as u16,
+    ((144 as i32) as i16) as u16,
+    ((128 as i32) as i16) as u16,
+    ((129 as i32) as i16) as u16,
+    ((130 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((61 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((47 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((16 as i32) as i16) as u16,
+    ((132 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((263 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((314 as i32) as i16) as u16,
+    ((315 as i32) as i16) as u16,
+    ((267 as i32) as i16) as u16,
+    ((103 as i32) as i16) as u16,
+    ((104 as i32) as i16) as u16,
+    ((105 as i32) as i16) as u16,
+    ((106 as i32) as i16) as u16,
+    ((107 as i32) as i16) as u16,
+    ((108 as i32) as i16) as u16,
+    ((109 as i32) as i16) as u16,
+    ((110 as i32) as i16) as u16,
+    ((111 as i32) as i16) as u16,
+    ((112 as i32) as i16) as u16,
+    ((113 as i32) as i16) as u16,
+    ((114 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((151 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((103 as i32) as i16) as u16,
+    ((104 as i32) as i16) as u16,
+    ((105 as i32) as i16) as u16,
+    ((106 as i32) as i16) as u16,
+    ((107 as i32) as i16) as u16,
+    ((108 as i32) as i16) as u16,
+    ((109 as i32) as i16) as u16,
+    ((110 as i32) as i16) as u16,
+    ((111 as i32) as i16) as u16,
+    ((112 as i32) as i16) as u16,
+    ((113 as i32) as i16) as u16,
+    ((114 as i32) as i16) as u16,
+    ((210 as i32) as i16) as u16,
+    ((211 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((7 as i32) as i16) as u16,
+    ((8 as i32) as i16) as u16,
+    ((9 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((312 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((316 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((120 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((263 as i32) as i16) as u16,
+    ((19 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((125 as i32) as i16) as u16,
+    ((267 as i32) as i16) as u16,
+    ((78 as i32) as i16) as u16,
+    ((24 as i32) as i16) as u16,
+    ((80 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((116 as i32) as i16) as u16,
+    ((162 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((301 as i32) as i16) as u16,
+    ((302 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((19 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((276 as i32) as i16) as u16,
+    ((43 as i32) as i16) as u16,
+    ((44 as i32) as i16) as u16,
+    ((45 as i32) as i16) as u16,
+    ((160 as i32) as i16) as u16,
+    ((47 as i32) as i16) as u16,
+    ((48 as i32) as i16) as u16,
+    ((49 as i32) as i16) as u16,
+    ((50 as i32) as i16) as u16,
+    ((51 as i32) as i16) as u16,
+    ((52 as i32) as i16) as u16,
+    ((53 as i32) as i16) as u16,
+    ((54 as i32) as i16) as u16,
+    ((55 as i32) as i16) as u16,
+    ((56 as i32) as i16) as u16,
+    ((57 as i32) as i16) as u16,
+    ((58 as i32) as i16) as u16,
+    ((19 as i32) as i16) as u16,
+    ((146 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((43 as i32) as i16) as u16,
+    ((44 as i32) as i16) as u16,
+    ((45 as i32) as i16) as u16,
+    ((118 as i32) as i16) as u16,
+    ((47 as i32) as i16) as u16,
+    ((48 as i32) as i16) as u16,
+    ((49 as i32) as i16) as u16,
+    ((50 as i32) as i16) as u16,
+    ((51 as i32) as i16) as u16,
+    ((52 as i32) as i16) as u16,
+    ((53 as i32) as i16) as u16,
+    ((54 as i32) as i16) as u16,
+    ((55 as i32) as i16) as u16,
+    ((56 as i32) as i16) as u16,
+    ((57 as i32) as i16) as u16,
+    ((58 as i32) as i16) as u16,
+    ((165 as i32) as i16) as u16,
+    ((314 as i32) as i16) as u16,
+    ((315 as i32) as i16) as u16,
+    ((276 as i32) as i16) as u16,
+    ((43 as i32) as i16) as u16,
+    ((44 as i32) as i16) as u16,
+    ((45 as i32) as i16) as u16,
+    ((266 as i32) as i16) as u16,
+    ((47 as i32) as i16) as u16,
+    ((48 as i32) as i16) as u16,
+    ((49 as i32) as i16) as u16,
+    ((50 as i32) as i16) as u16,
+    ((51 as i32) as i16) as u16,
+    ((52 as i32) as i16) as u16,
+    ((53 as i32) as i16) as u16,
+    ((54 as i32) as i16) as u16,
+    ((55 as i32) as i16) as u16,
+    ((56 as i32) as i16) as u16,
+    ((57 as i32) as i16) as u16,
+    ((58 as i32) as i16) as u16,
+    ((128 as i32) as i16) as u16,
+    ((129 as i32) as i16) as u16,
+    ((130 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((103 as i32) as i16) as u16,
+    ((104 as i32) as i16) as u16,
+    ((105 as i32) as i16) as u16,
+    ((106 as i32) as i16) as u16,
+    ((107 as i32) as i16) as u16,
+    ((108 as i32) as i16) as u16,
+    ((109 as i32) as i16) as u16,
+    ((110 as i32) as i16) as u16,
+    ((111 as i32) as i16) as u16,
+    ((112 as i32) as i16) as u16,
+    ((113 as i32) as i16) as u16,
+    ((114 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((228 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((61 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((314 as i32) as i16) as u16,
+    ((315 as i32) as i16) as u16,
+    ((25 as i32) as i16) as u16,
+    ((103 as i32) as i16) as u16,
+    ((104 as i32) as i16) as u16,
+    ((105 as i32) as i16) as u16,
+    ((106 as i32) as i16) as u16,
+    ((107 as i32) as i16) as u16,
+    ((108 as i32) as i16) as u16,
+    ((109 as i32) as i16) as u16,
+    ((110 as i32) as i16) as u16,
+    ((111 as i32) as i16) as u16,
+    ((112 as i32) as i16) as u16,
+    ((113 as i32) as i16) as u16,
+    ((114 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((22 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((103 as i32) as i16) as u16,
+    ((104 as i32) as i16) as u16,
+    ((105 as i32) as i16) as u16,
+    ((106 as i32) as i16) as u16,
+    ((107 as i32) as i16) as u16,
+    ((108 as i32) as i16) as u16,
+    ((109 as i32) as i16) as u16,
+    ((110 as i32) as i16) as u16,
+    ((111 as i32) as i16) as u16,
+    ((112 as i32) as i16) as u16,
+    ((113 as i32) as i16) as u16,
+    ((114 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((246 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((25 as i32) as i16) as u16,
+    ((19 as i32) as i16) as u16,
+    ((246 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((246 as i32) as i16) as u16,
+    ((257 as i32) as i16) as u16,
+    ((259 as i32) as i16) as u16,
+    ((260 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((22 as i32) as i16) as u16,
+    ((266 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((257 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((120 as i32) as i16) as u16,
+    ((257 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((116 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((19 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((150 as i32) as i16) as u16,
+    ((151 as i32) as i16) as u16,
+    ((25 as i32) as i16) as u16,
+    ((44 as i32) as i16) as u16,
+    ((45 as i32) as i16) as u16,
+    ((266 as i32) as i16) as u16,
+    ((47 as i32) as i16) as u16,
+    ((48 as i32) as i16) as u16,
+    ((49 as i32) as i16) as u16,
+    ((50 as i32) as i16) as u16,
+    ((51 as i32) as i16) as u16,
+    ((52 as i32) as i16) as u16,
+    ((53 as i32) as i16) as u16,
+    ((54 as i32) as i16) as u16,
+    ((55 as i32) as i16) as u16,
+    ((56 as i32) as i16) as u16,
+    ((57 as i32) as i16) as u16,
+    ((58 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((54 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((45 as i32) as i16) as u16,
+    ((145 as i32) as i16) as u16,
+    ((47 as i32) as i16) as u16,
+    ((48 as i32) as i16) as u16,
+    ((49 as i32) as i16) as u16,
+    ((50 as i32) as i16) as u16,
+    ((51 as i32) as i16) as u16,
+    ((52 as i32) as i16) as u16,
+    ((53 as i32) as i16) as u16,
+    ((54 as i32) as i16) as u16,
+    ((55 as i32) as i16) as u16,
+    ((56 as i32) as i16) as u16,
+    ((57 as i32) as i16) as u16,
+    ((58 as i32) as i16) as u16,
+    ((246 as i32) as i16) as u16,
+    ((121 as i32) as i16) as u16,
+    ((122 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((19 as i32) as i16) as u16,
+    ((23 as i32) as i16) as u16,
+    ((31 as i32) as i16) as u16,
+    ((25 as i32) as i16) as u16,
+    ((118 as i32) as i16) as u16,
+    ((159 as i32) as i16) as u16,
+    ((257 as i32) as i16) as u16,
+    ((161 as i32) as i16) as u16,
+    ((24 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((39 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((143 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((19 as i32) as i16) as u16,
+    ((20 as i32) as i16) as u16,
+    ((22 as i32) as i16) as u16,
+    ((22 as i32) as i16) as u16,
+    ((24 as i32) as i16) as u16,
+    ((103 as i32) as i16) as u16,
+    ((104 as i32) as i16) as u16,
+    ((105 as i32) as i16) as u16,
+    ((106 as i32) as i16) as u16,
+    ((107 as i32) as i16) as u16,
+    ((108 as i32) as i16) as u16,
+    ((109 as i32) as i16) as u16,
+    ((110 as i32) as i16) as u16,
+    ((111 as i32) as i16) as u16,
+    ((112 as i32) as i16) as u16,
+    ((113 as i32) as i16) as u16,
+    ((114 as i32) as i16) as u16,
+    ((36 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((103 as i32) as i16) as u16,
+    ((104 as i32) as i16) as u16,
+    ((105 as i32) as i16) as u16,
+    ((106 as i32) as i16) as u16,
+    ((107 as i32) as i16) as u16,
+    ((108 as i32) as i16) as u16,
+    ((109 as i32) as i16) as u16,
+    ((110 as i32) as i16) as u16,
+    ((111 as i32) as i16) as u16,
+    ((112 as i32) as i16) as u16,
+    ((113 as i32) as i16) as u16,
+    ((114 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((143 as i32) as i16) as u16,
+    ((119 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((22 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((141 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((23 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((25 as i32) as i16) as u16,
+    ((72 as i32) as i16) as u16,
+    ((23 as i32) as i16) as u16,
+    ((131 as i32) as i16) as u16,
+    ((25 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((134 as i32) as i16) as u16,
+    ((23 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((82 as i32) as i16) as u16,
+    ((144 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((23 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((25 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((101 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((117 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((107 as i32) as i16) as u16,
+    ((108 as i32) as i16) as u16,
+    ((23 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((25 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((115 as i32) as i16) as u16,
+    ((228 as i32) as i16) as u16,
+    ((117 as i32) as i16) as u16,
+    ((118 as i32) as i16) as u16,
+    ((119 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((122 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((19 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((142 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((19 as i32) as i16) as u16,
+    ((20 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((22 as i32) as i16) as u16,
+    ((139 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((23 as i32) as i16) as u16,
+    ((23 as i32) as i16) as u16,
+    ((25 as i32) as i16) as u16,
+    ((25 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((7 as i32) as i16) as u16,
+    ((8 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((36 as i32) as i16) as u16,
+    ((118 as i32) as i16) as u16,
+    ((154 as i32) as i16) as u16,
+    ((155 as i32) as i16) as u16,
+    ((156 as i32) as i16) as u16,
+    ((157 as i32) as i16) as u16,
+    ((158 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((23 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((25 as i32) as i16) as u16,
+    ((84 as i32) as i16) as u16,
+    ((85 as i32) as i16) as u16,
+    ((49 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((23 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((25 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((23 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((25 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((23 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((25 as i32) as i16) as u16,
+    ((23 as i32) as i16) as u16,
+    ((23 as i32) as i16) as u16,
+    ((25 as i32) as i16) as u16,
+    ((25 as i32) as i16) as u16,
+    ((142 as i32) as i16) as u16,
+    ((183 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((118 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((72 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((146 as i32) as i16) as u16,
+    ((86 as i32) as i16) as u16,
+    ((98 as i32) as i16) as u16,
+    ((23 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((25 as i32) as i16) as u16,
+    ((91 as i32) as i16) as u16,
+    ((19 as i32) as i16) as u16,
+    ((20 as i32) as i16) as u16,
+    ((154 as i32) as i16) as u16,
+    ((22 as i32) as i16) as u16,
+    ((156 as i32) as i16) as u16,
+    ((154 as i32) as i16) as u16,
+    ((23 as i32) as i16) as u16,
+    ((156 as i32) as i16) as u16,
+    ((25 as i32) as i16) as u16,
+    ((101 as i32) as i16) as u16,
+    ((23 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((25 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((107 as i32) as i16) as u16,
+    ((108 as i32) as i16) as u16,
+    ((36 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((228 as i32) as i16) as u16,
+    ((115 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((117 as i32) as i16) as u16,
+    ((118 as i32) as i16) as u16,
+    ((119 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((122 as i32) as i16) as u16,
+    ((261 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((321 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((258 as i32) as i16) as u16,
+    ((238 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((299 as i32) as i16) as u16,
+    ((291 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((258 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((290 as i32) as i16) as u16,
+    ((244 as i32) as i16) as u16,
+    ((216 as i32) as i16) as u16,
+    ((72 as i32) as i16) as u16,
+    ((245 as i32) as i16) as u16,
+    ((193 as i32) as i16) as u16,
+    ((258 as i32) as i16) as u16,
+    ((258 as i32) as i16) as u16,
+    ((299 as i32) as i16) as u16,
+    ((258 as i32) as i16) as u16,
+    ((299 as i32) as i16) as u16,
+    ((274 as i32) as i16) as u16,
+    ((154 as i32) as i16) as u16,
+    ((155 as i32) as i16) as u16,
+    ((156 as i32) as i16) as u16,
+    ((157 as i32) as i16) as u16,
+    ((158 as i32) as i16) as u16,
+    ((86 as i32) as i16) as u16,
+    ((247 as i32) as i16) as u16,
+    ((295 as i32) as i16) as u16,
+    ((248 as i32) as i16) as u16,
+    ((295 as i32) as i16) as u16,
+    ((91 as i32) as i16) as u16,
+    ((19 as i32) as i16) as u16,
+    ((20 as i32) as i16) as u16,
+    ((270 as i32) as i16) as u16,
+    ((22 as i32) as i16) as u16,
+    ((274 as i32) as i16) as u16,
+    ((270 as i32) as i16) as u16,
+    ((248 as i32) as i16) as u16,
+    ((274 as i32) as i16) as u16,
+    ((222 as i32) as i16) as u16,
+    ((101 as i32) as i16) as u16,
+    ((227 as i32) as i16) as u16,
+    ((274 as i32) as i16) as u16,
+    ((221 as i32) as i16) as u16,
+    ((231 as i32) as i16) as u16,
+    ((221 as i32) as i16) as u16,
+    ((107 as i32) as i16) as u16,
+    ((108 as i32) as i16) as u16,
+    ((36 as i32) as i16) as u16,
+    ((183 as i32) as i16) as u16,
+    ((262 as i32) as i16) as u16,
+    ((247 as i32) as i16) as u16,
+    ((221 as i32) as i16) as u16,
+    ((283 as i32) as i16) as u16,
+    ((115 as i32) as i16) as u16,
+    ((262 as i32) as i16) as u16,
+    ((117 as i32) as i16) as u16,
+    ((118 as i32) as i16) as u16,
+    ((119 as i32) as i16) as u16,
+    ((198 as i32) as i16) as u16,
+    ((116 as i32) as i16) as u16,
+    ((122 as i32) as i16) as u16,
+    ((220 as i32) as i16) as u16,
+    ((262 as i32) as i16) as u16,
+    ((61 as i32) as i16) as u16,
+    ((220 as i32) as i16) as u16,
+    ((220 as i32) as i16) as u16,
+    ((251 as i32) as i16) as u16,
+    ((247 as i32) as i16) as u16,
+    ((142 as i32) as i16) as u16,
+    ((251 as i32) as i16) as u16,
+    ((245 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((202 as i32) as i16) as u16,
+    ((299 as i32) as i16) as u16,
+    ((202 as i32) as i16) as u16,
+    ((38 as i32) as i16) as u16,
+    ((262 as i32) as i16) as u16,
+    ((202 as i32) as i16) as u16,
+    ((22 as i32) as i16) as u16,
+    ((152 as i32) as i16) as u16,
+    ((151 as i32) as i16) as u16,
+    ((296 as i32) as i16) as u16,
+    ((43 as i32) as i16) as u16,
+    ((72 as i32) as i16) as u16,
+    ((236 as i32) as i16) as u16,
+    ((18 as i32) as i16) as u16,
+    ((239 as i32) as i16) as u16,
+    ((202 as i32) as i16) as u16,
+    ((239 as i32) as i16) as u16,
+    ((239 as i32) as i16) as u16,
+    ((239 as i32) as i16) as u16,
+    ((18 as i32) as i16) as u16,
+    ((154 as i32) as i16) as u16,
+    ((155 as i32) as i16) as u16,
+    ((156 as i32) as i16) as u16,
+    ((157 as i32) as i16) as u16,
+    ((158 as i32) as i16) as u16,
+    ((86 as i32) as i16) as u16,
+    ((150 as i32) as i16) as u16,
+    ((201 as i32) as i16) as u16,
+    ((248 as i32) as i16) as u16,
+    ((275 as i32) as i16) as u16,
+    ((91 as i32) as i16) as u16,
+    ((248 as i32) as i16) as u16,
+    ((273 as i32) as i16) as u16,
+    ((236 as i32) as i16) as u16,
+    ((248 as i32) as i16) as u16,
+    ((275 as i32) as i16) as u16,
+    ((275 as i32) as i16) as u16,
+    ((273 as i32) as i16) as u16,
+    ((236 as i32) as i16) as u16,
+    ((248 as i32) as i16) as u16,
+    ((101 as i32) as i16) as u16,
+    ((286 as i32) as i16) as u16,
+    ((202 as i32) as i16) as u16,
+    ((201 as i32) as i16) as u16,
+    ((159 as i32) as i16) as u16,
+    ((63 as i32) as i16) as u16,
+    ((107 as i32) as i16) as u16,
+    ((108 as i32) as i16) as u16,
+    ((296 as i32) as i16) as u16,
+    ((183 as i32) as i16) as u16,
+    ((293 as i32) as i16) as u16,
+    ((202 as i32) as i16) as u16,
+    ((201 as i32) as i16) as u16,
+    ((22 as i32) as i16) as u16,
+    ((115 as i32) as i16) as u16,
+    ((202 as i32) as i16) as u16,
+    ((117 as i32) as i16) as u16,
+    ((118 as i32) as i16) as u16,
+    ((119 as i32) as i16) as u16,
+    ((292 as i32) as i16) as u16,
+    ((223 as i32) as i16) as u16,
+    ((122 as i32) as i16) as u16,
+    ((201 as i32) as i16) as u16,
+    ((65 as i32) as i16) as u16,
+    ((202 as i32) as i16) as u16,
+    ((201 as i32) as i16) as u16,
+    ((223 as i32) as i16) as u16,
+    ((220 as i32) as i16) as u16,
+    ((220 as i32) as i16) as u16,
+    ((22 as i32) as i16) as u16,
+    ((220 as i32) as i16) as u16,
+    ((226 as i32) as i16) as u16,
+    ((226 as i32) as i16) as u16,
+    ((229 as i32) as i16) as u16,
+    ((127 as i32) as i16) as u16,
+    ((223 as i32) as i16) as u16,
+    ((220 as i32) as i16) as u16,
+    ((166 as i32) as i16) as u16,
+    ((24 as i32) as i16) as u16,
+    ((285 as i32) as i16) as u16,
+    ((220 as i32) as i16) as u16,
+    ((222 as i32) as i16) as u16,
+    ((114 as i32) as i16) as u16,
+    ((315 as i32) as i16) as u16,
+    ((285 as i32) as i16) as u16,
+    ((220 as i32) as i16) as u16,
+    ((202 as i32) as i16) as u16,
+    ((220 as i32) as i16) as u16,
+    ((307 as i32) as i16) as u16,
+    ((92 as i32) as i16) as u16,
+    ((320 as i32) as i16) as u16,
+    ((320 as i32) as i16) as u16,
+    ((229 as i32) as i16) as u16,
+    ((154 as i32) as i16) as u16,
+    ((155 as i32) as i16) as u16,
+    ((156 as i32) as i16) as u16,
+    ((157 as i32) as i16) as u16,
+    ((158 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((1 as i32) as i16) as u16,
+    ((2 as i32) as i16) as u16,
+    ((223 as i32) as i16) as u16,
+    ((83 as i32) as i16) as u16,
+    ((5 as i32) as i16) as u16,
+    ((268 as i32) as i16) as u16,
+    ((149 as i32) as i16) as u16,
+    ((268 as i32) as i16) as u16,
+    ((146 as i32) as i16) as u16,
+    ((10 as i32) as i16) as u16,
+    ((11 as i32) as i16) as u16,
+    ((12 as i32) as i16) as u16,
+    ((13 as i32) as i16) as u16,
+    ((14 as i32) as i16) as u16,
+    ((22 as i32) as i16) as u16,
+    ((280 as i32) as i16) as u16,
+    ((17 as i32) as i16) as u16,
+    ((202 as i32) as i16) as u16,
+    ((159 as i32) as i16) as u16,
+    ((19 as i32) as i16) as u16,
+    ((20 as i32) as i16) as u16,
+    ((251 as i32) as i16) as u16,
+    ((22 as i32) as i16) as u16,
+    ((183 as i32) as i16) as u16,
+    ((282 as i32) as i16) as u16,
+    ((148 as i32) as i16) as u16,
+    ((252 as i32) as i16) as u16,
+    ((252 as i32) as i16) as u16,
+    ((250 as i32) as i16) as u16,
+    ((30 as i32) as i16) as u16,
+    ((249 as i32) as i16) as u16,
+    ((32 as i32) as i16) as u16,
+    ((248 as i32) as i16) as u16,
+    ((147 as i32) as i16) as u16,
+    ((25 as i32) as i16) as u16,
+    ((13 as i32) as i16) as u16,
+    ((36 as i32) as i16) as u16,
+    ((204 as i32) as i16) as u16,
+    ((196 as i32) as i16) as u16,
+    ((40 as i32) as i16) as u16,
+    ((196 as i32) as i16) as u16,
+    ((6 as i32) as i16) as u16,
+    ((302 as i32) as i16) as u16,
+    ((194 as i32) as i16) as u16,
+    ((194 as i32) as i16) as u16,
+    ((194 as i32) as i16) as u16,
+    ((209 as i32) as i16) as u16,
+    ((215 as i32) as i16) as u16,
+    ((209 as i32) as i16) as u16,
+    ((215 as i32) as i16) as u16,
+    ((215 as i32) as i16) as u16,
+    ((215 as i32) as i16) as u16,
+    ((224 as i32) as i16) as u16,
+    ((224 as i32) as i16) as u16,
+    ((216 as i32) as i16) as u16,
+    ((209 as i32) as i16) as u16,
+    ((4 as i32) as i16) as u16,
+    ((216 as i32) as i16) as u16,
+    ((215 as i32) as i16) as u16,
+    ((3 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((22 as i32) as i16) as u16,
+    ((122 as i32) as i16) as u16,
+    ((19 as i32) as i16) as u16,
+    ((122 as i32) as i16) as u16,
+    ((19 as i32) as i16) as u16,
+    ((125 as i32) as i16) as u16,
+    ((22 as i32) as i16) as u16,
+    ((15 as i32) as i16) as u16,
+    ((22 as i32) as i16) as u16,
+    ((71 as i32) as i16) as u16,
+    ((16 as i32) as i16) as u16,
+    ((72 as i32) as i16) as u16,
+    ((23 as i32) as i16) as u16,
+    ((23 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((305 as i32) as i16) as u16,
+    ((152 as i32) as i16) as u16,
+    ((79 as i32) as i16) as u16,
+    ((25 as i32) as i16) as u16,
+    ((131 as i32) as i16) as u16,
+    ((82 as i32) as i16) as u16,
+    ((143 as i32) as i16) as u16,
+    ((20 as i32) as i16) as u16,
+    ((16 as i32) as i16) as u16,
+    ((305 as i32) as i16) as u16,
+    ((1 as i32) as i16) as u16,
+    ((143 as i32) as i16) as u16,
+    ((145 as i32) as i16) as u16,
+    ((131 as i32) as i16) as u16,
+    ((131 as i32) as i16) as u16,
+    ((62 as i32) as i16) as u16,
+    ((54 as i32) as i16) as u16,
+    ((131 as i32) as i16) as u16,
+    ((37 as i32) as i16) as u16,
+    ((54 as i32) as i16) as u16,
+    ((54 as i32) as i16) as u16,
+    ((152 as i32) as i16) as u16,
+    ((99 as i32) as i16) as u16,
+    ((117 as i32) as i16) as u16,
+    ((34 as i32) as i16) as u16,
+    ((101 as i32) as i16) as u16,
+    ((54 as i32) as i16) as u16,
+    ((24 as i32) as i16) as u16,
+    ((1 as i32) as i16) as u16,
+    ((5 as i32) as i16) as u16,
+    ((22 as i32) as i16) as u16,
+    ((107 as i32) as i16) as u16,
+    ((108 as i32) as i16) as u16,
+    ((116 as i32) as i16) as u16,
+    ((76 as i32) as i16) as u16,
+    ((25 as i32) as i16) as u16,
+    ((162 as i32) as i16) as u16,
+    ((41 as i32) as i16) as u16,
+    ((142 as i32) as i16) as u16,
+    ((115 as i32) as i16) as u16,
+    ((24 as i32) as i16) as u16,
+    ((117 as i32) as i16) as u16,
+    ((118 as i32) as i16) as u16,
+    ((119 as i32) as i16) as u16,
+    ((116 as i32) as i16) as u16,
+    ((20 as i32) as i16) as u16,
+    ((122 as i32) as i16) as u16,
+    ((19 as i32) as i16) as u16,
+    ((126 as i32) as i16) as u16,
+    ((23 as i32) as i16) as u16,
+    ((132 as i32) as i16) as u16,
+    ((19 as i32) as i16) as u16,
+    ((20 as i32) as i16) as u16,
+    ((69 as i32) as i16) as u16,
+    ((22 as i32) as i16) as u16,
+    ((69 as i32) as i16) as u16,
+    ((22 as i32) as i16) as u16,
+    ((134 as i32) as i16) as u16,
+    ((22 as i32) as i16) as u16,
+    ((68 as i32) as i16) as u16,
+    ((22 as i32) as i16) as u16,
+    ((22 as i32) as i16) as u16,
+    ((139 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((141 as i32) as i16) as u16,
+    ((68 as i32) as i16) as u16,
+    ((24 as i32) as i16) as u16,
+    ((36 as i32) as i16) as u16,
+    ((28 as i32) as i16) as u16,
+    ((97 as i32) as i16) as u16,
+    ((22 as i32) as i16) as u16,
+    ((37 as i32) as i16) as u16,
+    ((68 as i32) as i16) as u16,
+    ((23 as i32) as i16) as u16,
+    ((150 as i32) as i16) as u16,
+    ((34 as i32) as i16) as u16,
+    ((22 as i32) as i16) as u16,
+    ((154 as i32) as i16) as u16,
+    ((155 as i32) as i16) as u16,
+    ((156 as i32) as i16) as u16,
+    ((157 as i32) as i16) as u16,
+    ((158 as i32) as i16) as u16,
+    ((23 as i32) as i16) as u16,
+    ((23 as i32) as i16) as u16,
+    ((22 as i32) as i16) as u16,
+    ((163 as i32) as i16) as u16,
+    ((25 as i32) as i16) as u16,
+    ((23 as i32) as i16) as u16,
+    ((142 as i32) as i16) as u16,
+    ((23 as i32) as i16) as u16,
+    ((98 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((23 as i32) as i16) as u16,
+    ((22 as i32) as i16) as u16,
+    ((144 as i32) as i16) as u16,
+    ((25 as i32) as i16) as u16,
+    ((76 as i32) as i16) as u16,
+    ((34 as i32) as i16) as u16,
+    ((117 as i32) as i16) as u16,
+    ((34 as i32) as i16) as u16,
+    ((89 as i32) as i16) as u16,
+    ((34 as i32) as i16) as u16,
+    ((34 as i32) as i16) as u16,
+    ((72 as i32) as i16) as u16,
+    ((87 as i32) as i16) as u16,
+    ((76 as i32) as i16) as u16,
+    ((183 as i32) as i16) as u16,
+    ((34 as i32) as i16) as u16,
+    ((94 as i32) as i16) as u16,
+    ((34 as i32) as i16) as u16,
+    ((23 as i32) as i16) as u16,
+    ((22 as i32) as i16) as u16,
+    ((24 as i32) as i16) as u16,
+    ((34 as i32) as i16) as u16,
+    ((23 as i32) as i16) as u16,
+    ((25 as i32) as i16) as u16,
+    ((44 as i32) as i16) as u16,
+    ((25 as i32) as i16) as u16,
+    ((23 as i32) as i16) as u16,
+    ((23 as i32) as i16) as u16,
+    ((23 as i32) as i16) as u16,
+    ((22 as i32) as i16) as u16,
+    ((22 as i32) as i16) as u16,
+    ((25 as i32) as i16) as u16,
+    ((11 as i32) as i16) as u16,
+    ((143 as i32) as i16) as u16,
+    ((25 as i32) as i16) as u16,
+    ((143 as i32) as i16) as u16,
+    ((23 as i32) as i16) as u16,
+    ((22 as i32) as i16) as u16,
+    ((22 as i32) as i16) as u16,
+    ((22 as i32) as i16) as u16,
+    ((101 as i32) as i16) as u16,
+    ((23 as i32) as i16) as u16,
+    ((23 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((22 as i32) as i16) as u16,
+    ((25 as i32) as i16) as u16,
+    ((107 as i32) as i16) as u16,
+    ((108 as i32) as i16) as u16,
+    ((142 as i32) as i16) as u16,
+    ((25 as i32) as i16) as u16,
+    ((142 as i32) as i16) as u16,
+    ((142 as i32) as i16) as u16,
+    ((23 as i32) as i16) as u16,
+    ((15 as i32) as i16) as u16,
+    ((115 as i32) as i16) as u16,
+    ((1 as i32) as i16) as u16,
+    ((117 as i32) as i16) as u16,
+    ((118 as i32) as i16) as u16,
+    ((119 as i32) as i16) as u16,
+    ((1 as i32) as i16) as u16,
+    ((2 as i32) as i16) as u16,
+    ((122 as i32) as i16) as u16,
+    ((1 as i32) as i16) as u16,
+    ((5 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((10 as i32) as i16) as u16,
+    ((11 as i32) as i16) as u16,
+    ((12 as i32) as i16) as u16,
+    ((13 as i32) as i16) as u16,
+    ((14 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((17 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((5 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((141 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((10 as i32) as i16) as u16,
+    ((11 as i32) as i16) as u16,
+    ((12 as i32) as i16) as u16,
+    ((13 as i32) as i16) as u16,
+    ((14 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((30 as i32) as i16) as u16,
+    ((17 as i32) as i16) as u16,
+    ((32 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((154 as i32) as i16) as u16,
+    ((155 as i32) as i16) as u16,
+    ((156 as i32) as i16) as u16,
+    ((157 as i32) as i16) as u16,
+    ((158 as i32) as i16) as u16,
+    ((40 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((30 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((32 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((40 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((183 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((71 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((79 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((82 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((71 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((79 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((82 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((99 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((99 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((134 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((139 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((134 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((139 as i32) as i16) as u16,
+    ((140 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((163 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((163 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((322 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+]);
+
+// /*     0 */
+// /*    10 */
+// /*    20 */
+// /*    30 */
+// /*    40 */
+// /*    50 */
+// /*    60 */
+// /*    70 */
+// /*    80 */
+// /*    90 */
+// /*   100 */
+// /*   110 */
+// /*   120 */
+// /*   130 */
+// /*   140 */
+// /*   150 */
+// /*   160 */
+// /*   170 */
+// /*   180 */
+// /*   190 */
+// /*   200 */
+// /*   210 */
+// /*   220 */
+// /*   230 */
+// /*   240 */
+// /*   250 */
+// /*   260 */
+// /*   270 */
+// /*   280 */
+// /*   290 */
+// /*   300 */
+// /*   310 */
+// /*   320 */
+// /*   330 */
+// /*   340 */
+// /*   350 */
+// /*   360 */
+// /*   370 */
+// /*   380 */
+// /*   390 */
+// /*   400 */
+// /*   410 */
+// /*   420 */
+// /*   430 */
+// /*   440 */
+// /*   450 */
+// /*   460 */
+// /*   470 */
+// /*   480 */
+// /*   490 */
+// /*   500 */
+// /*   510 */
+// /*   520 */
+// /*   530 */
+// /*   540 */
+// /*   550 */
+// /*   560 */
+// /*   570 */
+// /*   580 */
+// /*   590 */
+// /*   600 */
+// /*   610 */
+// /*   620 */
+// /*   630 */
+// /*   640 */
+// /*   650 */
+// /*   660 */
+// /*   670 */
+// /*   680 */
+// /*   690 */
+// /*   700 */
+// /*   710 */
+// /*   720 */
+// /*   730 */
+// /*   740 */
+// /*   750 */
+// /*   760 */
+// /*   770 */
+// /*   780 */
+// /*   790 */
+// /*   800 */
+// /*   810 */
+// /*   820 */
+// /*   830 */
+// /*   840 */
+// /*   850 */
+// /*   860 */
+// /*   870 */
+// /*   880 */
+// /*   890 */
+// /*   900 */
+// /*   910 */
+// /*   920 */
+// /*   930 */
+// /*   940 */
+// /*   950 */
+// /*   960 */
+// /*   970 */
+// /*   980 */
+// /*   990 */
+// /*  1000 */
+// /*  1010 */
+// /*  1020 */
+// /*  1030 */
+// /*  1040 */
+// /*  1050 */
+// /*  1060 */
+// /*  1070 */
+// /*  1080 */
+// /*  1090 */
+// /*  1100 */
+// /*  1110 */
+// /*  1120 */
+// /*  1130 */
+// /*  1140 */
+// /*  1150 */
+// /*  1160 */
+// /*  1170 */
+// /*  1180 */
+// /*  1190 */
+// /*  1200 */
+// /*  1210 */
+// /*  1220 */
+// /*  1230 */
+// /*  1240 */
+// /*  1250 */
+// /*  1260 */
+// /*  1270 */
+// /*  1280 */
+// /*  1290 */
+// /*  1300 */
+// /*  1310 */
+// /*  1320 */
+// /*  1330 */
+// /*  1340 */
+// /*  1350 */
+// /*  1360 */
+// /*  1370 */
+// /*  1380 */
+// /*  1390 */
+// /*  1400 */
+// /*  1410 */
+// /*  1420 */
+// /*  1430 */
+// /*  1440 */
+// /*  1450 */
+// /*  1460 */
+// /*  1470 */
+// /*  1480 */
+// /*  1490 */
+// /*  1500 */
+// /*  1510 */
+// /*  1520 */
+// /*  1530 */
+// /*  1540 */
+// /*  1550 */
+// /*  1560 */
+// /*  1570 */
+// /*  1580 */
+// /*  1590 */
+// /*  1600 */
+// /*  1610 */
+// /*  1620 */
+// /*  1630 */
+// /*  1640 */
+// /*  1650 */
+// /*  1660 */
+// /*  1670 */
+// /*  1680 */
+// /*  1690 */
+// /*  1700 */
+// /*  1710 */
+// /*  1720 */
+// /*  1730 */
+// /*  1740 */
+// /*  1750 */
+// /*  1760 */
+// /*  1770 */
+// /*  1780 */
+// /*  1790 */
+// /*  1800 */
+// /*  1810 */
+// /*  1820 */
+// /*  1830 */
+// /*  1840 */
+// /*  1850 */
+// /*  1860 */
+// /*  1870 */
+// /*  1880 */
+// /*  1890 */
+// /*  1900 */
+// /*  1910 */
+// /*  1920 */
+// /*  1930 */
+// /*  1940 */
+// /*  1950 */
+// /*  1960 */
+// /*  1970 */
+// /*  1980 */
+// /*  1990 */
+// /*  2000 */
+// /*  2010 */
+// /*  2020 */
+// /*  2030 */
+// /*  2040 */
+// /*  2050 */
+// /*  2060 */
+// /*  2070 */
+// /*  2080 */
+// /*  2090 */
+// /*  2100 */
+// /*  2110 */
+// /*  2120 */
+// /*  2130 */
+// /*  2140 */
+// /*  2150 */
+// /*  2160 */
+// /*  2170 */
+// /*  2180 */
+// /*  2190 */
+// /*  2200 */
+// /*  2210 */
+// /*  2220 */
+// /*  2230 */
+// /*  2240 */
+// /*  2250 */
+// /*  2260 */
+// /*  2270 */
+// /*  2280 */
+// /*  2290 */
+// /*  2300 */
+// /*  2310 */
+// /*  2320 */
+// /*  2330 */
+// /*  2340 */
+// /*  2350 */
+// /*  2360 */
+// /*  2370 */
+// /*  2380 */
+// /*  2390 */
+// /*  2400 */
+// /*  2410 */
+// /*  2420 */
+// /*  2430 */
+// /*  2440 */
+// /*  2450 */
+// /*  2460 */
+// /*  2470 */
+// /*  2480 */
+// /*  2490 */
+// /*  2500 */
+// /*  2510 */
+// /*  2520 */
+// /*  2530 */
+// /*  2540 */
+// /*  2550 */
+// /*  2560 */
+static mut yy_shift_ofst: __SlateAlign16<[u16; 600]> = __SlateAlign16([
+    ((2201 as i32) as i16) as u16,
+    ((1973 as i32) as i16) as u16,
+    ((2215 as i32) as i16) as u16,
+    ((1552 as i32) as i16) as u16,
+    ((1552 as i32) as i16) as u16,
+    ((33 as i32) as i16) as u16,
+    ((368 as i32) as i16) as u16,
+    ((1668 as i32) as i16) as u16,
+    ((1741 as i32) as i16) as u16,
+    ((1814 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((265 as i32) as i16) as u16,
+    ((33 as i32) as i16) as u16,
+    ((33 as i32) as i16) as u16,
+    ((33 as i32) as i16) as u16,
+    ((33 as i32) as i16) as u16,
+    ((33 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((216 as i32) as i16) as u16,
+    ((1349 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((272 as i32) as i16) as u16,
+    ((272 as i32) as i16) as u16,
+    ((111 as i32) as i16) as u16,
+    ((111 as i32) as i16) as u16,
+    ((316 as i32) as i16) as u16,
+    ((365 as i32) as i16) as u16,
+    ((516 as i32) as i16) as u16,
+    ((867 as i32) as i16) as u16,
+    ((867 as i32) as i16) as u16,
+    ((916 as i32) as i16) as u16,
+    ((916 as i32) as i16) as u16,
+    ((916 as i32) as i16) as u16,
+    ((916 as i32) as i16) as u16,
+    ((40 as i32) as i16) as u16,
+    ((112 as i32) as i16) as u16,
+    ((260 as i32) as i16) as u16,
+    ((364 as i32) as i16) as u16,
+    ((408 as i32) as i16) as u16,
+    ((512 as i32) as i16) as u16,
+    ((617 as i32) as i16) as u16,
+    ((661 as i32) as i16) as u16,
+    ((765 as i32) as i16) as u16,
+    ((809 as i32) as i16) as u16,
+    ((913 as i32) as i16) as u16,
+    ((957 as i32) as i16) as u16,
+    ((1061 as i32) as i16) as u16,
+    ((1081 as i32) as i16) as u16,
+    ((1195 as i32) as i16) as u16,
+    ((1215 as i32) as i16) as u16,
+    ((1329 as i32) as i16) as u16,
+    ((1349 as i32) as i16) as u16,
+    ((1349 as i32) as i16) as u16,
+    ((1349 as i32) as i16) as u16,
+    ((1349 as i32) as i16) as u16,
+    ((1349 as i32) as i16) as u16,
+    ((1349 as i32) as i16) as u16,
+    ((1349 as i32) as i16) as u16,
+    ((1349 as i32) as i16) as u16,
+    ((1349 as i32) as i16) as u16,
+    ((1349 as i32) as i16) as u16,
+    ((1349 as i32) as i16) as u16,
+    ((1349 as i32) as i16) as u16,
+    ((1349 as i32) as i16) as u16,
+    ((1349 as i32) as i16) as u16,
+    ((1349 as i32) as i16) as u16,
+    ((1349 as i32) as i16) as u16,
+    ((1349 as i32) as i16) as u16,
+    ((1349 as i32) as i16) as u16,
+    ((1369 as i32) as i16) as u16,
+    ((1349 as i32) as i16) as u16,
+    ((1473 as i32) as i16) as u16,
+    ((1493 as i32) as i16) as u16,
+    ((1493 as i32) as i16) as u16,
+    ((473 as i32) as i16) as u16,
+    ((1974 as i32) as i16) as u16,
+    ((2082 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((726 as i32) as i16) as u16,
+    ((138 as i32) as i16) as u16,
+    ((232 as i32) as i16) as u16,
+    ((232 as i32) as i16) as u16,
+    ((232 as i32) as i16) as u16,
+    ((232 as i32) as i16) as u16,
+    ((232 as i32) as i16) as u16,
+    ((232 as i32) as i16) as u16,
+    ((232 as i32) as i16) as u16,
+    ((188 as i32) as i16) as u16,
+    ((99 as i32) as i16) as u16,
+    ((242 as i32) as i16) as u16,
+    ((718 as i32) as i16) as u16,
+    ((416 as i32) as i16) as u16,
+    ((1159 as i32) as i16) as u16,
+    ((867 as i32) as i16) as u16,
+    ((867 as i32) as i16) as u16,
+    ((940 as i32) as i16) as u16,
+    ((940 as i32) as i16) as u16,
+    ((867 as i32) as i16) as u16,
+    ((1103 as i32) as i16) as u16,
+    ((417 as i32) as i16) as u16,
+    ((574 as i32) as i16) as u16,
+    ((574 as i32) as i16) as u16,
+    ((574 as i32) as i16) as u16,
+    ((611 as i32) as i16) as u16,
+    ((139 as i32) as i16) as u16,
+    ((139 as i32) as i16) as u16,
+    ((2379 as i32) as i16) as u16,
+    ((2379 as i32) as i16) as u16,
+    ((1026 as i32) as i16) as u16,
+    ((1026 as i32) as i16) as u16,
+    ((1026 as i32) as i16) as u16,
+    ((536 as i32) as i16) as u16,
+    ((466 as i32) as i16) as u16,
+    ((466 as i32) as i16) as u16,
+    ((466 as i32) as i16) as u16,
+    ((466 as i32) as i16) as u16,
+    ((1017 as i32) as i16) as u16,
+    ((1017 as i32) as i16) as u16,
+    ((849 as i32) as i16) as u16,
+    ((718 as i32) as i16) as u16,
+    ((971 as i32) as i16) as u16,
+    ((1060 as i32) as i16) as u16,
+    ((867 as i32) as i16) as u16,
+    ((867 as i32) as i16) as u16,
+    ((867 as i32) as i16) as u16,
+    ((867 as i32) as i16) as u16,
+    ((867 as i32) as i16) as u16,
+    ((867 as i32) as i16) as u16,
+    ((867 as i32) as i16) as u16,
+    ((867 as i32) as i16) as u16,
+    ((867 as i32) as i16) as u16,
+    ((867 as i32) as i16) as u16,
+    ((867 as i32) as i16) as u16,
+    ((867 as i32) as i16) as u16,
+    ((867 as i32) as i16) as u16,
+    ((867 as i32) as i16) as u16,
+    ((867 as i32) as i16) as u16,
+    ((867 as i32) as i16) as u16,
+    ((867 as i32) as i16) as u16,
+    ((867 as i32) as i16) as u16,
+    ((867 as i32) as i16) as u16,
+    ((261 as i32) as i16) as u16,
+    ((712 as i32) as i16) as u16,
+    ((712 as i32) as i16) as u16,
+    ((867 as i32) as i16) as u16,
+    ((108 as i32) as i16) as u16,
+    ((1142 as i32) as i16) as u16,
+    ((1142 as i32) as i16) as u16,
+    ((977 as i32) as i16) as u16,
+    ((1108 as i32) as i16) as u16,
+    ((1108 as i32) as i16) as u16,
+    ((977 as i32) as i16) as u16,
+    ((977 as i32) as i16) as u16,
+    ((1243 as i32) as i16) as u16,
+    ((2379 as i32) as i16) as u16,
+    ((2379 as i32) as i16) as u16,
+    ((2379 as i32) as i16) as u16,
+    ((2379 as i32) as i16) as u16,
+    ((2379 as i32) as i16) as u16,
+    ((2379 as i32) as i16) as u16,
+    ((2379 as i32) as i16) as u16,
+    ((641 as i32) as i16) as u16,
+    ((789 as i32) as i16) as u16,
+    ((789 as i32) as i16) as u16,
+    ((635 as i32) as i16) as u16,
+    ((366 as i32) as i16) as u16,
+    ((721 as i32) as i16) as u16,
+    ((673 as i32) as i16) as u16,
+    ((782 as i32) as i16) as u16,
+    ((494 as i32) as i16) as u16,
+    ((787 as i32) as i16) as u16,
+    ((829 as i32) as i16) as u16,
+    ((867 as i32) as i16) as u16,
+    ((867 as i32) as i16) as u16,
+    ((867 as i32) as i16) as u16,
+    ((867 as i32) as i16) as u16,
+    ((867 as i32) as i16) as u16,
+    ((867 as i32) as i16) as u16,
+    ((867 as i32) as i16) as u16,
+    ((867 as i32) as i16) as u16,
+    ((867 as i32) as i16) as u16,
+    ((867 as i32) as i16) as u16,
+    ((867 as i32) as i16) as u16,
+    ((959 as i32) as i16) as u16,
+    ((867 as i32) as i16) as u16,
+    ((867 as i32) as i16) as u16,
+    ((867 as i32) as i16) as u16,
+    ((867 as i32) as i16) as u16,
+    ((867 as i32) as i16) as u16,
+    ((867 as i32) as i16) as u16,
+    ((867 as i32) as i16) as u16,
+    ((867 as i32) as i16) as u16,
+    ((867 as i32) as i16) as u16,
+    ((867 as i32) as i16) as u16,
+    ((867 as i32) as i16) as u16,
+    ((867 as i32) as i16) as u16,
+    ((867 as i32) as i16) as u16,
+    ((867 as i32) as i16) as u16,
+    ((820 as i32) as i16) as u16,
+    ((820 as i32) as i16) as u16,
+    ((820 as i32) as i16) as u16,
+    ((867 as i32) as i16) as u16,
+    ((867 as i32) as i16) as u16,
+    ((867 as i32) as i16) as u16,
+    ((1136 as i32) as i16) as u16,
+    ((867 as i32) as i16) as u16,
+    ((867 as i32) as i16) as u16,
+    ((867 as i32) as i16) as u16,
+    ((1119 as i32) as i16) as u16,
+    ((1007 as i32) as i16) as u16,
+    ((867 as i32) as i16) as u16,
+    ((1169 as i32) as i16) as u16,
+    ((867 as i32) as i16) as u16,
+    ((867 as i32) as i16) as u16,
+    ((867 as i32) as i16) as u16,
+    ((867 as i32) as i16) as u16,
+    ((867 as i32) as i16) as u16,
+    ((867 as i32) as i16) as u16,
+    ((867 as i32) as i16) as u16,
+    ((867 as i32) as i16) as u16,
+    ((1225 as i32) as i16) as u16,
+    ((1153 as i32) as i16) as u16,
+    ((869 as i32) as i16) as u16,
+    ((196 as i32) as i16) as u16,
+    ((618 as i32) as i16) as u16,
+    ((618 as i32) as i16) as u16,
+    ((618 as i32) as i16) as u16,
+    ((618 as i32) as i16) as u16,
+    ((1491 as i32) as i16) as u16,
+    ((196 as i32) as i16) as u16,
+    ((196 as i32) as i16) as u16,
+    ((91 as i32) as i16) as u16,
+    ((339 as i32) as i16) as u16,
+    ((1326 as i32) as i16) as u16,
+    ((1386 as i32) as i16) as u16,
+    ((383 as i32) as i16) as u16,
+    ((1163 as i32) as i16) as u16,
+    ((1364 as i32) as i16) as u16,
+    ((1426 as i32) as i16) as u16,
+    ((1364 as i32) as i16) as u16,
+    ((1538 as i32) as i16) as u16,
+    ((903 as i32) as i16) as u16,
+    ((1163 as i32) as i16) as u16,
+    ((1163 as i32) as i16) as u16,
+    ((903 as i32) as i16) as u16,
+    ((1163 as i32) as i16) as u16,
+    ((1426 as i32) as i16) as u16,
+    ((1538 as i32) as i16) as u16,
+    ((1018 as i32) as i16) as u16,
+    ((1535 as i32) as i16) as u16,
+    ((1241 as i32) as i16) as u16,
+    ((1528 as i32) as i16) as u16,
+    ((1528 as i32) as i16) as u16,
+    ((1528 as i32) as i16) as u16,
+    ((1394 as i32) as i16) as u16,
+    ((1394 as i32) as i16) as u16,
+    ((1394 as i32) as i16) as u16,
+    ((1394 as i32) as i16) as u16,
+    ((762 as i32) as i16) as u16,
+    ((762 as i32) as i16) as u16,
+    ((1403 as i32) as i16) as u16,
+    ((1466 as i32) as i16) as u16,
+    ((1475 as i32) as i16) as u16,
+    ((1551 as i32) as i16) as u16,
+    ((1746 as i32) as i16) as u16,
+    ((1805 as i32) as i16) as u16,
+    ((1746 as i32) as i16) as u16,
+    ((1746 as i32) as i16) as u16,
+    ((1729 as i32) as i16) as u16,
+    ((1729 as i32) as i16) as u16,
+    ((1840 as i32) as i16) as u16,
+    ((1840 as i32) as i16) as u16,
+    ((1729 as i32) as i16) as u16,
+    ((1730 as i32) as i16) as u16,
+    ((1732 as i32) as i16) as u16,
+    ((1859 as i32) as i16) as u16,
+    ((1842 as i32) as i16) as u16,
+    ((1870 as i32) as i16) as u16,
+    ((1870 as i32) as i16) as u16,
+    ((1870 as i32) as i16) as u16,
+    ((1870 as i32) as i16) as u16,
+    ((1729 as i32) as i16) as u16,
+    ((1876 as i32) as i16) as u16,
+    ((1751 as i32) as i16) as u16,
+    ((1732 as i32) as i16) as u16,
+    ((1732 as i32) as i16) as u16,
+    ((1751 as i32) as i16) as u16,
+    ((1859 as i32) as i16) as u16,
+    ((1842 as i32) as i16) as u16,
+    ((1751 as i32) as i16) as u16,
+    ((1842 as i32) as i16) as u16,
+    ((1751 as i32) as i16) as u16,
+    ((1729 as i32) as i16) as u16,
+    ((1876 as i32) as i16) as u16,
+    ((1760 as i32) as i16) as u16,
+    ((1857 as i32) as i16) as u16,
+    ((1729 as i32) as i16) as u16,
+    ((1876 as i32) as i16) as u16,
+    ((1906 as i32) as i16) as u16,
+    ((1729 as i32) as i16) as u16,
+    ((1876 as i32) as i16) as u16,
+    ((1729 as i32) as i16) as u16,
+    ((1876 as i32) as i16) as u16,
+    ((1906 as i32) as i16) as u16,
+    ((1746 as i32) as i16) as u16,
+    ((1746 as i32) as i16) as u16,
+    ((1746 as i32) as i16) as u16,
+    ((1873 as i32) as i16) as u16,
+    ((1922 as i32) as i16) as u16,
+    ((1922 as i32) as i16) as u16,
+    ((1906 as i32) as i16) as u16,
+    ((1746 as i32) as i16) as u16,
+    ((1822 as i32) as i16) as u16,
+    ((1746 as i32) as i16) as u16,
+    ((1873 as i32) as i16) as u16,
+    ((1746 as i32) as i16) as u16,
+    ((1746 as i32) as i16) as u16,
+    ((1786 as i32) as i16) as u16,
+    ((1929 as i32) as i16) as u16,
+    ((1843 as i32) as i16) as u16,
+    ((1843 as i32) as i16) as u16,
+    ((1906 as i32) as i16) as u16,
+    ((1729 as i32) as i16) as u16,
+    ((1872 as i32) as i16) as u16,
+    ((1872 as i32) as i16) as u16,
+    ((1894 as i32) as i16) as u16,
+    ((1894 as i32) as i16) as u16,
+    ((1831 as i32) as i16) as u16,
+    ((1836 as i32) as i16) as u16,
+    ((1966 as i32) as i16) as u16,
+    ((1729 as i32) as i16) as u16,
+    ((1833 as i32) as i16) as u16,
+    ((1831 as i32) as i16) as u16,
+    ((1851 as i32) as i16) as u16,
+    ((1860 as i32) as i16) as u16,
+    ((1751 as i32) as i16) as u16,
+    ((1983 as i32) as i16) as u16,
+    ((1996 as i32) as i16) as u16,
+    ((1996 as i32) as i16) as u16,
+    ((2009 as i32) as i16) as u16,
+    ((2009 as i32) as i16) as u16,
+    ((2009 as i32) as i16) as u16,
+    ((2379 as i32) as i16) as u16,
+    ((2379 as i32) as i16) as u16,
+    ((2379 as i32) as i16) as u16,
+    ((2379 as i32) as i16) as u16,
+    ((2379 as i32) as i16) as u16,
+    ((2379 as i32) as i16) as u16,
+    ((2379 as i32) as i16) as u16,
+    ((2379 as i32) as i16) as u16,
+    ((2379 as i32) as i16) as u16,
+    ((2379 as i32) as i16) as u16,
+    ((2379 as i32) as i16) as u16,
+    ((2379 as i32) as i16) as u16,
+    ((2379 as i32) as i16) as u16,
+    ((2379 as i32) as i16) as u16,
+    ((2379 as i32) as i16) as u16,
+    ((136 as i32) as i16) as u16,
+    ((1063 as i32) as i16) as u16,
+    ((1196 as i32) as i16) as u16,
+    ((530 as i32) as i16) as u16,
+    ((636 as i32) as i16) as u16,
+    ((1274 as i32) as i16) as u16,
+    ((1300 as i32) as i16) as u16,
+    ((1443 as i32) as i16) as u16,
+    ((1598 as i32) as i16) as u16,
+    ((1495 as i32) as i16) as u16,
+    ((1479 as i32) as i16) as u16,
+    ((967 as i32) as i16) as u16,
+    ((1083 as i32) as i16) as u16,
+    ((1602 as i32) as i16) as u16,
+    ((463 as i32) as i16) as u16,
+    ((1625 as i32) as i16) as u16,
+    ((1638 as i32) as i16) as u16,
+    ((1670 as i32) as i16) as u16,
+    ((1541 as i32) as i16) as u16,
+    ((1671 as i32) as i16) as u16,
+    ((1689 as i32) as i16) as u16,
+    ((1696 as i32) as i16) as u16,
+    ((1277 as i32) as i16) as u16,
+    ((1432 as i32) as i16) as u16,
+    ((1693 as i32) as i16) as u16,
+    ((808 as i32) as i16) as u16,
+    ((1700 as i32) as i16) as u16,
+    ((1607 as i32) as i16) as u16,
+    ((1657 as i32) as i16) as u16,
+    ((1587 as i32) as i16) as u16,
+    ((1704 as i32) as i16) as u16,
+    ((1707 as i32) as i16) as u16,
+    ((1631 as i32) as i16) as u16,
+    ((1708 as i32) as i16) as u16,
+    ((1733 as i32) as i16) as u16,
+    ((1608 as i32) as i16) as u16,
+    ((1611 as i32) as i16) as u16,
+    ((1743 as i32) as i16) as u16,
+    ((1747 as i32) as i16) as u16,
+    ((1620 as i32) as i16) as u16,
+    ((1592 as i32) as i16) as u16,
+    ((2026 as i32) as i16) as u16,
+    ((2030 as i32) as i16) as u16,
+    ((2013 as i32) as i16) as u16,
+    ((1914 as i32) as i16) as u16,
+    ((2018 as i32) as i16) as u16,
+    ((1916 as i32) as i16) as u16,
+    ((2020 as i32) as i16) as u16,
+    ((2019 as i32) as i16) as u16,
+    ((2021 as i32) as i16) as u16,
+    ((1915 as i32) as i16) as u16,
+    ((2027 as i32) as i16) as u16,
+    ((2029 as i32) as i16) as u16,
+    ((2024 as i32) as i16) as u16,
+    ((2025 as i32) as i16) as u16,
+    ((1909 as i32) as i16) as u16,
+    ((1899 as i32) as i16) as u16,
+    ((1923 as i32) as i16) as u16,
+    ((2028 as i32) as i16) as u16,
+    ((2028 as i32) as i16) as u16,
+    ((1913 as i32) as i16) as u16,
+    ((2037 as i32) as i16) as u16,
+    ((1917 as i32) as i16) as u16,
+    ((2042 as i32) as i16) as u16,
+    ((2059 as i32) as i16) as u16,
+    ((1918 as i32) as i16) as u16,
+    ((1932 as i32) as i16) as u16,
+    ((2028 as i32) as i16) as u16,
+    ((1933 as i32) as i16) as u16,
+    ((2003 as i32) as i16) as u16,
+    ((2031 as i32) as i16) as u16,
+    ((2028 as i32) as i16) as u16,
+    ((1919 as i32) as i16) as u16,
+    ((2012 as i32) as i16) as u16,
+    ((2015 as i32) as i16) as u16,
+    ((2016 as i32) as i16) as u16,
+    ((2022 as i32) as i16) as u16,
+    ((1936 as i32) as i16) as u16,
+    ((1956 as i32) as i16) as u16,
+    ((2040 as i32) as i16) as u16,
+    ((2053 as i32) as i16) as u16,
+    ((2077 as i32) as i16) as u16,
+    ((2074 as i32) as i16) as u16,
+    ((2058 as i32) as i16) as u16,
+    ((1967 as i32) as i16) as u16,
+    ((1924 as i32) as i16) as u16,
+    ((2034 as i32) as i16) as u16,
+    ((2060 as i32) as i16) as u16,
+    ((2036 as i32) as i16) as u16,
+    ((2008 as i32) as i16) as u16,
+    ((2046 as i32) as i16) as u16,
+    ((1946 as i32) as i16) as u16,
+    ((1978 as i32) as i16) as u16,
+    ((2066 as i32) as i16) as u16,
+    ((2075 as i32) as i16) as u16,
+    ((2078 as i32) as i16) as u16,
+    ((1968 as i32) as i16) as u16,
+    ((1972 as i32) as i16) as u16,
+    ((2084 as i32) as i16) as u16,
+    ((2041 as i32) as i16) as u16,
+    ((2086 as i32) as i16) as u16,
+    ((2088 as i32) as i16) as u16,
+    ((2076 as i32) as i16) as u16,
+    ((2089 as i32) as i16) as u16,
+    ((2048 as i32) as i16) as u16,
+    ((2054 as i32) as i16) as u16,
+    ((2093 as i32) as i16) as u16,
+    ((2023 as i32) as i16) as u16,
+    ((2091 as i32) as i16) as u16,
+    ((2099 as i32) as i16) as u16,
+    ((2055 as i32) as i16) as u16,
+    ((2085 as i32) as i16) as u16,
+    ((2101 as i32) as i16) as u16,
+    ((2092 as i32) as i16) as u16,
+    ((1975 as i32) as i16) as u16,
+    ((2105 as i32) as i16) as u16,
+    ((2110 as i32) as i16) as u16,
+    ((2111 as i32) as i16) as u16,
+    ((2112 as i32) as i16) as u16,
+    ((2115 as i32) as i16) as u16,
+    ((2113 as i32) as i16) as u16,
+    ((2043 as i32) as i16) as u16,
+    ((1997 as i32) as i16) as u16,
+    ((2117 as i32) as i16) as u16,
+    ((2120 as i32) as i16) as u16,
+    ((2032 as i32) as i16) as u16,
+    ((2114 as i32) as i16) as u16,
+    ((2122 as i32) as i16) as u16,
+    ((2001 as i32) as i16) as u16,
+    ((2121 as i32) as i16) as u16,
+    ((2116 as i32) as i16) as u16,
+    ((2118 as i32) as i16) as u16,
+    ((2119 as i32) as i16) as u16,
+    ((2124 as i32) as i16) as u16,
+    ((2062 as i32) as i16) as u16,
+    ((2071 as i32) as i16) as u16,
+    ((2068 as i32) as i16) as u16,
+    ((2123 as i32) as i16) as u16,
+    ((2080 as i32) as i16) as u16,
+    ((2065 as i32) as i16) as u16,
+    ((2126 as i32) as i16) as u16,
+    ((2138 as i32) as i16) as u16,
+    ((2140 as i32) as i16) as u16,
+    ((2139 as i32) as i16) as u16,
+    ((2141 as i32) as i16) as u16,
+    ((2143 as i32) as i16) as u16,
+    ((2130 as i32) as i16) as u16,
+    ((2033 as i32) as i16) as u16,
+    ((2035 as i32) as i16) as u16,
+    ((2142 as i32) as i16) as u16,
+    ((2121 as i32) as i16) as u16,
+    ((2146 as i32) as i16) as u16,
+    ((2147 as i32) as i16) as u16,
+    ((2148 as i32) as i16) as u16,
+    ((2150 as i32) as i16) as u16,
+    ((2149 as i32) as i16) as u16,
+    ((2152 as i32) as i16) as u16,
+    ((2156 as i32) as i16) as u16,
+    ((2151 as i32) as i16) as u16,
+    ((2164 as i32) as i16) as u16,
+    ((2158 as i32) as i16) as u16,
+    ((2159 as i32) as i16) as u16,
+    ((2161 as i32) as i16) as u16,
+    ((2162 as i32) as i16) as u16,
+    ((2160 as i32) as i16) as u16,
+    ((2165 as i32) as i16) as u16,
+    ((2163 as i32) as i16) as u16,
+    ((2050 as i32) as i16) as u16,
+    ((2049 as i32) as i16) as u16,
+    ((2051 as i32) as i16) as u16,
+    ((2052 as i32) as i16) as u16,
+    ((2167 as i32) as i16) as u16,
+    ((2172 as i32) as i16) as u16,
+    ((2181 as i32) as i16) as u16,
+    ((2197 as i32) as i16) as u16,
+    ((2204 as i32) as i16) as u16,
+]);
+
+// /*     0 */
+// /*    10 */
+// /*    20 */
+// /*    30 */
+// /*    40 */
+// /*    50 */
+// /*    60 */
+// /*    70 */
+// /*    80 */
+// /*    90 */
+// /*   100 */
+// /*   110 */
+// /*   120 */
+// /*   130 */
+// /*   140 */
+// /*   150 */
+// /*   160 */
+// /*   170 */
+// /*   180 */
+// /*   190 */
+// /*   200 */
+// /*   210 */
+// /*   220 */
+// /*   230 */
+// /*   240 */
+// /*   250 */
+// /*   260 */
+// /*   270 */
+// /*   280 */
+// /*   290 */
+// /*   300 */
+// /*   310 */
+// /*   320 */
+// /*   330 */
+// /*   340 */
+// /*   350 */
+// /*   360 */
+// /*   370 */
+// /*   380 */
+// /*   390 */
+// /*   400 */
+// /*   410 */
+// /*   420 */
+// /*   430 */
+// /*   440 */
+// /*   450 */
+// /*   460 */
+// /*   470 */
+// /*   480 */
+// /*   490 */
+// /*   500 */
+// /*   510 */
+// /*   520 */
+// /*   530 */
+// /*   540 */
+// /*   550 */
+// /*   560 */
+// /*   570 */
+// /*   580 */
+// /*   590 */
+static mut yy_reduce_ofst: __SlateAlign16<[i16; 424]> = __SlateAlign16([
+    -(67 as i32) as i16,
+    (345 as i32) as i16,
+    -(64 as i32) as i16,
+    -(178 as i32) as i16,
+    -(181 as i32) as i16,
+    (143 as i32) as i16,
+    (435 as i32) as i16,
+    -(78 as i32) as i16,
+    -(183 as i32) as i16,
+    (163 as i32) as i16,
+    -(185 as i32) as i16,
+    (284 as i32) as i16,
+    (384 as i32) as i16,
+    -(174 as i32) as i16,
+    (189 as i32) as i16,
+    (352 as i32) as i16,
+    (440 as i32) as i16,
+    (444 as i32) as i16,
+    (493 as i32) as i16,
+    -(23 as i32) as i16,
+    (227 as i32) as i16,
+    -(277 as i32) as i16,
+    -(1 as i32) as i16,
+    (305 as i32) as i16,
+    (561 as i32) as i16,
+    (755 as i32) as i16,
+    (759 as i32) as i16,
+    (764 as i32) as i16,
+    -(189 as i32) as i16,
+    (839 as i32) as i16,
+    (857 as i32) as i16,
+    (354 as i32) as i16,
+    (484 as i32) as i16,
+    (859 as i32) as i16,
+    (631 as i32) as i16,
+    (67 as i32) as i16,
+    (734 as i32) as i16,
+    (780 as i32) as i16,
+    -(187 as i32) as i16,
+    (616 as i32) as i16,
+    (581 as i32) as i16,
+    (730 as i32) as i16,
+    (891 as i32) as i16,
+    (449 as i32) as i16,
+    (588 as i32) as i16,
+    (795 as i32) as i16,
+    (836 as i32) as i16,
+    -(238 as i32) as i16,
+    (287 as i32) as i16,
+    -(238 as i32) as i16,
+    (287 as i32) as i16,
+    -(256 as i32) as i16,
+    -(256 as i32) as i16,
+    -(256 as i32) as i16,
+    -(256 as i32) as i16,
+    -(256 as i32) as i16,
+    -(256 as i32) as i16,
+    -(256 as i32) as i16,
+    -(256 as i32) as i16,
+    -(256 as i32) as i16,
+    -(256 as i32) as i16,
+    -(256 as i32) as i16,
+    -(256 as i32) as i16,
+    -(256 as i32) as i16,
+    -(256 as i32) as i16,
+    -(256 as i32) as i16,
+    -(256 as i32) as i16,
+    -(256 as i32) as i16,
+    -(256 as i32) as i16,
+    -(256 as i32) as i16,
+    -(256 as i32) as i16,
+    -(256 as i32) as i16,
+    -(256 as i32) as i16,
+    -(256 as i32) as i16,
+    -(256 as i32) as i16,
+    -(256 as i32) as i16,
+    -(256 as i32) as i16,
+    -(256 as i32) as i16,
+    -(256 as i32) as i16,
+    -(256 as i32) as i16,
+    -(256 as i32) as i16,
+    -(256 as i32) as i16,
+    -(256 as i32) as i16,
+    -(256 as i32) as i16,
+    -(256 as i32) as i16,
+    -(256 as i32) as i16,
+    -(256 as i32) as i16,
+    -(256 as i32) as i16,
+    -(256 as i32) as i16,
+    -(256 as i32) as i16,
+    -(256 as i32) as i16,
+    (205 as i32) as i16,
+    (582 as i32) as i16,
+    (715 as i32) as i16,
+    (958 as i32) as i16,
+    (985 as i32) as i16,
+    (1003 as i32) as i16,
+    (1005 as i32) as i16,
+    (1010 as i32) as i16,
+    (1012 as i32) as i16,
+    (1059 as i32) as i16,
+    (1066 as i32) as i16,
+    (1092 as i32) as i16,
+    (1094 as i32) as i16,
+    (1097 as i32) as i16,
+    (1122 as i32) as i16,
+    (1137 as i32) as i16,
+    (1141 as i32) as i16,
+    (1143 as i32) as i16,
+    (1147 as i32) as i16,
+    (1151 as i32) as i16,
+    (1172 as i32) as i16,
+    (1249 as i32) as i16,
+    (1251 as i32) as i16,
+    (1269 as i32) as i16,
+    (1271 as i32) as i16,
+    (1276 as i32) as i16,
+    (1290 as i32) as i16,
+    (1316 as i32) as i16,
+    (1318 as i32) as i16,
+    (1337 as i32) as i16,
+    (1371 as i32) as i16,
+    (1373 as i32) as i16,
+    (1375 as i32) as i16,
+    (1400 as i32) as i16,
+    (1413 as i32) as i16,
+    (1418 as i32) as i16,
+    (1420 as i32) as i16,
+    (1422 as i32) as i16,
+    (1425 as i32) as i16,
+    (1427 as i32) as i16,
+    (1433 as i32) as i16,
+    (1438 as i32) as i16,
+    (1447 as i32) as i16,
+    (1454 as i32) as i16,
+    (1459 as i32) as i16,
+    (1463 as i32) as i16,
+    (1467 as i32) as i16,
+    (1480 as i32) as i16,
+    (1484 as i32) as i16,
+    (1518 as i32) as i16,
+    (1523 as i32) as i16,
+    (1525 as i32) as i16,
+    (1527 as i32) as i16,
+    (1529 as i32) as i16,
+    (1531 as i32) as i16,
+    -(256 as i32) as i16,
+    -(256 as i32) as i16,
+    -(256 as i32) as i16,
+    -(256 as i32) as i16,
+    -(256 as i32) as i16,
+    -(256 as i32) as i16,
+    -(256 as i32) as i16,
+    -(256 as i32) as i16,
+    -(256 as i32) as i16,
+    -(256 as i32) as i16,
+    -(256 as i32) as i16,
+    (155 as i32) as i16,
+    (210 as i32) as i16,
+    -(220 as i32) as i16,
+    (86 as i32) as i16,
+    -(130 as i32) as i16,
+    (943 as i32) as i16,
+    (996 as i32) as i16,
+    (402 as i32) as i16,
+    -(256 as i32) as i16,
+    -(113 as i32) as i16,
+    (981 as i32) as i16,
+    (1095 as i32) as i16,
+    (1135 as i32) as i16,
+    (395 as i32) as i16,
+    -(256 as i32) as i16,
+    -(256 as i32) as i16,
+    -(256 as i32) as i16,
+    -(256 as i32) as i16,
+    (568 as i32) as i16,
+    (568 as i32) as i16,
+    (568 as i32) as i16,
+    -(4 as i32) as i16,
+    -(153 as i32) as i16,
+    -(133 as i32) as i16,
+    (259 as i32) as i16,
+    (306 as i32) as i16,
+    -(166 as i32) as i16,
+    (523 as i32) as i16,
+    -(303 as i32) as i16,
+    -(126 as i32) as i16,
+    (503 as i32) as i16,
+    (503 as i32) as i16,
+    -(37 as i32) as i16,
+    -(149 as i32) as i16,
+    (164 as i32) as i16,
+    (690 as i32) as i16,
+    (292 as i32) as i16,
+    (412 as i32) as i16,
+    (492 as i32) as i16,
+    (651 as i32) as i16,
+    (784 as i32) as i16,
+    (332 as i32) as i16,
+    (786 as i32) as i16,
+    (841 as i32) as i16,
+    (1149 as i32) as i16,
+    (833 as i32) as i16,
+    (1236 as i32) as i16,
+    (792 as i32) as i16,
+    (162 as i32) as i16,
+    (796 as i32) as i16,
+    (1253 as i32) as i16,
+    (777 as i32) as i16,
+    (288 as i32) as i16,
+    (381 as i32) as i16,
+    (380 as i32) as i16,
+    (709 as i32) as i16,
+    (487 as i32) as i16,
+    (1027 as i32) as i16,
+    (972 as i32) as i16,
+    (1030 as i32) as i16,
+    (1084 as i32) as i16,
+    (991 as i32) as i16,
+    (1120 as i32) as i16,
+    -(152 as i32) as i16,
+    (1062 as i32) as i16,
+    (692 as i32) as i16,
+    (1240 as i32) as i16,
+    (1247 as i32) as i16,
+    (1250 as i32) as i16,
+    (1239 as i32) as i16,
+    (1306 as i32) as i16,
+    -(207 as i32) as i16,
+    -(194 as i32) as i16,
+    (57 as i32) as i16,
+    (180 as i32) as i16,
+    (74 as i32) as i16,
+    (315 as i32) as i16,
+    (355 as i32) as i16,
+    (376 as i32) as i16,
+    (452 as i32) as i16,
+    (488 as i32) as i16,
+    (630 as i32) as i16,
+    (693 as i32) as i16,
+    (965 as i32) as i16,
+    (1004 as i32) as i16,
+    (1025 as i32) as i16,
+    (1099 as i32) as i16,
+    (1154 as i32) as i16,
+    (1289 as i32) as i16,
+    (1305 as i32) as i16,
+    (1310 as i32) as i16,
+    (1469 as i32) as i16,
+    (1489 as i32) as i16,
+    (984 as i32) as i16,
+    (1494 as i32) as i16,
+    (1502 as i32) as i16,
+    (1516 as i32) as i16,
+    (1544 as i32) as i16,
+    (1556 as i32) as i16,
+    (1557 as i32) as i16,
+    (1562 as i32) as i16,
+    (1576 as i32) as i16,
+    (1578 as i32) as i16,
+    (1579 as i32) as i16,
+    (1583 as i32) as i16,
+    (1584 as i32) as i16,
+    (1585 as i32) as i16,
+    (1586 as i32) as i16,
+    (1217 as i32) as i16,
+    (1440 as i32) as i16,
+    (1554 as i32) as i16,
+    (1589 as i32) as i16,
+    (1593 as i32) as i16,
+    (1594 as i32) as i16,
+    (1530 as i32) as i16,
+    (1597 as i32) as i16,
+    (1599 as i32) as i16,
+    (1600 as i32) as i16,
+    (1539 as i32) as i16,
+    (1472 as i32) as i16,
+    (1601 as i32) as i16,
+    (1560 as i32) as i16,
+    (1604 as i32) as i16,
+    (355 as i32) as i16,
+    (1605 as i32) as i16,
+    (1609 as i32) as i16,
+    (1610 as i32) as i16,
+    (1612 as i32) as i16,
+    (1613 as i32) as i16,
+    (1614 as i32) as i16,
+    (1503 as i32) as i16,
+    (1512 as i32) as i16,
+    (1520 as i32) as i16,
+    (1567 as i32) as i16,
+    (1548 as i32) as i16,
+    (1558 as i32) as i16,
+    (1559 as i32) as i16,
+    (1561 as i32) as i16,
+    (1530 as i32) as i16,
+    (1567 as i32) as i16,
+    (1567 as i32) as i16,
+    (1569 as i32) as i16,
+    (1596 as i32) as i16,
+    (1622 as i32) as i16,
+    (1519 as i32) as i16,
+    (1521 as i32) as i16,
+    (1547 as i32) as i16,
+    (1565 as i32) as i16,
+    (1581 as i32) as i16,
+    (1568 as i32) as i16,
+    (1534 as i32) as i16,
+    (1582 as i32) as i16,
+    (1563 as i32) as i16,
+    (1566 as i32) as i16,
+    (1591 as i32) as i16,
+    (1570 as i32) as i16,
+    (1606 as i32) as i16,
+    (1536 as i32) as i16,
+    (1619 as i32) as i16,
+    (1615 as i32) as i16,
+    (1616 as i32) as i16,
+    (1624 as i32) as i16,
+    (1626 as i32) as i16,
+    (1633 as i32) as i16,
+    (1590 as i32) as i16,
+    (1595 as i32) as i16,
+    (1603 as i32) as i16,
+    (1617 as i32) as i16,
+    (1618 as i32) as i16,
+    (1621 as i32) as i16,
+    (1572 as i32) as i16,
+    (1623 as i32) as i16,
+    (1628 as i32) as i16,
+    (1663 as i32) as i16,
+    (1644 as i32) as i16,
+    (1577 as i32) as i16,
+    (1647 as i32) as i16,
+    (1648 as i32) as i16,
+    (1673 as i32) as i16,
+    (1675 as i32) as i16,
+    (1588 as i32) as i16,
+    (1627 as i32) as i16,
+    (1678 as i32) as i16,
+    (1630 as i32) as i16,
+    (1629 as i32) as i16,
+    (1634 as i32) as i16,
+    (1651 as i32) as i16,
+    (1650 as i32) as i16,
+    (1652 as i32) as i16,
+    (1653 as i32) as i16,
+    (1654 as i32) as i16,
+    (1688 as i32) as i16,
+    (1701 as i32) as i16,
+    (1655 as i32) as i16,
+    (1635 as i32) as i16,
+    (1636 as i32) as i16,
+    (1658 as i32) as i16,
+    (1639 as i32) as i16,
+    (1672 as i32) as i16,
+    (1661 as i32) as i16,
+    (1677 as i32) as i16,
+    (1666 as i32) as i16,
+    (1715 as i32) as i16,
+    (1717 as i32) as i16,
+    (1632 as i32) as i16,
+    (1642 as i32) as i16,
+    (1724 as i32) as i16,
+    (1726 as i32) as i16,
+    (1712 as i32) as i16,
+    (1728 as i32) as i16,
+    (1736 as i32) as i16,
+    (1737 as i32) as i16,
+    (1739 as i32) as i16,
+    (1718 as i32) as i16,
+    (1722 as i32) as i16,
+    (1723 as i32) as i16,
+    (1725 as i32) as i16,
+    (1719 as i32) as i16,
+    (1720 as i32) as i16,
+    (1721 as i32) as i16,
+    (1727 as i32) as i16,
+    (1731 as i32) as i16,
+    (1734 as i32) as i16,
+    (1735 as i32) as i16,
+    (1738 as i32) as i16,
+    (1740 as i32) as i16,
+    (1742 as i32) as i16,
+    (1643 as i32) as i16,
+    (1656 as i32) as i16,
+    (1669 as i32) as i16,
+    (1674 as i32) as i16,
+    (1753 as i32) as i16,
+    (1759 as i32) as i16,
+    (1645 as i32) as i16,
+    (1646 as i32) as i16,
+    (1711 as i32) as i16,
+    (1713 as i32) as i16,
+    (1748 as i32) as i16,
+    (1744 as i32) as i16,
+    (1709 as i32) as i16,
+    (1789 as i32) as i16,
+    (1716 as i32) as i16,
+    (1749 as i32) as i16,
+    (1752 as i32) as i16,
+    (1755 as i32) as i16,
+    (1758 as i32) as i16,
+    (1807 as i32) as i16,
+    (1816 as i32) as i16,
+    (1818 as i32) as i16,
+    (1823 as i32) as i16,
+    (1824 as i32) as i16,
+    (1825 as i32) as i16,
+    (1745 as i32) as i16,
+    (1754 as i32) as i16,
+    (1714 as i32) as i16,
+    (1811 as i32) as i16,
+    (1806 as i32) as i16,
+    (1808 as i32) as i16,
+    (1809 as i32) as i16,
+    (1810 as i32) as i16,
+    (1813 as i32) as i16,
+    (1802 as i32) as i16,
+    (1803 as i32) as i16,
+    (1812 as i32) as i16,
+    (1815 as i32) as i16,
+    (1817 as i32) as i16,
+    (1820 as i32) as i16,
+]);
+
+// /*     0 */
+// /*    10 */
+// /*    20 */
+// /*    30 */
+// /*    40 */
+// /*    50 */
+// /*    60 */
+// /*    70 */
+// /*    80 */
+// /*    90 */
+// /*   100 */
+// /*   110 */
+// /*   120 */
+// /*   130 */
+// /*   140 */
+// /*   150 */
+// /*   160 */
+// /*   170 */
+// /*   180 */
+// /*   190 */
+// /*   200 */
+// /*   210 */
+// /*   220 */
+// /*   230 */
+// /*   240 */
+// /*   250 */
+// /*   260 */
+// /*   270 */
+// /*   280 */
+// /*   290 */
+// /*   300 */
+// /*   310 */
+// /*   320 */
+// /*   330 */
+// /*   340 */
+// /*   350 */
+// /*   360 */
+// /*   370 */
+// /*   380 */
+// /*   390 */
+// /*   400 */
+// /*   410 */
+// /*   420 */
+static mut yy_default: __SlateAlign16<[u16; 600]> = __SlateAlign16([
+    ((1691 as i32) as i16) as u16,
+    ((1691 as i32) as i16) as u16,
+    ((1691 as i32) as i16) as u16,
+    ((1516 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1392 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1516 as i32) as i16) as u16,
+    ((1516 as i32) as i16) as u16,
+    ((1516 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1422 as i32) as i16) as u16,
+    ((1422 as i32) as i16) as u16,
+    ((1568 as i32) as i16) as u16,
+    ((1312 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1515 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1607 as i32) as i16) as u16,
+    ((1607 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1592 as i32) as i16) as u16,
+    ((1591 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1431 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1438 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1517 as i32) as i16) as u16,
+    ((1518 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1567 as i32) as i16) as u16,
+    ((1569 as i32) as i16) as u16,
+    ((1533 as i32) as i16) as u16,
+    ((1445 as i32) as i16) as u16,
+    ((1444 as i32) as i16) as u16,
+    ((1443 as i32) as i16) as u16,
+    ((1442 as i32) as i16) as u16,
+    ((1551 as i32) as i16) as u16,
+    ((1410 as i32) as i16) as u16,
+    ((1436 as i32) as i16) as u16,
+    ((1429 as i32) as i16) as u16,
+    ((1433 as i32) as i16) as u16,
+    ((1512 as i32) as i16) as u16,
+    ((1513 as i32) as i16) as u16,
+    ((1511 as i32) as i16) as u16,
+    ((1670 as i32) as i16) as u16,
+    ((1518 as i32) as i16) as u16,
+    ((1517 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1432 as i32) as i16) as u16,
+    ((1480 as i32) as i16) as u16,
+    ((1496 as i32) as i16) as u16,
+    ((1479 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1488 as i32) as i16) as u16,
+    ((1495 as i32) as i16) as u16,
+    ((1494 as i32) as i16) as u16,
+    ((1493 as i32) as i16) as u16,
+    ((1502 as i32) as i16) as u16,
+    ((1492 as i32) as i16) as u16,
+    ((1489 as i32) as i16) as u16,
+    ((1482 as i32) as i16) as u16,
+    ((1481 as i32) as i16) as u16,
+    ((1483 as i32) as i16) as u16,
+    ((1484 as i32) as i16) as u16,
+    ((1303 as i32) as i16) as u16,
+    ((1300 as i32) as i16) as u16,
+    ((1354 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1485 as i32) as i16) as u16,
+    ((1312 as i32) as i16) as u16,
+    ((1473 as i32) as i16) as u16,
+    ((1472 as i32) as i16) as u16,
+    ((1471 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1499 as i32) as i16) as u16,
+    ((1486 as i32) as i16) as u16,
+    ((1498 as i32) as i16) as u16,
+    ((1497 as i32) as i16) as u16,
+    ((1575 as i32) as i16) as u16,
+    ((1644 as i32) as i16) as u16,
+    ((1643 as i32) as i16) as u16,
+    ((1534 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1607 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1412 as i32) as i16) as u16,
+    ((1607 as i32) as i16) as u16,
+    ((1607 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1312 as i32) as i16) as u16,
+    ((1607 as i32) as i16) as u16,
+    ((1607 as i32) as i16) as u16,
+    ((1308 as i32) as i16) as u16,
+    ((1413 as i32) as i16) as u16,
+    ((1413 as i32) as i16) as u16,
+    ((1308 as i32) as i16) as u16,
+    ((1308 as i32) as i16) as u16,
+    ((1416 as i32) as i16) as u16,
+    ((1587 as i32) as i16) as u16,
+    ((1383 as i32) as i16) as u16,
+    ((1383 as i32) as i16) as u16,
+    ((1383 as i32) as i16) as u16,
+    ((1383 as i32) as i16) as u16,
+    ((1392 as i32) as i16) as u16,
+    ((1383 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1572 as i32) as i16) as u16,
+    ((1570 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1388 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1637 as i32) as i16) as u16,
+    ((1683 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1546 as i32) as i16) as u16,
+    ((1368 as i32) as i16) as u16,
+    ((1388 as i32) as i16) as u16,
+    ((1388 as i32) as i16) as u16,
+    ((1388 as i32) as i16) as u16,
+    ((1388 as i32) as i16) as u16,
+    ((1390 as i32) as i16) as u16,
+    ((1369 as i32) as i16) as u16,
+    ((1367 as i32) as i16) as u16,
+    ((1382 as i32) as i16) as u16,
+    ((1313 as i32) as i16) as u16,
+    ((1286 as i32) as i16) as u16,
+    ((1683 as i32) as i16) as u16,
+    ((1683 as i32) as i16) as u16,
+    ((1448 as i32) as i16) as u16,
+    ((1437 as i32) as i16) as u16,
+    ((1389 as i32) as i16) as u16,
+    ((1437 as i32) as i16) as u16,
+    ((1680 as i32) as i16) as u16,
+    ((1435 as i32) as i16) as u16,
+    ((1448 as i32) as i16) as u16,
+    ((1448 as i32) as i16) as u16,
+    ((1435 as i32) as i16) as u16,
+    ((1448 as i32) as i16) as u16,
+    ((1389 as i32) as i16) as u16,
+    ((1680 as i32) as i16) as u16,
+    ((1329 as i32) as i16) as u16,
+    ((1659 as i32) as i16) as u16,
+    ((1324 as i32) as i16) as u16,
+    ((1422 as i32) as i16) as u16,
+    ((1422 as i32) as i16) as u16,
+    ((1422 as i32) as i16) as u16,
+    ((1412 as i32) as i16) as u16,
+    ((1412 as i32) as i16) as u16,
+    ((1412 as i32) as i16) as u16,
+    ((1412 as i32) as i16) as u16,
+    ((1416 as i32) as i16) as u16,
+    ((1416 as i32) as i16) as u16,
+    ((1514 as i32) as i16) as u16,
+    ((1389 as i32) as i16) as u16,
+    ((1382 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1355 as i32) as i16) as u16,
+    ((1683 as i32) as i16) as u16,
+    ((1355 as i32) as i16) as u16,
+    ((1355 as i32) as i16) as u16,
+    ((1398 as i32) as i16) as u16,
+    ((1398 as i32) as i16) as u16,
+    ((1682 as i32) as i16) as u16,
+    ((1682 as i32) as i16) as u16,
+    ((1398 as i32) as i16) as u16,
+    ((1534 as i32) as i16) as u16,
+    ((1667 as i32) as i16) as u16,
+    ((1457 as i32) as i16) as u16,
+    ((1357 as i32) as i16) as u16,
+    ((1363 as i32) as i16) as u16,
+    ((1363 as i32) as i16) as u16,
+    ((1363 as i32) as i16) as u16,
+    ((1363 as i32) as i16) as u16,
+    ((1398 as i32) as i16) as u16,
+    ((1297 as i32) as i16) as u16,
+    ((1435 as i32) as i16) as u16,
+    ((1667 as i32) as i16) as u16,
+    ((1667 as i32) as i16) as u16,
+    ((1435 as i32) as i16) as u16,
+    ((1457 as i32) as i16) as u16,
+    ((1357 as i32) as i16) as u16,
+    ((1435 as i32) as i16) as u16,
+    ((1357 as i32) as i16) as u16,
+    ((1435 as i32) as i16) as u16,
+    ((1398 as i32) as i16) as u16,
+    ((1297 as i32) as i16) as u16,
+    ((1550 as i32) as i16) as u16,
+    ((1678 as i32) as i16) as u16,
+    ((1398 as i32) as i16) as u16,
+    ((1297 as i32) as i16) as u16,
+    ((1524 as i32) as i16) as u16,
+    ((1398 as i32) as i16) as u16,
+    ((1297 as i32) as i16) as u16,
+    ((1398 as i32) as i16) as u16,
+    ((1297 as i32) as i16) as u16,
+    ((1524 as i32) as i16) as u16,
+    ((1355 as i32) as i16) as u16,
+    ((1355 as i32) as i16) as u16,
+    ((1355 as i32) as i16) as u16,
+    ((1344 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1524 as i32) as i16) as u16,
+    ((1355 as i32) as i16) as u16,
+    ((1329 as i32) as i16) as u16,
+    ((1355 as i32) as i16) as u16,
+    ((1344 as i32) as i16) as u16,
+    ((1355 as i32) as i16) as u16,
+    ((1355 as i32) as i16) as u16,
+    ((1625 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1528 as i32) as i16) as u16,
+    ((1528 as i32) as i16) as u16,
+    ((1524 as i32) as i16) as u16,
+    ((1398 as i32) as i16) as u16,
+    ((1617 as i32) as i16) as u16,
+    ((1617 as i32) as i16) as u16,
+    ((1425 as i32) as i16) as u16,
+    ((1425 as i32) as i16) as u16,
+    ((1430 as i32) as i16) as u16,
+    ((1416 as i32) as i16) as u16,
+    ((1519 as i32) as i16) as u16,
+    ((1398 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1430 as i32) as i16) as u16,
+    ((1428 as i32) as i16) as u16,
+    ((1426 as i32) as i16) as u16,
+    ((1435 as i32) as i16) as u16,
+    ((1347 as i32) as i16) as u16,
+    ((1640 as i32) as i16) as u16,
+    ((1640 as i32) as i16) as u16,
+    ((1636 as i32) as i16) as u16,
+    ((1636 as i32) as i16) as u16,
+    ((1636 as i32) as i16) as u16,
+    ((1688 as i32) as i16) as u16,
+    ((1688 as i32) as i16) as u16,
+    ((1587 as i32) as i16) as u16,
+    ((1652 as i32) as i16) as u16,
+    ((1312 as i32) as i16) as u16,
+    ((1312 as i32) as i16) as u16,
+    ((1312 as i32) as i16) as u16,
+    ((1312 as i32) as i16) as u16,
+    ((1652 as i32) as i16) as u16,
+    ((1331 as i32) as i16) as u16,
+    ((1331 as i32) as i16) as u16,
+    ((1313 as i32) as i16) as u16,
+    ((1313 as i32) as i16) as u16,
+    ((1312 as i32) as i16) as u16,
+    ((1652 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1647 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1535 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1402 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1593 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1462 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1282 as i32) as i16) as u16,
+    ((1584 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1439 as i32) as i16) as u16,
+    ((1440 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1454 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1449 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1403 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1549 as i32) as i16) as u16,
+    ((1548 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1400 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1327 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1427 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1622 as i32) as i16) as u16,
+    ((1417 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1671 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1377 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1663 as i32) as i16) as u16,
+    ((1371 as i32) as i16) as u16,
+    ((1463 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1466 as i32) as i16) as u16,
+    ((1301 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1291 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+    ((1279 as i32) as i16) as u16,
+]);
+
+// /*     0 */
+// /*    10 */
+// /*    20 */
+// /*    30 */
+// /*    40 */
+// /*    50 */
+// /*    60 */
+// /*    70 */
+// /*    80 */
+// /*    90 */
+// /*   100 */
+// /*   110 */
+// /*   120 */
+// /*   130 */
+// /*   140 */
+// /*   150 */
+// /*   160 */
+// /*   170 */
+// /*   180 */
+// /*   190 */
+// /*   200 */
+// /*   210 */
+// /*   220 */
+// /*   230 */
+// /*   240 */
+// /*   250 */
+// /*   260 */
+// /*   270 */
+// /*   280 */
+// /*   290 */
+// /*   300 */
+// /*   310 */
+// /*   320 */
+// /*   330 */
+// /*   340 */
+// /*   350 */
+// /*   360 */
+// /*   370 */
+// /*   380 */
+// /*   390 */
+// /*   400 */
+// /*   410 */
+// /*   420 */
+// /*   430 */
+// /*   440 */
+// /*   450 */
+// /*   460 */
+// /*   470 */
+// /*   480 */
+// /*   490 */
+// /*   500 */
+// /*   510 */
+// /*   520 */
+// /*   530 */
+// /*   540 */
+// /*   550 */
+// /*   560 */
+// /*   570 */
+// /*   580 */
+// /*   590 */
+// /********** End of lemon-generated parsing tables *****************************/
+// /* The next table maps tokens (terminal symbols) into fallback tokens.
+// ** If a construct like the following:
+// **
+// **      %fallback ID X Y Z.
+// **
+// ** appears in the grammar, then ID becomes a fallback token for X, Y,
+// ** and Z.  Whenever one of the tokens X, Y, or Z is input to the parser
+// ** but it does not parse, the type of the token is changed to ID and
+// ** the parse is retried before an error is thrown.
+// **
+// ** This feature can be used, for example, to cause some keywords in a language
+// ** to revert to identifiers if they keyword does not apply in the context where
+// ** it appears.
+// */
+static mut yyFallback: __SlateAlign16<[u16; 187]> = __SlateAlign16([
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((60 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+    ((0 as i32) as i16) as u16,
+]);
+
+// /* The parser to be shifted */
+// /* The new state to shift in */
+// /* The major token to shift in */
+// /* The minor token to shift in */
+// /* For rule J, yyRuleInfoLhs[J] contains the symbol on the left-hand side
+// ** of that rule */
+static mut yyRuleInfoLhs: __SlateAlign16<[u16; 412]> = __SlateAlign16([
+    ((191 as i32) as i16) as u16,
+    ((191 as i32) as i16) as u16,
+    ((190 as i32) as i16) as u16,
+    ((192 as i32) as i16) as u16,
+    ((193 as i32) as i16) as u16,
+    ((193 as i32) as i16) as u16,
+    ((193 as i32) as i16) as u16,
+    ((193 as i32) as i16) as u16,
+    ((192 as i32) as i16) as u16,
+    ((192 as i32) as i16) as u16,
+    ((192 as i32) as i16) as u16,
+    ((192 as i32) as i16) as u16,
+    ((192 as i32) as i16) as u16,
+    ((197 as i32) as i16) as u16,
+    ((199 as i32) as i16) as u16,
+    ((201 as i32) as i16) as u16,
+    ((201 as i32) as i16) as u16,
+    ((200 as i32) as i16) as u16,
+    ((200 as i32) as i16) as u16,
+    ((198 as i32) as i16) as u16,
+    ((198 as i32) as i16) as u16,
+    ((205 as i32) as i16) as u16,
+    ((205 as i32) as i16) as u16,
+    ((207 as i32) as i16) as u16,
+    ((207 as i32) as i16) as u16,
+    ((208 as i32) as i16) as u16,
+    ((210 as i32) as i16) as u16,
+    ((210 as i32) as i16) as u16,
+    ((210 as i32) as i16) as u16,
+    ((211 as i32) as i16) as u16,
+    ((215 as i32) as i16) as u16,
+    ((216 as i32) as i16) as u16,
+    ((217 as i32) as i16) as u16,
+    ((217 as i32) as i16) as u16,
+    ((217 as i32) as i16) as u16,
+    ((217 as i32) as i16) as u16,
+    ((217 as i32) as i16) as u16,
+    ((217 as i32) as i16) as u16,
+    ((217 as i32) as i16) as u16,
+    ((217 as i32) as i16) as u16,
+    ((217 as i32) as i16) as u16,
+    ((217 as i32) as i16) as u16,
+    ((217 as i32) as i16) as u16,
+    ((217 as i32) as i16) as u16,
+    ((217 as i32) as i16) as u16,
+    ((226 as i32) as i16) as u16,
+    ((226 as i32) as i16) as u16,
+    ((222 as i32) as i16) as u16,
+    ((222 as i32) as i16) as u16,
+    ((224 as i32) as i16) as u16,
+    ((224 as i32) as i16) as u16,
+    ((227 as i32) as i16) as u16,
+    ((227 as i32) as i16) as u16,
+    ((227 as i32) as i16) as u16,
+    ((227 as i32) as i16) as u16,
+    ((228 as i32) as i16) as u16,
+    ((228 as i32) as i16) as u16,
+    ((228 as i32) as i16) as u16,
+    ((228 as i32) as i16) as u16,
+    ((228 as i32) as i16) as u16,
+    ((225 as i32) as i16) as u16,
+    ((225 as i32) as i16) as u16,
+    ((229 as i32) as i16) as u16,
+    ((229 as i32) as i16) as u16,
+    ((229 as i32) as i16) as u16,
+    ((204 as i32) as i16) as u16,
+    ((231 as i32) as i16) as u16,
+    ((232 as i32) as i16) as u16,
+    ((232 as i32) as i16) as u16,
+    ((232 as i32) as i16) as u16,
+    ((232 as i32) as i16) as u16,
+    ((232 as i32) as i16) as u16,
+    ((235 as i32) as i16) as u16,
+    ((220 as i32) as i16) as u16,
+    ((220 as i32) as i16) as u16,
+    ((236 as i32) as i16) as u16,
+    ((236 as i32) as i16) as u16,
+    ((237 as i32) as i16) as u16,
+    ((237 as i32) as i16) as u16,
+    ((192 as i32) as i16) as u16,
+    ((239 as i32) as i16) as u16,
+    ((239 as i32) as i16) as u16,
+    ((192 as i32) as i16) as u16,
+    ((192 as i32) as i16) as u16,
+    ((192 as i32) as i16) as u16,
+    ((206 as i32) as i16) as u16,
+    ((206 as i32) as i16) as u16,
+    ((206 as i32) as i16) as u16,
+    ((241 as i32) as i16) as u16,
+    ((244 as i32) as i16) as u16,
+    ((244 as i32) as i16) as u16,
+    ((244 as i32) as i16) as u16,
+    ((242 as i32) as i16) as u16,
+    ((242 as i32) as i16) as u16,
+    ((254 as i32) as i16) as u16,
+    ((242 as i32) as i16) as u16,
+    ((256 as i32) as i16) as u16,
+    ((256 as i32) as i16) as u16,
+    ((245 as i32) as i16) as u16,
+    ((245 as i32) as i16) as u16,
+    ((245 as i32) as i16) as u16,
+    ((257 as i32) as i16) as u16,
+    ((246 as i32) as i16) as u16,
+    ((246 as i32) as i16) as u16,
+    ((246 as i32) as i16) as u16,
+    ((258 as i32) as i16) as u16,
+    ((258 as i32) as i16) as u16,
+    ((247 as i32) as i16) as u16,
+    ((247 as i32) as i16) as u16,
+    ((260 as i32) as i16) as u16,
+    ((260 as i32) as i16) as u16,
+    ((259 as i32) as i16) as u16,
+    ((259 as i32) as i16) as u16,
+    ((259 as i32) as i16) as u16,
+    ((259 as i32) as i16) as u16,
+    ((259 as i32) as i16) as u16,
+    ((202 as i32) as i16) as u16,
+    ((202 as i32) as i16) as u16,
+    ((240 as i32) as i16) as u16,
+    ((240 as i32) as i16) as u16,
+    ((265 as i32) as i16) as u16,
+    ((265 as i32) as i16) as u16,
+    ((265 as i32) as i16) as u16,
+    ((265 as i32) as i16) as u16,
+    ((261 as i32) as i16) as u16,
+    ((261 as i32) as i16) as u16,
+    ((261 as i32) as i16) as u16,
+    ((261 as i32) as i16) as u16,
+    ((262 as i32) as i16) as u16,
+    ((262 as i32) as i16) as u16,
+    ((262 as i32) as i16) as u16,
+    ((267 as i32) as i16) as u16,
+    ((263 as i32) as i16) as u16,
+    ((263 as i32) as i16) as u16,
+    ((251 as i32) as i16) as u16,
+    ((251 as i32) as i16) as u16,
+    ((233 as i32) as i16) as u16,
+    ((233 as i32) as i16) as u16,
+    ((221 as i32) as i16) as u16,
+    ((221 as i32) as i16) as u16,
+    ((221 as i32) as i16) as u16,
+    ((268 as i32) as i16) as u16,
+    ((268 as i32) as i16) as u16,
+    ((268 as i32) as i16) as u16,
+    ((249 as i32) as i16) as u16,
+    ((249 as i32) as i16) as u16,
+    ((250 as i32) as i16) as u16,
+    ((250 as i32) as i16) as u16,
+    ((252 as i32) as i16) as u16,
+    ((252 as i32) as i16) as u16,
+    ((252 as i32) as i16) as u16,
+    ((252 as i32) as i16) as u16,
+    ((192 as i32) as i16) as u16,
+    ((248 as i32) as i16) as u16,
+    ((248 as i32) as i16) as u16,
+    ((270 as i32) as i16) as u16,
+    ((270 as i32) as i16) as u16,
+    ((270 as i32) as i16) as u16,
+    ((270 as i32) as i16) as u16,
+    ((192 as i32) as i16) as u16,
+    ((271 as i32) as i16) as u16,
+    ((271 as i32) as i16) as u16,
+    ((271 as i32) as i16) as u16,
+    ((271 as i32) as i16) as u16,
+    ((192 as i32) as i16) as u16,
+    ((192 as i32) as i16) as u16,
+    ((274 as i32) as i16) as u16,
+    ((274 as i32) as i16) as u16,
+    ((274 as i32) as i16) as u16,
+    ((274 as i32) as i16) as u16,
+    ((274 as i32) as i16) as u16,
+    ((274 as i32) as i16) as u16,
+    ((275 as i32) as i16) as u16,
+    ((272 as i32) as i16) as u16,
+    ((272 as i32) as i16) as u16,
+    ((273 as i32) as i16) as u16,
+    ((273 as i32) as i16) as u16,
+    ((266 as i32) as i16) as u16,
+    ((266 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((277 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((278 as i32) as i16) as u16,
+    ((278 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((279 as i32) as i16) as u16,
+    ((279 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((282 as i32) as i16) as u16,
+    ((282 as i32) as i16) as u16,
+    ((283 as i32) as i16) as u16,
+    ((283 as i32) as i16) as u16,
+    ((281 as i32) as i16) as u16,
+    ((264 as i32) as i16) as u16,
+    ((255 as i32) as i16) as u16,
+    ((255 as i32) as i16) as u16,
+    ((280 as i32) as i16) as u16,
+    ((280 as i32) as i16) as u16,
+    ((192 as i32) as i16) as u16,
+    ((284 as i32) as i16) as u16,
+    ((284 as i32) as i16) as u16,
+    ((223 as i32) as i16) as u16,
+    ((223 as i32) as i16) as u16,
+    ((234 as i32) as i16) as u16,
+    ((234 as i32) as i16) as u16,
+    ((285 as i32) as i16) as u16,
+    ((285 as i32) as i16) as u16,
+    ((192 as i32) as i16) as u16,
+    ((192 as i32) as i16) as u16,
+    ((192 as i32) as i16) as u16,
+    ((286 as i32) as i16) as u16,
+    ((286 as i32) as i16) as u16,
+    ((192 as i32) as i16) as u16,
+    ((192 as i32) as i16) as u16,
+    ((192 as i32) as i16) as u16,
+    ((192 as i32) as i16) as u16,
+    ((192 as i32) as i16) as u16,
+    ((213 as i32) as i16) as u16,
+    ((214 as i32) as i16) as u16,
+    ((192 as i32) as i16) as u16,
+    ((288 as i32) as i16) as u16,
+    ((290 as i32) as i16) as u16,
+    ((290 as i32) as i16) as u16,
+    ((290 as i32) as i16) as u16,
+    ((291 as i32) as i16) as u16,
+    ((291 as i32) as i16) as u16,
+    ((291 as i32) as i16) as u16,
+    ((293 as i32) as i16) as u16,
+    ((293 as i32) as i16) as u16,
+    ((289 as i32) as i16) as u16,
+    ((289 as i32) as i16) as u16,
+    ((295 as i32) as i16) as u16,
+    ((295 as i32) as i16) as u16,
+    ((294 as i32) as i16) as u16,
+    ((294 as i32) as i16) as u16,
+    ((294 as i32) as i16) as u16,
+    ((294 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((238 as i32) as i16) as u16,
+    ((238 as i32) as i16) as u16,
+    ((238 as i32) as i16) as u16,
+    ((192 as i32) as i16) as u16,
+    ((192 as i32) as i16) as u16,
+    ((192 as i32) as i16) as u16,
+    ((297 as i32) as i16) as u16,
+    ((297 as i32) as i16) as u16,
+    ((192 as i32) as i16) as u16,
+    ((192 as i32) as i16) as u16,
+    ((192 as i32) as i16) as u16,
+    ((192 as i32) as i16) as u16,
+    ((192 as i32) as i16) as u16,
+    ((192 as i32) as i16) as u16,
+    ((298 as i32) as i16) as u16,
+    ((192 as i32) as i16) as u16,
+    ((192 as i32) as i16) as u16,
+    ((192 as i32) as i16) as u16,
+    ((192 as i32) as i16) as u16,
+    ((192 as i32) as i16) as u16,
+    ((192 as i32) as i16) as u16,
+    ((192 as i32) as i16) as u16,
+    ((192 as i32) as i16) as u16,
+    ((192 as i32) as i16) as u16,
+    ((300 as i32) as i16) as u16,
+    ((302 as i32) as i16) as u16,
+    ((303 as i32) as i16) as u16,
+    ((303 as i32) as i16) as u16,
+    ((304 as i32) as i16) as u16,
+    ((269 as i32) as i16) as u16,
+    ((269 as i32) as i16) as u16,
+    ((307 as i32) as i16) as u16,
+    ((307 as i32) as i16) as u16,
+    ((307 as i32) as i16) as u16,
+    ((306 as i32) as i16) as u16,
+    ((308 as i32) as i16) as u16,
+    ((243 as i32) as i16) as u16,
+    ((243 as i32) as i16) as u16,
+    ((309 as i32) as i16) as u16,
+    ((310 as i32) as i16) as u16,
+    ((311 as i32) as i16) as u16,
+    ((311 as i32) as i16) as u16,
+    ((311 as i32) as i16) as u16,
+    ((311 as i32) as i16) as u16,
+    ((311 as i32) as i16) as u16,
+    ((312 as i32) as i16) as u16,
+    ((312 as i32) as i16) as u16,
+    ((312 as i32) as i16) as u16,
+    ((316 as i32) as i16) as u16,
+    ((318 as i32) as i16) as u16,
+    ((318 as i32) as i16) as u16,
+    ((319 as i32) as i16) as u16,
+    ((319 as i32) as i16) as u16,
+    ((317 as i32) as i16) as u16,
+    ((317 as i32) as i16) as u16,
+    ((320 as i32) as i16) as u16,
+    ((320 as i32) as i16) as u16,
+    ((321 as i32) as i16) as u16,
+    ((321 as i32) as i16) as u16,
+    ((321 as i32) as i16) as u16,
+    ((253 as i32) as i16) as u16,
+    ((276 as i32) as i16) as u16,
+    ((276 as i32) as i16) as u16,
+    ((276 as i32) as i16) as u16,
+    ((315 as i32) as i16) as u16,
+    ((315 as i32) as i16) as u16,
+    ((314 as i32) as i16) as u16,
+    ((218 as i32) as i16) as u16,
+    ((187 as i32) as i16) as u16,
+    ((188 as i32) as i16) as u16,
+    ((188 as i32) as i16) as u16,
+    ((189 as i32) as i16) as u16,
+    ((189 as i32) as i16) as u16,
+    ((189 as i32) as i16) as u16,
+    ((194 as i32) as i16) as u16,
+    ((194 as i32) as i16) as u16,
+    ((194 as i32) as i16) as u16,
+    ((196 as i32) as i16) as u16,
+    ((196 as i32) as i16) as u16,
+    ((192 as i32) as i16) as u16,
+    ((205 as i32) as i16) as u16,
+    ((203 as i32) as i16) as u16,
+    ((203 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((195 as i32) as i16) as u16,
+    ((210 as i32) as i16) as u16,
+    ((211 as i32) as i16) as u16,
+    ((212 as i32) as i16) as u16,
+    ((212 as i32) as i16) as u16,
+    ((209 as i32) as i16) as u16,
+    ((209 as i32) as i16) as u16,
+    ((217 as i32) as i16) as u16,
+    ((217 as i32) as i16) as u16,
+    ((217 as i32) as i16) as u16,
+    ((204 as i32) as i16) as u16,
+    ((230 as i32) as i16) as u16,
+    ((230 as i32) as i16) as u16,
+    ((231 as i32) as i16) as u16,
+    ((235 as i32) as i16) as u16,
+    ((237 as i32) as i16) as u16,
+    ((241 as i32) as i16) as u16,
+    ((242 as i32) as i16) as u16,
+    ((257 as i32) as i16) as u16,
+    ((258 as i32) as i16) as u16,
+    ((267 as i32) as i16) as u16,
+    ((275 as i32) as i16) as u16,
+    ((219 as i32) as i16) as u16,
+    ((277 as i32) as i16) as u16,
+    ((281 as i32) as i16) as u16,
+    ((264 as i32) as i16) as u16,
+    ((287 as i32) as i16) as u16,
+    ((287 as i32) as i16) as u16,
+    ((287 as i32) as i16) as u16,
+    ((287 as i32) as i16) as u16,
+    ((287 as i32) as i16) as u16,
+    ((213 as i32) as i16) as u16,
+    ((292 as i32) as i16) as u16,
+    ((292 as i32) as i16) as u16,
+    ((295 as i32) as i16) as u16,
+    ((296 as i32) as i16) as u16,
+    ((296 as i32) as i16) as u16,
+    ((299 as i32) as i16) as u16,
+    ((299 as i32) as i16) as u16,
+    ((301 as i32) as i16) as u16,
+    ((301 as i32) as i16) as u16,
+    ((302 as i32) as i16) as u16,
+    ((305 as i32) as i16) as u16,
+    ((305 as i32) as i16) as u16,
+    ((305 as i32) as i16) as u16,
+    ((269 as i32) as i16) as u16,
+    ((309 as i32) as i16) as u16,
+    ((311 as i32) as i16) as u16,
+]);
+
+// /* (0) explain ::= EXPLAIN */
+// /* (1) explain ::= EXPLAIN QUERY PLAN */
+// /* (2) cmdx ::= cmd */
+// /* (3) cmd ::= BEGIN transtype trans_opt */
+// /* (4) transtype ::= */
+// /* (5) transtype ::= DEFERRED */
+// /* (6) transtype ::= IMMEDIATE */
+// /* (7) transtype ::= EXCLUSIVE */
+// /* (8) cmd ::= COMMIT|END trans_opt */
+// /* (9) cmd ::= ROLLBACK trans_opt */
+// /* (10) cmd ::= SAVEPOINT nm */
+// /* (11) cmd ::= RELEASE savepoint_opt nm */
+// /* (12) cmd ::= ROLLBACK trans_opt TO savepoint_opt nm */
+// /* (13) create_table ::= createkw temp TABLE ifnotexists nm dbnm */
+// /* (14) createkw ::= CREATE */
+// /* (15) ifnotexists ::= */
+// /* (16) ifnotexists ::= IF NOT EXISTS */
+// /* (17) temp ::= TEMP */
+// /* (18) temp ::= */
+// /* (19) create_table_args ::= LP columnlist conslist_opt RP table_option_set */
+// /* (20) create_table_args ::= AS select */
+// /* (21) table_option_set ::= */
+// /* (22) table_option_set ::= table_option_set COMMA table_option */
+// /* (23) table_option ::= WITHOUT nm */
+// /* (24) table_option ::= nm */
+// /* (25) columnname ::= nm typetoken */
+// /* (26) typetoken ::= */
+// /* (27) typetoken ::= typename LP signed RP */
+// /* (28) typetoken ::= typename LP signed COMMA signed RP */
+// /* (29) typename ::= typename ID|STRING */
+// /* (30) scanpt ::= */
+// /* (31) scantok ::= */
+// /* (32) ccons ::= CONSTRAINT nm */
+// /* (33) ccons ::= DEFAULT scantok term */
+// /* (34) ccons ::= DEFAULT LP expr RP */
+// /* (35) ccons ::= DEFAULT PLUS scantok term */
+// /* (36) ccons ::= DEFAULT MINUS scantok term */
+// /* (37) ccons ::= DEFAULT scantok ID|INDEXED */
+// /* (38) ccons ::= NOT NULL onconf */
+// /* (39) ccons ::= PRIMARY KEY sortorder onconf autoinc */
+// /* (40) ccons ::= UNIQUE onconf */
+// /* (41) ccons ::= CHECK LP expr RP */
+// /* (42) ccons ::= REFERENCES nm eidlist_opt refargs */
+// /* (43) ccons ::= defer_subclause */
+// /* (44) ccons ::= COLLATE ID|STRING */
+// /* (45) generated ::= LP expr RP */
+// /* (46) generated ::= LP expr RP ID */
+// /* (47) autoinc ::= */
+// /* (48) autoinc ::= AUTOINCR */
+// /* (49) refargs ::= */
+// /* (50) refargs ::= refargs refarg */
+// /* (51) refarg ::= MATCH nm */
+// /* (52) refarg ::= ON INSERT refact */
+// /* (53) refarg ::= ON DELETE refact */
+// /* (54) refarg ::= ON UPDATE refact */
+// /* (55) refact ::= SET NULL */
+// /* (56) refact ::= SET DEFAULT */
+// /* (57) refact ::= CASCADE */
+// /* (58) refact ::= RESTRICT */
+// /* (59) refact ::= NO ACTION */
+// /* (60) defer_subclause ::= NOT DEFERRABLE init_deferred_pred_opt */
+// /* (61) defer_subclause ::= DEFERRABLE init_deferred_pred_opt */
+// /* (62) init_deferred_pred_opt ::= */
+// /* (63) init_deferred_pred_opt ::= INITIALLY DEFERRED */
+// /* (64) init_deferred_pred_opt ::= INITIALLY IMMEDIATE */
+// /* (65) conslist_opt ::= */
+// /* (66) tconscomma ::= COMMA */
+// /* (67) tcons ::= CONSTRAINT nm */
+// /* (68) tcons ::= PRIMARY KEY LP sortlist autoinc RP onconf */
+// /* (69) tcons ::= UNIQUE LP sortlist RP onconf */
+// /* (70) tcons ::= CHECK LP expr RP onconf */
+// /* (71) tcons ::= FOREIGN KEY LP eidlist RP REFERENCES nm eidlist_opt refargs defer_subclause_opt */
+// /* (72) defer_subclause_opt ::= */
+// /* (73) onconf ::= */
+// /* (74) onconf ::= ON CONFLICT resolvetype */
+// /* (75) orconf ::= */
+// /* (76) orconf ::= OR resolvetype */
+// /* (77) resolvetype ::= IGNORE */
+// /* (78) resolvetype ::= REPLACE */
+// /* (79) cmd ::= DROP TABLE ifexists fullname */
+// /* (80) ifexists ::= IF EXISTS */
+// /* (81) ifexists ::= */
+// /* (82) cmd ::= createkw temp VIEW ifnotexists nm dbnm eidlist_opt AS select */
+// /* (83) cmd ::= DROP VIEW ifexists fullname */
+// /* (84) cmd ::= select */
+// /* (85) select ::= WITH wqlist selectnowith */
+// /* (86) select ::= WITH RECURSIVE wqlist selectnowith */
+// /* (87) select ::= selectnowith */
+// /* (88) selectnowith ::= selectnowith multiselect_op oneselect */
+// /* (89) multiselect_op ::= UNION */
+// /* (90) multiselect_op ::= UNION ALL */
+// /* (91) multiselect_op ::= EXCEPT|INTERSECT */
+// /* (92) oneselect ::= SELECT distinct selcollist from where_opt groupby_opt having_opt orderby_opt limit_opt */
+// /* (93) oneselect ::= SELECT distinct selcollist from where_opt groupby_opt having_opt window_clause orderby_opt limit_opt */
+// /* (94) values ::= VALUES LP nexprlist RP */
+// /* (95) oneselect ::= mvalues */
+// /* (96) mvalues ::= values COMMA LP nexprlist RP */
+// /* (97) mvalues ::= mvalues COMMA LP nexprlist RP */
+// /* (98) distinct ::= DISTINCT */
+// /* (99) distinct ::= ALL */
+// /* (100) distinct ::= */
+// /* (101) sclp ::= */
+// /* (102) selcollist ::= sclp scanpt expr scanpt as */
+// /* (103) selcollist ::= sclp scanpt STAR */
+// /* (104) selcollist ::= sclp scanpt nm DOT STAR */
+// /* (105) as ::= AS nm */
+// /* (106) as ::= */
+// /* (107) from ::= */
+// /* (108) from ::= FROM seltablist */
+// /* (109) stl_prefix ::= seltablist joinop */
+// /* (110) stl_prefix ::= */
+// /* (111) seltablist ::= stl_prefix nm dbnm as on_using */
+// /* (112) seltablist ::= stl_prefix nm dbnm as indexed_by on_using */
+// /* (113) seltablist ::= stl_prefix nm dbnm LP exprlist RP as on_using */
+// /* (114) seltablist ::= stl_prefix LP select RP as on_using */
+// /* (115) seltablist ::= stl_prefix LP seltablist RP as on_using */
+// /* (116) dbnm ::= */
+// /* (117) dbnm ::= DOT nm */
+// /* (118) fullname ::= nm */
+// /* (119) fullname ::= nm DOT nm */
+// /* (120) xfullname ::= nm */
+// /* (121) xfullname ::= nm DOT nm */
+// /* (122) xfullname ::= nm AS nm */
+// /* (123) xfullname ::= nm DOT nm AS nm */
+// /* (124) joinop ::= COMMA|JOIN */
+// /* (125) joinop ::= JOIN_KW JOIN */
+// /* (126) joinop ::= JOIN_KW nm JOIN */
+// /* (127) joinop ::= JOIN_KW nm nm JOIN */
+// /* (128) on_using ::= ON expr */
+// /* (129) on_using ::= USING LP idlist RP */
+// /* (130) on_using ::= */
+// /* (131) indexed_opt ::= */
+// /* (132) indexed_by ::= INDEXED BY nm */
+// /* (133) indexed_by ::= NOT INDEXED */
+// /* (134) orderby_opt ::= */
+// /* (135) orderby_opt ::= ORDER BY sortlist */
+// /* (136) sortlist ::= sortlist COMMA expr sortorder nulls */
+// /* (137) sortlist ::= expr sortorder nulls */
+// /* (138) sortorder ::= ASC */
+// /* (139) sortorder ::= DESC */
+// /* (140) sortorder ::= */
+// /* (141) nulls ::= NULLS FIRST */
+// /* (142) nulls ::= NULLS LAST */
+// /* (143) nulls ::= */
+// /* (144) groupby_opt ::= */
+// /* (145) groupby_opt ::= GROUP BY nexprlist */
+// /* (146) having_opt ::= */
+// /* (147) having_opt ::= HAVING expr */
+// /* (148) limit_opt ::= */
+// /* (149) limit_opt ::= LIMIT expr */
+// /* (150) limit_opt ::= LIMIT expr OFFSET expr */
+// /* (151) limit_opt ::= LIMIT expr COMMA expr */
+// /* (152) cmd ::= with DELETE FROM xfullname indexed_opt where_opt_ret */
+// /* (153) where_opt ::= */
+// /* (154) where_opt ::= WHERE expr */
+// /* (155) where_opt_ret ::= */
+// /* (156) where_opt_ret ::= WHERE expr */
+// /* (157) where_opt_ret ::= RETURNING selcollist */
+// /* (158) where_opt_ret ::= WHERE expr RETURNING selcollist */
+// /* (159) cmd ::= with UPDATE orconf xfullname indexed_opt SET setlist from where_opt_ret */
+// /* (160) setlist ::= setlist COMMA nm EQ expr */
+// /* (161) setlist ::= setlist COMMA LP idlist RP EQ expr */
+// /* (162) setlist ::= nm EQ expr */
+// /* (163) setlist ::= LP idlist RP EQ expr */
+// /* (164) cmd ::= with insert_cmd INTO xfullname idlist_opt select upsert */
+// /* (165) cmd ::= with insert_cmd INTO xfullname idlist_opt DEFAULT VALUES returning */
+// /* (166) upsert ::= */
+// /* (167) upsert ::= RETURNING selcollist */
+// /* (168) upsert ::= ON CONFLICT LP sortlist RP where_opt DO UPDATE SET setlist where_opt upsert */
+// /* (169) upsert ::= ON CONFLICT LP sortlist RP where_opt DO NOTHING upsert */
+// /* (170) upsert ::= ON CONFLICT DO NOTHING returning */
+// /* (171) upsert ::= ON CONFLICT DO UPDATE SET setlist where_opt returning */
+// /* (172) returning ::= RETURNING selcollist */
+// /* (173) insert_cmd ::= INSERT orconf */
+// /* (174) insert_cmd ::= REPLACE */
+// /* (175) idlist_opt ::= */
+// /* (176) idlist_opt ::= LP idlist RP */
+// /* (177) idlist ::= idlist COMMA nm */
+// /* (178) idlist ::= nm */
+// /* (179) expr ::= LP expr RP */
+// /* (180) expr ::= ID|INDEXED|JOIN_KW */
+// /* (181) expr ::= nm DOT nm */
+// /* (182) expr ::= nm DOT nm DOT nm */
+// /* (183) term ::= NULL|FLOAT|BLOB */
+// /* (184) term ::= STRING */
+// /* (185) term ::= INTEGER */
+// /* (186) expr ::= VARIABLE */
+// /* (187) expr ::= expr COLLATE ID|STRING */
+// /* (188) expr ::= CAST LP expr AS typetoken RP */
+// /* (189) expr ::= ID|INDEXED|JOIN_KW LP distinct exprlist RP */
+// /* (190) expr ::= ID|INDEXED|JOIN_KW LP distinct exprlist ORDER BY sortlist RP */
+// /* (191) expr ::= ID|INDEXED|JOIN_KW LP STAR RP */
+// /* (192) expr ::= ID|INDEXED|JOIN_KW LP distinct exprlist RP filter_over */
+// /* (193) expr ::= ID|INDEXED|JOIN_KW LP distinct exprlist ORDER BY sortlist RP filter_over */
+// /* (194) expr ::= ID|INDEXED|JOIN_KW LP STAR RP filter_over */
+// /* (195) term ::= CTIME_KW */
+// /* (196) expr ::= LP nexprlist COMMA expr RP */
+// /* (197) expr ::= expr AND expr */
+// /* (198) expr ::= expr OR expr */
+// /* (199) expr ::= expr LT|GT|GE|LE expr */
+// /* (200) expr ::= expr EQ|NE expr */
+// /* (201) expr ::= expr BITAND|BITOR|LSHIFT|RSHIFT expr */
+// /* (202) expr ::= expr PLUS|MINUS expr */
+// /* (203) expr ::= expr STAR|SLASH|REM expr */
+// /* (204) expr ::= expr CONCAT expr */
+// /* (205) likeop ::= NOT LIKE_KW|MATCH */
+// /* (206) expr ::= expr likeop expr */
+// /* (207) expr ::= expr likeop expr ESCAPE expr */
+// /* (208) expr ::= expr ISNULL|NOTNULL */
+// /* (209) expr ::= expr NOT NULL */
+// /* (210) expr ::= expr IS expr */
+// /* (211) expr ::= expr IS NOT expr */
+// /* (212) expr ::= expr IS NOT DISTINCT FROM expr */
+// /* (213) expr ::= expr IS DISTINCT FROM expr */
+// /* (214) expr ::= NOT expr */
+// /* (215) expr ::= BITNOT expr */
+// /* (216) expr ::= PLUS|MINUS expr */
+// /* (217) expr ::= expr PTR expr */
+// /* (218) between_op ::= BETWEEN */
+// /* (219) between_op ::= NOT BETWEEN */
+// /* (220) expr ::= expr between_op expr AND expr */
+// /* (221) in_op ::= IN */
+// /* (222) in_op ::= NOT IN */
+// /* (223) expr ::= expr in_op LP exprlist RP */
+// /* (224) expr ::= LP select RP */
+// /* (225) expr ::= expr in_op LP select RP */
+// /* (226) expr ::= expr in_op nm dbnm paren_exprlist */
+// /* (227) expr ::= EXISTS LP select RP */
+// /* (228) expr ::= CASE case_operand case_exprlist case_else END */
+// /* (229) case_exprlist ::= case_exprlist WHEN expr THEN expr */
+// /* (230) case_exprlist ::= WHEN expr THEN expr */
+// /* (231) case_else ::= ELSE expr */
+// /* (232) case_else ::= */
+// /* (233) case_operand ::= */
+// /* (234) exprlist ::= */
+// /* (235) nexprlist ::= nexprlist COMMA expr */
+// /* (236) nexprlist ::= expr */
+// /* (237) paren_exprlist ::= */
+// /* (238) paren_exprlist ::= LP exprlist RP */
+// /* (239) cmd ::= createkw uniqueflag INDEX ifnotexists nm dbnm ON nm LP sortlist RP where_opt */
+// /* (240) uniqueflag ::= UNIQUE */
+// /* (241) uniqueflag ::= */
+// /* (242) eidlist_opt ::= */
+// /* (243) eidlist_opt ::= LP eidlist RP */
+// /* (244) eidlist ::= eidlist COMMA nm collate sortorder */
+// /* (245) eidlist ::= nm collate sortorder */
+// /* (246) collate ::= */
+// /* (247) collate ::= COLLATE ID|STRING */
+// /* (248) cmd ::= DROP INDEX ifexists fullname */
+// /* (249) cmd ::= VACUUM vinto */
+// /* (250) cmd ::= VACUUM nm vinto */
+// /* (251) vinto ::= INTO expr */
+// /* (252) vinto ::= */
+// /* (253) cmd ::= PRAGMA nm dbnm */
+// /* (254) cmd ::= PRAGMA nm dbnm EQ nmnum */
+// /* (255) cmd ::= PRAGMA nm dbnm LP nmnum RP */
+// /* (256) cmd ::= PRAGMA nm dbnm EQ minus_num */
+// /* (257) cmd ::= PRAGMA nm dbnm LP minus_num RP */
+// /* (258) plus_num ::= PLUS INTEGER|FLOAT */
+// /* (259) minus_num ::= MINUS INTEGER|FLOAT */
+// /* (260) cmd ::= createkw trigger_decl BEGIN trigger_cmd_list END */
+// /* (261) trigger_decl ::= temp TRIGGER ifnotexists nm dbnm trigger_time trigger_event ON fullname foreach_clause when_clause */
+// /* (262) trigger_time ::= BEFORE|AFTER */
+// /* (263) trigger_time ::= INSTEAD OF */
+// /* (264) trigger_time ::= */
+// /* (265) trigger_event ::= DELETE|INSERT */
+// /* (266) trigger_event ::= UPDATE */
+// /* (267) trigger_event ::= UPDATE OF idlist */
+// /* (268) when_clause ::= */
+// /* (269) when_clause ::= WHEN expr */
+// /* (270) trigger_cmd_list ::= trigger_cmd_list trigger_cmd SEMI */
+// /* (271) trigger_cmd_list ::= trigger_cmd SEMI */
+// /* (272) tridxby ::= INDEXED BY nm */
+// /* (273) tridxby ::= NOT INDEXED */
+// /* (274) trigger_cmd ::= UPDATE orconf xfullname tridxby SET setlist from where_opt scanpt */
+// /* (275) trigger_cmd ::= scanpt insert_cmd INTO xfullname idlist_opt select upsert scanpt */
+// /* (276) trigger_cmd ::= DELETE FROM xfullname tridxby where_opt scanpt */
+// /* (277) trigger_cmd ::= scanpt select scanpt */
+// /* (278) expr ::= RAISE LP IGNORE RP */
+// /* (279) expr ::= RAISE LP raisetype COMMA expr RP */
+// /* (280) raisetype ::= ROLLBACK */
+// /* (281) raisetype ::= ABORT */
+// /* (282) raisetype ::= FAIL */
+// /* (283) cmd ::= DROP TRIGGER ifexists fullname */
+// /* (284) cmd ::= ATTACH database_kw_opt expr AS expr key_opt */
+// /* (285) cmd ::= DETACH database_kw_opt expr */
+// /* (286) key_opt ::= */
+// /* (287) key_opt ::= KEY expr */
+// /* (288) cmd ::= REINDEX */
+// /* (289) cmd ::= REINDEX nm dbnm */
+// /* (290) cmd ::= ANALYZE */
+// /* (291) cmd ::= ANALYZE nm dbnm */
+// /* (292) cmd ::= ALTER TABLE fullname RENAME TO nm */
+// /* (293) cmd ::= alter_add carglist */
+// /* (294) alter_add ::= ALTER TABLE fullname ADD kwcolumn_opt nm typetoken */
+// /* (295) cmd ::= ALTER TABLE fullname DROP kwcolumn_opt nm */
+// /* (296) cmd ::= ALTER TABLE fullname RENAME kwcolumn_opt nm TO nm */
+// /* (297) cmd ::= ALTER TABLE fullname DROP CONSTRAINT nm */
+// /* (298) cmd ::= ALTER TABLE fullname ALTER kwcolumn_opt nm DROP NOT NULL */
+// /* (299) cmd ::= ALTER TABLE fullname ALTER kwcolumn_opt nm SET NOT NULL onconf */
+// /* (300) cmd ::= ALTER TABLE fullname ADD CONSTRAINT nm CHECK LP expr RP onconf */
+// /* (301) cmd ::= ALTER TABLE fullname ADD CHECK LP expr RP onconf */
+// /* (302) cmd ::= create_vtab */
+// /* (303) cmd ::= create_vtab LP vtabarglist RP */
+// /* (304) create_vtab ::= createkw VIRTUAL TABLE ifnotexists nm dbnm USING nm */
+// /* (305) vtabarg ::= */
+// /* (306) vtabargtoken ::= ANY */
+// /* (307) vtabargtoken ::= lp anylist RP */
+// /* (308) lp ::= LP */
+// /* (309) with ::= WITH wqlist */
+// /* (310) with ::= WITH RECURSIVE wqlist */
+// /* (311) wqas ::= AS */
+// /* (312) wqas ::= AS MATERIALIZED */
+// /* (313) wqas ::= AS NOT MATERIALIZED */
+// /* (314) wqitem ::= withnm eidlist_opt wqas LP select RP */
+// /* (315) withnm ::= nm */
+// /* (316) wqlist ::= wqitem */
+// /* (317) wqlist ::= wqlist COMMA wqitem */
+// /* (318) windowdefn_list ::= windowdefn_list COMMA windowdefn */
+// /* (319) windowdefn ::= nm AS LP window RP */
+// /* (320) window ::= PARTITION BY nexprlist orderby_opt frame_opt */
+// /* (321) window ::= nm PARTITION BY nexprlist orderby_opt frame_opt */
+// /* (322) window ::= ORDER BY sortlist frame_opt */
+// /* (323) window ::= nm ORDER BY sortlist frame_opt */
+// /* (324) window ::= nm frame_opt */
+// /* (325) frame_opt ::= */
+// /* (326) frame_opt ::= range_or_rows frame_bound_s frame_exclude_opt */
+// /* (327) frame_opt ::= range_or_rows BETWEEN frame_bound_s AND frame_bound_e frame_exclude_opt */
+// /* (328) range_or_rows ::= RANGE|ROWS|GROUPS */
+// /* (329) frame_bound_s ::= frame_bound */
+// /* (330) frame_bound_s ::= UNBOUNDED PRECEDING */
+// /* (331) frame_bound_e ::= frame_bound */
+// /* (332) frame_bound_e ::= UNBOUNDED FOLLOWING */
+// /* (333) frame_bound ::= expr PRECEDING|FOLLOWING */
+// /* (334) frame_bound ::= CURRENT ROW */
+// /* (335) frame_exclude_opt ::= */
+// /* (336) frame_exclude_opt ::= EXCLUDE frame_exclude */
+// /* (337) frame_exclude ::= NO OTHERS */
+// /* (338) frame_exclude ::= CURRENT ROW */
+// /* (339) frame_exclude ::= GROUP|TIES */
+// /* (340) window_clause ::= WINDOW windowdefn_list */
+// /* (341) filter_over ::= filter_clause over_clause */
+// /* (342) filter_over ::= over_clause */
+// /* (343) filter_over ::= filter_clause */
+// /* (344) over_clause ::= OVER LP window RP */
+// /* (345) over_clause ::= OVER nm */
+// /* (346) filter_clause ::= FILTER LP WHERE expr RP */
+// /* (347) term ::= QNUMBER */
+// /* (348) input ::= cmdlist */
+// /* (349) cmdlist ::= cmdlist ecmd */
+// /* (350) cmdlist ::= ecmd */
+// /* (351) ecmd ::= SEMI */
+// /* (352) ecmd ::= cmdx SEMI */
+// /* (353) ecmd ::= explain cmdx SEMI */
+// /* (354) trans_opt ::= */
+// /* (355) trans_opt ::= TRANSACTION */
+// /* (356) trans_opt ::= TRANSACTION nm */
+// /* (357) savepoint_opt ::= SAVEPOINT */
+// /* (358) savepoint_opt ::= */
+// /* (359) cmd ::= create_table create_table_args */
+// /* (360) table_option_set ::= table_option */
+// /* (361) columnlist ::= columnlist COMMA columnname carglist */
+// /* (362) columnlist ::= columnname carglist */
+// /* (363) nm ::= ID|INDEXED|JOIN_KW */
+// /* (364) nm ::= STRING */
+// /* (365) typetoken ::= typename */
+// /* (366) typename ::= ID|STRING */
+// /* (367) signed ::= plus_num */
+// /* (368) signed ::= minus_num */
+// /* (369) carglist ::= carglist ccons */
+// /* (370) carglist ::= */
+// /* (371) ccons ::= NULL onconf */
+// /* (372) ccons ::= GENERATED ALWAYS AS generated */
+// /* (373) ccons ::= AS generated */
+// /* (374) conslist_opt ::= COMMA conslist */
+// /* (375) conslist ::= conslist tconscomma tcons */
+// /* (376) conslist ::= tcons */
+// /* (377) tconscomma ::= */
+// /* (378) defer_subclause_opt ::= defer_subclause */
+// /* (379) resolvetype ::= raisetype */
+// /* (380) selectnowith ::= oneselect */
+// /* (381) oneselect ::= values */
+// /* (382) sclp ::= selcollist COMMA */
+// /* (383) as ::= ID|STRING */
+// /* (384) indexed_opt ::= indexed_by */
+// /* (385) returning ::= */
+// /* (386) expr ::= term */
+// /* (387) likeop ::= LIKE_KW|MATCH */
+// /* (388) case_operand ::= expr */
+// /* (389) exprlist ::= nexprlist */
+// /* (390) nmnum ::= plus_num */
+// /* (391) nmnum ::= nm */
+// /* (392) nmnum ::= ON */
+// /* (393) nmnum ::= DELETE */
+// /* (394) nmnum ::= DEFAULT */
+// /* (395) plus_num ::= INTEGER|FLOAT */
+// /* (396) foreach_clause ::= */
+// /* (397) foreach_clause ::= FOR EACH ROW */
+// /* (398) tridxby ::= */
+// /* (399) database_kw_opt ::= DATABASE */
+// /* (400) database_kw_opt ::= */
+// /* (401) kwcolumn_opt ::= */
+// /* (402) kwcolumn_opt ::= COLUMNKW */
+// /* (403) vtabarglist ::= vtabarg */
+// /* (404) vtabarglist ::= vtabarglist COMMA vtabarg */
+// /* (405) vtabarg ::= vtabarg vtabargtoken */
+// /* (406) anylist ::= */
+// /* (407) anylist ::= anylist LP anylist RP */
+// /* (408) anylist ::= anylist ANY */
+// /* (409) with ::= */
+// /* (410) windowdefn_list ::= windowdefn */
+// /* (411) window ::= frame_opt */
+// /* For rule J, yyRuleInfoNRhs[J] contains the negative of the number
+// ** of symbols on the right-hand side of that rule. */
+static mut yyRuleInfoNRhs: __SlateAlign16<[i8; 412]> = __SlateAlign16([
+    -(1 as i32) as i8,
+    -(3 as i32) as i8,
+    -(1 as i32) as i8,
+    -(3 as i32) as i8,
+    (0 as i32) as i8,
+    -(1 as i32) as i8,
+    -(1 as i32) as i8,
+    -(1 as i32) as i8,
+    -(2 as i32) as i8,
+    -(2 as i32) as i8,
+    -(2 as i32) as i8,
+    -(3 as i32) as i8,
+    -(5 as i32) as i8,
+    -(6 as i32) as i8,
+    -(1 as i32) as i8,
+    (0 as i32) as i8,
+    -(3 as i32) as i8,
+    -(1 as i32) as i8,
+    (0 as i32) as i8,
+    -(5 as i32) as i8,
+    -(2 as i32) as i8,
+    (0 as i32) as i8,
+    -(3 as i32) as i8,
+    -(2 as i32) as i8,
+    -(1 as i32) as i8,
+    -(2 as i32) as i8,
+    (0 as i32) as i8,
+    -(4 as i32) as i8,
+    -(6 as i32) as i8,
+    -(2 as i32) as i8,
+    (0 as i32) as i8,
+    (0 as i32) as i8,
+    -(2 as i32) as i8,
+    -(3 as i32) as i8,
+    -(4 as i32) as i8,
+    -(4 as i32) as i8,
+    -(4 as i32) as i8,
+    -(3 as i32) as i8,
+    -(3 as i32) as i8,
+    -(5 as i32) as i8,
+    -(2 as i32) as i8,
+    -(4 as i32) as i8,
+    -(4 as i32) as i8,
+    -(1 as i32) as i8,
+    -(2 as i32) as i8,
+    -(3 as i32) as i8,
+    -(4 as i32) as i8,
+    (0 as i32) as i8,
+    -(1 as i32) as i8,
+    (0 as i32) as i8,
+    -(2 as i32) as i8,
+    -(2 as i32) as i8,
+    -(3 as i32) as i8,
+    -(3 as i32) as i8,
+    -(3 as i32) as i8,
+    -(2 as i32) as i8,
+    -(2 as i32) as i8,
+    -(1 as i32) as i8,
+    -(1 as i32) as i8,
+    -(2 as i32) as i8,
+    -(3 as i32) as i8,
+    -(2 as i32) as i8,
+    (0 as i32) as i8,
+    -(2 as i32) as i8,
+    -(2 as i32) as i8,
+    (0 as i32) as i8,
+    -(1 as i32) as i8,
+    -(2 as i32) as i8,
+    -(7 as i32) as i8,
+    -(5 as i32) as i8,
+    -(5 as i32) as i8,
+    -(10 as i32) as i8,
+    (0 as i32) as i8,
+    (0 as i32) as i8,
+    -(3 as i32) as i8,
+    (0 as i32) as i8,
+    -(2 as i32) as i8,
+    -(1 as i32) as i8,
+    -(1 as i32) as i8,
+    -(4 as i32) as i8,
+    -(2 as i32) as i8,
+    (0 as i32) as i8,
+    -(9 as i32) as i8,
+    -(4 as i32) as i8,
+    -(1 as i32) as i8,
+    -(3 as i32) as i8,
+    -(4 as i32) as i8,
+    -(1 as i32) as i8,
+    -(3 as i32) as i8,
+    -(1 as i32) as i8,
+    -(2 as i32) as i8,
+    -(1 as i32) as i8,
+    -(9 as i32) as i8,
+    -(10 as i32) as i8,
+    -(4 as i32) as i8,
+    -(1 as i32) as i8,
+    -(5 as i32) as i8,
+    -(5 as i32) as i8,
+    -(1 as i32) as i8,
+    -(1 as i32) as i8,
+    (0 as i32) as i8,
+    (0 as i32) as i8,
+    -(5 as i32) as i8,
+    -(3 as i32) as i8,
+    -(5 as i32) as i8,
+    -(2 as i32) as i8,
+    (0 as i32) as i8,
+    (0 as i32) as i8,
+    -(2 as i32) as i8,
+    -(2 as i32) as i8,
+    (0 as i32) as i8,
+    -(5 as i32) as i8,
+    -(6 as i32) as i8,
+    -(8 as i32) as i8,
+    -(6 as i32) as i8,
+    -(6 as i32) as i8,
+    (0 as i32) as i8,
+    -(2 as i32) as i8,
+    -(1 as i32) as i8,
+    -(3 as i32) as i8,
+    -(1 as i32) as i8,
+    -(3 as i32) as i8,
+    -(3 as i32) as i8,
+    -(5 as i32) as i8,
+    -(1 as i32) as i8,
+    -(2 as i32) as i8,
+    -(3 as i32) as i8,
+    -(4 as i32) as i8,
+    -(2 as i32) as i8,
+    -(4 as i32) as i8,
+    (0 as i32) as i8,
+    (0 as i32) as i8,
+    -(3 as i32) as i8,
+    -(2 as i32) as i8,
+    (0 as i32) as i8,
+    -(3 as i32) as i8,
+    -(5 as i32) as i8,
+    -(3 as i32) as i8,
+    -(1 as i32) as i8,
+    -(1 as i32) as i8,
+    (0 as i32) as i8,
+    -(2 as i32) as i8,
+    -(2 as i32) as i8,
+    (0 as i32) as i8,
+    (0 as i32) as i8,
+    -(3 as i32) as i8,
+    (0 as i32) as i8,
+    -(2 as i32) as i8,
+    (0 as i32) as i8,
+    -(2 as i32) as i8,
+    -(4 as i32) as i8,
+    -(4 as i32) as i8,
+    -(6 as i32) as i8,
+    (0 as i32) as i8,
+    -(2 as i32) as i8,
+    (0 as i32) as i8,
+    -(2 as i32) as i8,
+    -(2 as i32) as i8,
+    -(4 as i32) as i8,
+    -(9 as i32) as i8,
+    -(5 as i32) as i8,
+    -(7 as i32) as i8,
+    -(3 as i32) as i8,
+    -(5 as i32) as i8,
+    -(7 as i32) as i8,
+    -(8 as i32) as i8,
+    (0 as i32) as i8,
+    -(2 as i32) as i8,
+    -(12 as i32) as i8,
+    -(9 as i32) as i8,
+    -(5 as i32) as i8,
+    -(8 as i32) as i8,
+    -(2 as i32) as i8,
+    -(2 as i32) as i8,
+    -(1 as i32) as i8,
+    (0 as i32) as i8,
+    -(3 as i32) as i8,
+    -(3 as i32) as i8,
+    -(1 as i32) as i8,
+    -(3 as i32) as i8,
+    -(1 as i32) as i8,
+    -(3 as i32) as i8,
+    -(5 as i32) as i8,
+    -(1 as i32) as i8,
+    -(1 as i32) as i8,
+    -(1 as i32) as i8,
+    -(1 as i32) as i8,
+    -(3 as i32) as i8,
+    -(6 as i32) as i8,
+    -(5 as i32) as i8,
+    -(8 as i32) as i8,
+    -(4 as i32) as i8,
+    -(6 as i32) as i8,
+    -(9 as i32) as i8,
+    -(5 as i32) as i8,
+    -(1 as i32) as i8,
+    -(5 as i32) as i8,
+    -(3 as i32) as i8,
+    -(3 as i32) as i8,
+    -(3 as i32) as i8,
+    -(3 as i32) as i8,
+    -(3 as i32) as i8,
+    -(3 as i32) as i8,
+    -(3 as i32) as i8,
+    -(3 as i32) as i8,
+    -(2 as i32) as i8,
+    -(3 as i32) as i8,
+    -(5 as i32) as i8,
+    -(2 as i32) as i8,
+    -(3 as i32) as i8,
+    -(3 as i32) as i8,
+    -(4 as i32) as i8,
+    -(6 as i32) as i8,
+    -(5 as i32) as i8,
+    -(2 as i32) as i8,
+    -(2 as i32) as i8,
+    -(2 as i32) as i8,
+    -(3 as i32) as i8,
+    -(1 as i32) as i8,
+    -(2 as i32) as i8,
+    -(5 as i32) as i8,
+    -(1 as i32) as i8,
+    -(2 as i32) as i8,
+    -(5 as i32) as i8,
+    -(3 as i32) as i8,
+    -(5 as i32) as i8,
+    -(5 as i32) as i8,
+    -(4 as i32) as i8,
+    -(5 as i32) as i8,
+    -(5 as i32) as i8,
+    -(4 as i32) as i8,
+    -(2 as i32) as i8,
+    (0 as i32) as i8,
+    (0 as i32) as i8,
+    (0 as i32) as i8,
+    -(3 as i32) as i8,
+    -(1 as i32) as i8,
+    (0 as i32) as i8,
+    -(3 as i32) as i8,
+    -(12 as i32) as i8,
+    -(1 as i32) as i8,
+    (0 as i32) as i8,
+    (0 as i32) as i8,
+    -(3 as i32) as i8,
+    -(5 as i32) as i8,
+    -(3 as i32) as i8,
+    (0 as i32) as i8,
+    -(2 as i32) as i8,
+    -(4 as i32) as i8,
+    -(2 as i32) as i8,
+    -(3 as i32) as i8,
+    -(2 as i32) as i8,
+    (0 as i32) as i8,
+    -(3 as i32) as i8,
+    -(5 as i32) as i8,
+    -(6 as i32) as i8,
+    -(5 as i32) as i8,
+    -(6 as i32) as i8,
+    -(2 as i32) as i8,
+    -(2 as i32) as i8,
+    -(5 as i32) as i8,
+    -(11 as i32) as i8,
+    -(1 as i32) as i8,
+    -(2 as i32) as i8,
+    (0 as i32) as i8,
+    -(1 as i32) as i8,
+    -(1 as i32) as i8,
+    -(3 as i32) as i8,
+    (0 as i32) as i8,
+    -(2 as i32) as i8,
+    -(3 as i32) as i8,
+    -(2 as i32) as i8,
+    -(3 as i32) as i8,
+    -(2 as i32) as i8,
+    -(9 as i32) as i8,
+    -(8 as i32) as i8,
+    -(6 as i32) as i8,
+    -(3 as i32) as i8,
+    -(4 as i32) as i8,
+    -(6 as i32) as i8,
+    -(1 as i32) as i8,
+    -(1 as i32) as i8,
+    -(1 as i32) as i8,
+    -(4 as i32) as i8,
+    -(6 as i32) as i8,
+    -(3 as i32) as i8,
+    (0 as i32) as i8,
+    -(2 as i32) as i8,
+    -(1 as i32) as i8,
+    -(3 as i32) as i8,
+    -(1 as i32) as i8,
+    -(3 as i32) as i8,
+    -(6 as i32) as i8,
+    -(2 as i32) as i8,
+    -(7 as i32) as i8,
+    -(6 as i32) as i8,
+    -(8 as i32) as i8,
+    -(6 as i32) as i8,
+    -(9 as i32) as i8,
+    -(10 as i32) as i8,
+    -(11 as i32) as i8,
+    -(9 as i32) as i8,
+    -(1 as i32) as i8,
+    -(4 as i32) as i8,
+    -(8 as i32) as i8,
+    (0 as i32) as i8,
+    -(1 as i32) as i8,
+    -(3 as i32) as i8,
+    -(1 as i32) as i8,
+    -(2 as i32) as i8,
+    -(3 as i32) as i8,
+    -(1 as i32) as i8,
+    -(2 as i32) as i8,
+    -(3 as i32) as i8,
+    -(6 as i32) as i8,
+    -(1 as i32) as i8,
+    -(1 as i32) as i8,
+    -(3 as i32) as i8,
+    -(3 as i32) as i8,
+    -(5 as i32) as i8,
+    -(5 as i32) as i8,
+    -(6 as i32) as i8,
+    -(4 as i32) as i8,
+    -(5 as i32) as i8,
+    -(2 as i32) as i8,
+    (0 as i32) as i8,
+    -(3 as i32) as i8,
+    -(6 as i32) as i8,
+    -(1 as i32) as i8,
+    -(1 as i32) as i8,
+    -(2 as i32) as i8,
+    -(1 as i32) as i8,
+    -(2 as i32) as i8,
+    -(2 as i32) as i8,
+    -(2 as i32) as i8,
+    (0 as i32) as i8,
+    -(2 as i32) as i8,
+    -(2 as i32) as i8,
+    -(2 as i32) as i8,
+    -(1 as i32) as i8,
+    -(2 as i32) as i8,
+    -(2 as i32) as i8,
+    -(1 as i32) as i8,
+    -(1 as i32) as i8,
+    -(4 as i32) as i8,
+    -(2 as i32) as i8,
+    -(5 as i32) as i8,
+    -(1 as i32) as i8,
+    -(1 as i32) as i8,
+    -(2 as i32) as i8,
+    -(1 as i32) as i8,
+    -(1 as i32) as i8,
+    -(2 as i32) as i8,
+    -(3 as i32) as i8,
+    (0 as i32) as i8,
+    -(1 as i32) as i8,
+    -(2 as i32) as i8,
+    -(1 as i32) as i8,
+    (0 as i32) as i8,
+    -(2 as i32) as i8,
+    -(1 as i32) as i8,
+    -(4 as i32) as i8,
+    -(2 as i32) as i8,
+    -(1 as i32) as i8,
+    -(1 as i32) as i8,
+    -(1 as i32) as i8,
+    -(1 as i32) as i8,
+    -(1 as i32) as i8,
+    -(1 as i32) as i8,
+    -(2 as i32) as i8,
+    (0 as i32) as i8,
+    -(2 as i32) as i8,
+    -(4 as i32) as i8,
+    -(2 as i32) as i8,
+    -(2 as i32) as i8,
+    -(3 as i32) as i8,
+    -(1 as i32) as i8,
+    (0 as i32) as i8,
+    -(1 as i32) as i8,
+    -(1 as i32) as i8,
+    -(1 as i32) as i8,
+    -(1 as i32) as i8,
+    -(2 as i32) as i8,
+    -(1 as i32) as i8,
+    -(1 as i32) as i8,
+    (0 as i32) as i8,
+    -(1 as i32) as i8,
+    -(1 as i32) as i8,
+    -(1 as i32) as i8,
+    -(1 as i32) as i8,
+    -(1 as i32) as i8,
+    -(1 as i32) as i8,
+    -(1 as i32) as i8,
+    -(1 as i32) as i8,
+    -(1 as i32) as i8,
+    -(1 as i32) as i8,
+    (0 as i32) as i8,
+    -(3 as i32) as i8,
+    (0 as i32) as i8,
+    -(1 as i32) as i8,
+    (0 as i32) as i8,
+    (0 as i32) as i8,
+    -(1 as i32) as i8,
+    -(1 as i32) as i8,
+    -(3 as i32) as i8,
+    -(2 as i32) as i8,
+    (0 as i32) as i8,
+    -(4 as i32) as i8,
+    -(2 as i32) as i8,
+    (0 as i32) as i8,
+    -(1 as i32) as i8,
+    -(1 as i32) as i8,
+]);
+
+// /*
+// ** This function allocates a new parser.
+// ** The only argument is a pointer to a function which works like
+// ** malloc.
+// **
+// ** Inputs:
+// ** A pointer to the function used to allocate memory.
+// **
+// ** Outputs:
+// ** A pointer to a parser.  This pointer is used in subsequent calls
+// ** to sqlite3Parser and sqlite3ParserFree.
+// */
+#[unsafe(no_mangle)]
+extern "C-unwind" fn sqlite3ParserAlloc(
+    mut mallocProc: Option<unsafe extern "C-unwind" fn(u64) -> *mut ()>,
+    mut pParse: *mut Parse,
+) -> *mut () {
+    let mut yypParser: *mut yyParser = unsafe { std::mem::zeroed() };
+    yypParser = (unsafe { mallocProc.unwrap()(1232 as u64) }) as *mut yyParser;
+    if yypParser != std::ptr::null_mut::<yyParser>() {
+        unsafe {
+            (*yypParser).pParse = pParse;
+        }
+        sqlite3ParserInit(yypParser as *mut (), pParse);
+    }
+    return yypParser as *mut ();
+}
+
+// /*
+// ** Deallocate and destroy a parser.  Destructors are called for
+// ** all stack elements before shutting the parser down.
+// **
+// ** If the YYPARSEFREENEVERNULL macro exists (for example because it
+// ** is defined in a %include section of the input grammar) then it is
+// ** assumed that the input pointer is never NULL.
+// */
+#[unsafe(no_mangle)]
+extern "C-unwind" fn sqlite3ParserFree(
+    mut p: *mut (),
+    mut freeProc: Option<unsafe extern "C-unwind" fn(*mut ())>,
+) {
+    sqlite3ParserFinalize(p);
+    unsafe { freeProc.unwrap()(p) };
+}
+
+// /* The parser */
+// /* The main parser program.
+// ** The first argument is a pointer to a structure obtained from
+// ** "sqlite3ParserAlloc" which describes the current state of the parser.
+// ** The second argument is the major token number.  The third is
+// ** the minor token.  The fourth optional argument is whatever the
+// ** user wants (and specified in the grammar) and is available for
+// ** use by the action routines.
+// **
+// ** Inputs:
+// ** <ul>
+// ** <li> A pointer to the parser (an opaque structure.)
+// ** <li> The major token number.
+// ** <li> The minor token number.
+// ** <li> An option argument of a grammar-specified type.
+// ** </ul>
+// **
+// ** Outputs:
+// ** None.
+// */
+#[unsafe(no_mangle)]
+extern "C-unwind" fn sqlite3Parser(mut yyp: *mut (), mut yymajor: i32, mut yyminor: Token) {
+    let mut yyminorunion: __SlateRecord190 = unsafe { std::mem::zeroed() };
+    // /* The parser action. */
+    let mut yyact: u16 = 0 as u16;
+    // /* The parser */
+    let mut yypParser: *mut yyParser = yyp as *mut yyParser;
+    let mut pParse: *mut Parse = unsafe { (*yypParser).pParse };
+    0 as i32;
+    yyact = unsafe { (*unsafe { (*yypParser).yytos }).stateno };
+    // /* Exit by "break" */
+    '__slate_break_1050: while (1 as i32) != (0 as i32) {
+        0 as i32;
+        0 as i32;
+        yyact = yy_find_shift_action((yymajor as i16) as u16, yyact);
+        if ((yyact as u32) as i32) >= (1282 as i32) {
+            // /* Reduce by this rule */
+            let mut yyruleno: u32 = (((yyact as u32) as i32) - (1282 as i32)) as u32;
+            // /* Check that the stack is large enough to grow by a single entry
+            //       ** if the RHS of the rule is empty.  This ensures that there is room
+            //       ** enough on the stack to push the LHS value */
+            if ((unsafe {
+                *unsafe {
+                    unsafe { std::ptr::addr_of!(yyRuleInfoNRhs.0) as *const i8 }
+                        .offset(yyruleno as isize)
+                }
+            }) as i32)
+                == (0 as i32)
+            {
+                if (unsafe { (*yypParser).yytos }) >= unsafe { (*yypParser).yystackEnd } {
+                    if yyGrowStack(yypParser) != (0 as i32) {
+                        yyStackOverflow(yypParser);
+                        break '__slate_break_1050;
+                    }
+                }
+            }
+            yyact = yy_reduce(yypParser, yyruleno, yymajor, yyminor, pParse);
+        } else {
+            if ((yyact as u32) as i32) <= (1278 as i32) {
+                yy_shift(yypParser, yyact, (yymajor as i16) as u16, yyminor);
+                break '__slate_break_1050;
+            } else {
+                if ((yyact as u32) as i32) == (1280 as i32) {
+                    let __v1051: *mut yyParser = yypParser;
+                    let __v1052: *mut yyStackEntry = unsafe { (*__v1051).yytos };
+                    let __v1053: *mut yyStackEntry =
+                        unsafe { __v1052.offset(-((1 as i32) as isize)) };
+                    unsafe {
+                        (*__v1051).yytos = __v1053;
+                    }
+                    yy_accept(yypParser);
+                    return;
+                } else {
+                    0 as i32;
+                    unsafe {
+                        yyminorunion.yy0 = yyminor;
+                    }
+                    // /* If the YYNOERRORRECOVERY macro is defined, then do not attempt to
+                    //       ** do any kind of error recovery.  Instead, simply invoke the syntax
+                    //       ** error routine and continue going as if nothing had happened.
+                    //       **
+                    //       ** Applications can set this macro (for example inside %include) if
+                    //       ** they intend to abandon the parse upon the first syntax error seen.
+                    //       */
+                    yy_syntax_error(yypParser, yymajor, yyminor);
+                    yy_destructor(
+                        yypParser,
+                        (yymajor as i16) as u16,
+                        std::ptr::addr_of_mut!(yyminorunion),
+                    );
+                    break '__slate_break_1050;
+                    // /* YYERRORSYMBOL is not defined */
+                }
+            }
+        }
+    }
+    return;
+}
+
+// /* The parser */
+// /* The major token code number */
+// /* The value for the token */
+// /* Optional %extra_argument parameter */
+// /*
+// ** Return the fallback token corresponding to canonical token iToken, or
+// ** 0 if iToken has no fallback.
+// */
+#[unsafe(no_mangle)]
+extern "C-unwind" fn sqlite3ParserFallback(mut iToken: i32) -> i32 {
+    0 as i32;
+    return ((unsafe {
+        *unsafe {
+            unsafe { std::ptr::addr_of!(yyFallback.0) as *const u16 }.offset(iToken as isize)
+        }
+    }) as u32) as i32;
+}
+
+// /*
+// ** Generate a syntax error
+// */
+fn parserSyntaxError(mut pParse: *mut Parse, mut p: *mut Token) {
+    unsafe {
+        sqlite3ErrorMsg(
+            pParse,
+            (b"near \"%T\": syntax error\0".as_ptr() as *mut i8) as *const i8,
+            p,
+        )
+    };
+}
+
+// /*
+// ** Disable lookaside memory allocation for objects that might be
+// ** shared across database connections.
+// */
+fn disableLookaside(mut pParse: *mut Parse) {
+    let mut db: *mut sqlite3 = unsafe { (*pParse).db };
+    let __v1054: *mut Parse = pParse;
+    let __v1055: u8 = unsafe { (*__v1054).disableLookaside };
+    let __v1056: u8 = ((((__v1055 as u32) as i32) + (1 as i32)) as i8) as u8;
+    unsafe {
+        (*__v1054).disableLookaside = __v1056;
+    }
+    unsafe {
+        memset(
+            (unsafe { std::ptr::addr_of_mut!((*pParse).u1.cr) }) as *mut (),
+            0 as i32,
+            32 as u64,
+        )
+    };
+    let __v1057: *mut sqlite3 = db;
+    let __v1058: u32 = unsafe { (*__v1057).lookaside.bDisable };
+    let __v1059: u32 = __v1058.wrapping_add((1 as i32) as u32);
+    unsafe {
+        (*__v1057).lookaside.bDisable = __v1059;
+    }
+    unsafe {
+        (*db).lookaside.sz = ((0 as i32) as i16) as u16;
+    }
+}
+
+// /*
+//   ** For a compound SELECT statement, make sure p->pPrior->pNext==p for
+//   ** all elements in the list.  And make sure list length does not exceed
+//   ** SQLITE_LIMIT_COMPOUND_SELECT.
+//   */
+fn parserDoubleLinkSelect(mut pParse: *mut Parse, mut p: *mut Select) {
+    0 as i32;
+    if (unsafe { (*p).pPrior }) != std::ptr::null_mut::<Select>() {
+        let mut pNext: *mut Select = std::ptr::null_mut::<Select>();
+        let mut pLoop: *mut Select = p;
+        let mut mxSelect: i32 = 0 as i32;
+        let mut cnt: i32 = 1 as i32;
+        '__slate_break_1024: while (1 as i32) != (0 as i32) {
+            unsafe {
+                (*pLoop).pNext = pNext;
+            }
+            let __v1060: *mut Select = pLoop;
+            let __v1061: u32 = unsafe { (*__v1060).selFlags };
+            let __v1062: u32 = __v1061 | ((256 as i32) as u32);
+            unsafe {
+                (*__v1060).selFlags = __v1062;
+            }
+            pNext = pLoop;
+            pLoop = unsafe { (*pLoop).pPrior };
+            if pLoop == std::ptr::null_mut::<Select>() {
+                break '__slate_break_1024;
+            }
+            let __v1063: i32 = cnt;
+            let __v1064: i32 = __v1063 + (1 as i32);
+            cnt = __v1064;
+            if (unsafe { (*pLoop).pOrderBy }) != std::ptr::null_mut::<ExprList>()
+                || (unsafe { (*pLoop).pLimit }) != std::ptr::null_mut::<Expr>()
+            {
+                unsafe {
+                    sqlite3ErrorMsg(
+                        pParse,
+                        (b"%s clause should come after %s not before\0".as_ptr() as *mut i8)
+                            as *const i8,
+                        if (unsafe { (*pLoop).pOrderBy }) != std::ptr::null_mut::<ExprList>() {
+                            b"ORDER BY\0".as_ptr() as *mut i8
+                        } else {
+                            b"LIMIT\0".as_ptr() as *mut i8
+                        },
+                        unsafe { sqlite3SelectOpName(((unsafe { (*pNext).op }) as u32) as i32) },
+                    )
+                };
+                break '__slate_break_1024;
+            }
+        }
+        let __v1065: bool;
+        if (unsafe { (*p).selFlags }) & (((1024 as i32) | (512 as i32)) as u32)
+            == ((0 as i32) as u32)
+        {
+            let __v1066: i32 = unsafe {
+                *unsafe {
+                    unsafe { (*unsafe { (*pParse).db }).aLimit.as_mut_ptr() as *mut i32 }
+                        .offset((4 as i32) as isize)
+                }
+            };
+            mxSelect = __v1066;
+            __v1065 = __v1066 > (0 as i32);
+        } else {
+            __v1065 = false as bool;
+        }
+        if __v1065 && cnt > mxSelect {
+            unsafe {
+                sqlite3ErrorMsg(
+                    pParse,
+                    (b"too many terms in compound SELECT\0".as_ptr() as *mut i8) as *const i8,
+                )
+            };
+        }
+    }
+}
+
+// /* Attach a With object describing the WITH clause to a Select
+//   ** object describing the query for which the WITH clause is a prefix.
+//   */
+fn attachWithToSelect(
+    mut pParse: *mut Parse,
+    mut pSelect: *mut Select,
+    mut pWith: *mut With,
+) -> *mut Select {
+    if pSelect != std::ptr::null_mut::<Select>() {
+        unsafe {
+            (*pSelect).pWith = pWith;
+        }
+        parserDoubleLinkSelect(pParse, pSelect);
+    } else {
+        unsafe { sqlite3WithDelete(unsafe { (*pParse).db }, pWith) };
+    }
+    return pSelect;
+}
+
+// /* Memory allocator for parser stack resizing.  This is a thin wrapper around
+//   ** sqlite3_realloc() that includes a call to sqlite3FaultSim() to facilitate
+//   ** testing.
+//   */
+fn parserStackRealloc(mut pOld: *mut (), mut newSize: u64, mut pParse: *mut Parse) -> *mut () {
+    let mut p: *mut () = unsafe { std::mem::zeroed() };
+    let __v1067: *mut ();
+    if (unsafe { sqlite3FaultSim(700 as i32) }) != (0 as i32) {
+        __v1067 = std::ptr::null_mut::<()>();
+    } else {
+        __v1067 = unsafe { sqlite3_realloc(pOld, (newSize as u32) as i32) };
+    }
+    p = __v1067;
+    if p == std::ptr::null_mut::<()>() {
+        unsafe { sqlite3OomFault(unsafe { (*pParse).db }) };
+    }
+    return p;
+}
+
+// /* Prior allocation */
+// /* Requested new alloation size */
+// /* Parsing context */
+fn parserStackFree(mut pOld: *mut (), mut pParse: *mut Parse) {
+    pParse;
+    unsafe { sqlite3_free(pOld) };
+}
+
+// /* Return an integer that is the maximum allowed stack size */
+fn parserStackSizeLimit(mut pParse: *mut Parse) -> i32 {
+    return unsafe {
+        *unsafe {
+            unsafe { (*unsafe { (*pParse).db }).aLimit.as_mut_ptr() as *mut i32 }
+                .offset((12 as i32) as isize)
+        }
+    };
+}
+
+// /* Construct a new Expr object from a single token */
+fn tokenExpr(mut pParse: *mut Parse, mut op: i32, mut t: Token) -> *mut Expr {
+    let mut p: *mut Expr = (unsafe {
+        sqlite3DbMallocRawNN(
+            unsafe { (*pParse).db },
+            (72 as u64)
+                .wrapping_add(t.n as u64)
+                .wrapping_add(((1 as i32) as i64) as u64),
+        )
+    }) as *mut Expr;
+    if p != std::ptr::null_mut::<Expr>() {
+        // /* memset(p, 0, sizeof(Expr)); */
+        unsafe {
+            (*p).op = (op as i8) as u8;
+        }
+        unsafe {
+            (*p).affExpr = (0 as i32) as i8;
+        }
+        unsafe {
+            (*p).flags = (8388608 as i32) as u32;
+        }
+        {}
+        // /* p->iAgg = -1; // Not required */
+        unsafe {
+            (*p).pRight = std::ptr::null_mut::<Expr>();
+        }
+        unsafe {
+            (*p).pLeft = std::ptr::null_mut::<Expr>();
+        }
+        unsafe {
+            (*p).pAggInfo = std::ptr::null_mut::<AggInfo>();
+        }
+        unsafe {
+            memset(
+                (unsafe { std::ptr::addr_of_mut!((*p).x) }) as *mut (),
+                0 as i32,
+                8 as u64,
+            )
+        };
+        unsafe {
+            memset(
+                (unsafe { std::ptr::addr_of_mut!((*p).y) }) as *mut (),
+                0 as i32,
+                8 as u64,
+            )
+        };
+        unsafe {
+            (*p).op2 = ((0 as i32) as i8) as u8;
+        }
+        unsafe {
+            (*p).iTable = 0 as i32;
+        }
+        unsafe {
+            (*p).iColumn = (0 as i32) as i16;
+        }
+        unsafe {
+            (*p).u.zToken = (unsafe { p.offset((1 as i32) as isize) }) as *mut i8;
+        }
+        unsafe {
+            memcpy(
+                (unsafe { (*p).u.zToken }) as *mut (),
+                t.z as *const (),
+                t.n as u64,
+            )
+        };
+        unsafe {
+            *unsafe { unsafe { (*p).u.zToken }.offset(t.n as isize) } = (0 as i32) as i8;
+        }
+        unsafe {
+            (*p).w.iOfst = ((unsafe { t.z.offset_from((unsafe { (*pParse).zTail }) as *const i8) })
+                as i64) as i32;
+        }
+        if (((unsafe {
+            *unsafe {
+                unsafe { std::ptr::addr_of!(sqlite3CtypeMap) as *const u8 }.offset(
+                    ((((unsafe { *unsafe { unsafe { (*p).u.zToken }.offset((0 as i32) as isize) } })
+                        as u8) as u32) as i32) as isize,
+                )
+            }
+        }) as u32) as i32)
+            & (128 as i32)
+            != (0 as i32)
+        {
+            unsafe { sqlite3DequoteExpr(p) };
+        }
+        unsafe {
+            (*p).nHeight = 1 as i32;
+        }
+        if (((unsafe { (*pParse).eParseMode }) as u32) as i32) >= (2 as i32) {
+            return (unsafe {
+                sqlite3RenameTokenMap(
+                    pParse,
+                    (p as *mut ()) as *const (),
+                    std::ptr::addr_of_mut!(t) as *const Token,
+                )
+            }) as *mut Expr;
+        }
+    }
+    return p;
+}
+
+// /* Create a TK_ISNULL or TK_NOTNULL expression, perhaps optimized to
+//   ** to TK_TRUEFALSE, if possible */
+fn sqlite3PExprIsNull(mut pParse: *mut Parse, mut op: i32, mut pLeft: *mut Expr) -> *mut Expr {
+    let mut p: *mut Expr = pLeft;
+    0 as i32;
+    0 as i32;
+    '__slate_break_1029: while (((unsafe { (*p).op }) as u32) as i32) == (173 as i32)
+        || (((unsafe { (*p).op }) as u32) as i32) == (174 as i32)
+    {
+        p = unsafe { (*p).pLeft };
+        0 as i32;
+    }
+    '__slate_break_1030: {
+        match ((unsafe { (*p).op }) as u32) as i32 {
+            156 | 118 | 154 | 155 => {
+                unsafe { sqlite3ExprDeferredDelete(pParse, pLeft) };
+                return unsafe {
+                    sqlite3ExprInt32(unsafe { (*pParse).db }, (op == (52 as i32)) as i32)
+                };
+            }
+            _ => {}
+        }
+    }
+    return unsafe { sqlite3PExpr(pParse, op, pLeft, std::ptr::null_mut::<Expr>()) };
+}
+
+// /* Parsing context */
+// /* TK_ISNULL or TK_NOTNULL */
+// /* Operand */
+// /* Create a TK_IS or TK_ISNOT operator, perhaps optimized to
+//   ** TK_ISNULL or TK_NOTNULL or TK_TRUEFALSE. */
+fn sqlite3PExprIs(
+    mut pParse: *mut Parse,
+    mut op: i32,
+    mut pLeft: *mut Expr,
+    mut pRight: *mut Expr,
+) -> *mut Expr {
+    if pRight != std::ptr::null_mut::<Expr>()
+        && (((unsafe { (*pRight).op }) as u32) as i32) == (122 as i32)
+    {
+        unsafe { sqlite3ExprDeferredDelete(pParse, pRight) };
+        return sqlite3PExprIsNull(
+            pParse,
+            if op == (45 as i32) {
+                51 as i32
+            } else {
+                52 as i32
+            },
+            pLeft,
+        );
+    }
+    return unsafe { sqlite3PExpr(pParse, op, pLeft, pRight) };
+}
+
+// /* Parsing context */
+// /* TK_IS or TK_ISNOT */
+// /* Left operand */
+// /* Right operand */
+// /* Add a single new term to an ExprList that is used to store a
+//   ** list of identifiers.  Report an error if the ID list contains
+//   ** a COLLATE clause or an ASC or DESC keyword, except ignore the
+//   ** error while parsing a legacy schema.
+//   */
+fn parserAddExprIdListTerm(
+    mut pParse: *mut Parse,
+    mut pPrior: *mut ExprList,
+    mut pIdToken: *mut Token,
+    mut hasCollate: i32,
+    mut sortOrder: i32,
+) -> *mut ExprList {
+    let mut p: *mut ExprList =
+        unsafe { sqlite3ExprListAppend(pParse, pPrior, std::ptr::null_mut::<Expr>()) };
+    if (hasCollate != (0 as i32) || sortOrder != -(1 as i32))
+        && (((unsafe { (*unsafe { (*pParse).db }).init.busy }) as u32) as i32) == (0 as i32)
+    {
+        unsafe {
+            sqlite3ErrorMsg(
+                pParse,
+                (b"syntax error after column name \"%.*s\"\0".as_ptr() as *mut i8) as *const i8,
+                unsafe { (*pIdToken).n },
+                unsafe { (*pIdToken).z },
+            )
+        };
+    }
+    unsafe { sqlite3ExprListSetName(pParse, p, pIdToken as *const Token, 1 as i32) };
+    return p;
+}
+
+// /*
+// ** Try to increase the size of the parser stack.  Return the number
+// ** of errors.  Return 0 on success.
+// */
+fn yyGrowStack(mut p: *mut yyParser) -> i32 {
+    let mut oldSize: i32 = (1 as i32)
+        + (((unsafe {
+            unsafe { (*p).yystackEnd }.offset_from((unsafe { (*p).yystack }) as *mut yyStackEntry)
+        }) as i64) as i32);
+    let mut newSize: i32 = 0 as i32;
+    let mut idx: i32 = 0 as i32;
+    let mut pNew: *mut yyStackEntry = unsafe { std::mem::zeroed() };
+    let mut nLimit: i32 = parserStackSizeLimit(unsafe { (*p).pParse });
+    newSize = oldSize * (2 as i32) + (100 as i32);
+    if newSize > nLimit {
+        newSize = nLimit;
+        if newSize <= oldSize {
+            return 1 as i32;
+        }
+    }
+    idx = ((unsafe {
+        unsafe { (*p).yytos }.offset_from((unsafe { (*p).yystack }) as *mut yyStackEntry)
+    }) as i64) as i32;
+    if (unsafe { (*p).yystack }) == unsafe { (*p).yystk0.as_mut_ptr() as *mut yyStackEntry } {
+        pNew = parserStackRealloc(
+            std::ptr::null_mut::<()>(),
+            ((newSize as i64) as u64).wrapping_mul(24 as u64),
+            unsafe { (*p).pParse },
+        ) as *mut yyStackEntry;
+        if pNew == std::ptr::null_mut::<yyStackEntry>() {
+            return 1 as i32;
+        }
+        unsafe {
+            memcpy(
+                pNew as *mut (),
+                (unsafe { (*p).yystack }) as *const (),
+                ((oldSize as i64) as u64).wrapping_mul(24 as u64),
+            )
+        };
+    } else {
+        pNew = parserStackRealloc(
+            (unsafe { (*p).yystack }) as *mut (),
+            ((newSize as i64) as u64).wrapping_mul(24 as u64),
+            unsafe { (*p).pParse },
+        ) as *mut yyStackEntry;
+        if pNew == std::ptr::null_mut::<yyStackEntry>() {
+            return 1 as i32;
+        }
+    }
+    unsafe {
+        (*p).yystack = pNew;
+    }
+    unsafe {
+        (*p).yytos = unsafe { unsafe { (*p).yystack }.offset(idx as isize) };
+    }
+    unsafe {
+        (*p).yystackEnd =
+            unsafe { unsafe { (*p).yystack }.offset((newSize - (1 as i32)) as isize) };
+    }
+    return 0 as i32;
+}
+
+// /* YYGROWABLESTACK */
+// /* Datatype of the argument to the memory allocated passed as the
+// ** second argument to sqlite3ParserAlloc() below.  This can be changed by
+// ** putting an appropriate #define in the %include section of the input
+// ** grammar.
+// */
+// /* Initialize a new parser that has already been allocated.
+// */
+#[unsafe(no_mangle)]
+extern "C-unwind" fn sqlite3ParserInit(mut yypRawParser: *mut (), mut pParse: *mut Parse) {
+    let mut yypParser: *mut yyParser = yypRawParser as *mut yyParser;
+    unsafe {
+        (*yypParser).pParse = pParse;
+    }
+    unsafe {
+        (*yypParser).yystack = unsafe { (*yypParser).yystk0.as_mut_ptr() as *mut yyStackEntry };
+    }
+    unsafe {
+        (*yypParser).yystackEnd =
+            unsafe { unsafe { (*yypParser).yystack }.offset(((50 as i32) - (1 as i32)) as isize) };
+    }
+    unsafe {
+        (*yypParser).yytos = unsafe { (*yypParser).yystack };
+    }
+    unsafe {
+        (*unsafe { unsafe { (*yypParser).yystack }.offset((0 as i32) as isize) }).stateno =
+            ((0 as i32) as i16) as u16;
+    }
+    unsafe {
+        (*unsafe { unsafe { (*yypParser).yystack }.offset((0 as i32) as isize) }).major =
+            ((0 as i32) as i16) as u16;
+    }
+}
+
+// /* sqlite3Parser_ENGINEALWAYSONSTACK */
+// /* The following function deletes the "minor type" or semantic value
+// ** associated with a symbol.  The symbol can be either a terminal
+// ** or nonterminal. "yymajor" is the symbol code, and "yypminor" is
+// ** a pointer to the value to be deleted.  The code used to do the
+// ** deletions is derived from the %destructor and/or %token_destructor
+// ** directives of the input grammar.
+// */
+fn yy_destructor(
+    mut yypParser: *mut yyParser,
+    mut yymajor: u16,
+    mut yypminor: *mut __SlateRecord190,
+) {
+    let mut pParse: *mut Parse = unsafe { (*yypParser).pParse };
+    '__slate_break_1032: {
+        match (yymajor as u32) as i32 {
+            206 | 241 | 242 | 254 | 256 => {
+                // /* Here is inserted the actions which take place when a
+                //     ** terminal or non-terminal is destroyed.  This can happen
+                //     ** when the symbol is popped from the stack during a
+                //     ** reduce or during error processing or when a parser is
+                //     ** being destroyed before it is finished parsing.
+                //     **
+                //     ** Note: during a reduce, the only symbols destroyed are those
+                //     ** which appear on the RHS of the rule, but which are *not* used
+                //     ** inside the C code.
+                //     */
+                // /********* Begin destructor definitions ***************************************/
+                // /* select */
+                unsafe {
+                    sqlite3SelectDelete(unsafe { (*pParse).db }, unsafe { (*yypminor).yy555 })
+                };
+                // /* selectnowith */
+                // /* oneselect */
+                // /* values */
+                // /* mvalues */
+                break '__slate_break_1032;
+                // /* term */
+            }
+            218 | 219 | 248 | 250 | 270 | 281 | 283 | 286 | 293 | 297 | 314 => {
+                unsafe { sqlite3ExprDelete(unsafe { (*pParse).db }, unsafe { (*yypminor).yy454 }) };
+                // /* expr */
+                // /* where_opt */
+                // /* having_opt */
+                // /* where_opt_ret */
+                // /* case_operand */
+                // /* case_else */
+                // /* vinto */
+                // /* when_clause */
+                // /* key_opt */
+                // /* filter_clause */
+                break '__slate_break_1032;
+                // /* eidlist_opt */
+            }
+            223 | 233 | 234 | 246 | 249 | 251 | 255 | 257 | 264 | 271 | 280 | 282 | 313 => {
+                unsafe {
+                    sqlite3ExprListDelete(unsafe { (*pParse).db }, unsafe { (*yypminor).yy14 })
+                };
+                // /* sortlist */
+                // /* eidlist */
+                // /* selcollist */
+                // /* groupby_opt */
+                // /* orderby_opt */
+                // /* nexprlist */
+                // /* sclp */
+                // /* exprlist */
+                // /* setlist */
+                // /* paren_exprlist */
+                // /* case_exprlist */
+                // /* part_opt */
+                break '__slate_break_1032;
+                // /* fullname */
+            }
+            240 | 247 | 259 | 260 | 265 => {
+                unsafe {
+                    sqlite3SrcListDelete(unsafe { (*pParse).db }, unsafe { (*yypminor).yy203 })
+                };
+                // /* from */
+                // /* seltablist */
+                // /* stl_prefix */
+                // /* xfullname */
+                break '__slate_break_1032;
+                // /* wqlist */
+            }
+            243 => {
+                unsafe { sqlite3WithDelete(unsafe { (*pParse).db }, unsafe { (*yypminor).yy59 }) };
+                break '__slate_break_1032;
+                // /* window_clause */
+            }
+            253 | 309 => {
+                unsafe {
+                    sqlite3WindowListDelete(unsafe { (*pParse).db }, unsafe { (*yypminor).yy211 })
+                };
+                // /* windowdefn_list */
+                break '__slate_break_1032;
+                // /* idlist */
+            }
+            266 | 273 => {
+                unsafe {
+                    sqlite3IdListDelete(unsafe { (*pParse).db }, unsafe { (*yypminor).yy132 })
+                };
+                // /* idlist_opt */
+                break '__slate_break_1032;
+                // /* filter_over */
+            }
+            276 | 310 | 311 | 312 | 315 => {
+                unsafe {
+                    sqlite3WindowDelete(unsafe { (*pParse).db }, unsafe { (*yypminor).yy211 })
+                };
+                // /* windowdefn */
+                // /* window */
+                // /* frame_opt */
+                // /* over_clause */
+                break '__slate_break_1032;
+                // /* trigger_cmd_list */
+            }
+            289 | 294 => {
+                unsafe {
+                    sqlite3DeleteTriggerStep(unsafe { (*pParse).db }, unsafe { (*yypminor).yy427 })
+                };
+                // /* trigger_cmd */
+                break '__slate_break_1032;
+                // /* trigger_event */
+            }
+            291 => {
+                unsafe {
+                    sqlite3IdListDelete(unsafe { (*pParse).db }, unsafe { (*yypminor).yy286.b })
+                };
+                break '__slate_break_1032;
+                // /* frame_bound */
+            }
+            317 | 318 | 319 => {
+                unsafe {
+                    sqlite3ExprDelete(unsafe { (*pParse).db }, unsafe { (*yypminor).yy509.pExpr })
+                };
+                // /* frame_bound_s */
+                // /* frame_bound_e */
+                break '__slate_break_1032;
+                // /********* End destructor definitions *****************************************/
+                // /* If no destructor action specified: do nothing */
+            }
+            _ => {}
+        }
+    }
+}
+
+// /* The parser */
+// /* Type code for object to destroy */
+// /* The object to be destroyed */
+// /*
+// ** Pop the parser's stack once.
+// **
+// ** If there is a destructor routine associated with the token which
+// ** is popped from the stack, then call it.
+// */
+fn yy_pop_parser_stack(mut pParser: *mut yyParser) {
+    let mut yytos: *mut yyStackEntry = unsafe { std::mem::zeroed() };
+    0 as i32;
+    0 as i32;
+    let __v1068: *mut yyParser = pParser;
+    let __v1069: *mut yyStackEntry = unsafe { (*__v1068).yytos };
+    let __v1070: *mut yyStackEntry = unsafe { __v1069.offset(-((1 as i32) as isize)) };
+    unsafe {
+        (*__v1068).yytos = __v1070;
+    }
+    yytos = __v1069;
+    yy_destructor(pParser, unsafe { (*yytos).major }, unsafe {
+        std::ptr::addr_of_mut!((*yytos).minor)
+    });
+}
+
+// /*
+// ** Clear all secondary memory allocations from the parser
+// */
+#[unsafe(no_mangle)]
+extern "C-unwind" fn sqlite3ParserFinalize(mut p: *mut ()) {
+    let mut pParser: *mut yyParser = p as *mut yyParser;
+    // /* In-lined version of calling yy_pop_parser_stack() for each
+    //   ** element left in the stack */
+    let mut yytos: *mut yyStackEntry = unsafe { (*pParser).yytos };
+    '__slate_break_1033: while yytos > unsafe { (*pParser).yystack } {
+        if (((unsafe { (*yytos).major }) as u32) as i32) >= (206 as i32) {
+            yy_destructor(pParser, unsafe { (*yytos).major }, unsafe {
+                std::ptr::addr_of_mut!((*yytos).minor)
+            });
+        }
+        let __v1071: *mut yyStackEntry = yytos;
+        let __v1072: *mut yyStackEntry = unsafe { __v1071.offset(-((1 as i32) as isize)) };
+        yytos = __v1072;
+    }
+    if (unsafe { (*pParser).yystack })
+        != unsafe { (*pParser).yystk0.as_mut_ptr() as *mut yyStackEntry }
+    {
+        parserStackFree((unsafe { (*pParser).yystack }) as *mut (), unsafe {
+            (*pParser).pParse
+        });
+    }
+}
+
+// /* The parser to be deleted */
+// /* Function used to reclaim memory */
+// /* sqlite3Parser_ENGINEALWAYSONSTACK */
+// /*
+// ** Return the peak depth of the stack for a parser.
+// */
+// /* This array of booleans keeps track of the parser statement
+// ** coverage.  The element yycoverage[X][Y] is set when the parser
+// ** is in state X and has a lookahead token Y.  In a well-tested
+// ** systems, every element of this matrix should end up being set.
+// */
+// /*
+// ** Write into out a description of every state/lookahead combination that
+// **
+// **   (1)  has not been used by the parser, and
+// **   (2)  is not a syntax error.
+// **
+// ** Return the number of missed state/lookahead combinations.
+// */
+// /*
+// ** Find the appropriate action for a parser given the terminal
+// ** look-ahead token iLookAhead.
+// */
+fn yy_find_shift_action(mut iLookAhead: u16, mut stateno: u16) -> u16 {
+    let mut i: i32 = 0 as i32;
+    if ((stateno as u32) as i32) > (599 as i32) {
+        return stateno;
+    }
+    0 as i32;
+    '__slate_break_1034: loop {
+        i = ((unsafe {
+            *unsafe {
+                unsafe { std::ptr::addr_of!(yy_shift_ofst.0) as *const u16 }
+                    .offset(((stateno as u32) as i32) as isize)
+            }
+        }) as u32) as i32;
+        0 as i32;
+        0 as i32;
+        0 as i32;
+        0 as i32;
+        0 as i32;
+        let __v1073: i32 = i;
+        let __v1074: i32 = __v1073 + ((iLookAhead as u32) as i32);
+        i = __v1074;
+        0 as i32;
+        if (((unsafe {
+            *unsafe {
+                unsafe { std::ptr::addr_of!(yy_lookahead.0) as *const u16 }.offset(i as isize)
+            }
+        }) as u32) as i32)
+            != ((iLookAhead as u32) as i32)
+        {
+            // /* Fallback token */
+            let mut iFallback: u16 = 0 as u16;
+            0 as i32;
+            iFallback = unsafe {
+                *unsafe {
+                    unsafe { std::ptr::addr_of!(yyFallback.0) as *const u16 }
+                        .offset(((iLookAhead as u32) as i32) as isize)
+                }
+            };
+            if ((iFallback as u32) as i32) != (0 as i32) {
+                // /* Fallback loop must terminate */
+                0 as i32;
+                iLookAhead = iFallback;
+            } else {
+                let mut j: i32 = i - ((iLookAhead as u32) as i32) + (102 as i32);
+                0 as i32;
+                if (((unsafe {
+                    *unsafe {
+                        unsafe { std::ptr::addr_of!(yy_lookahead.0) as *const u16 }
+                            .offset(j as isize)
+                    }
+                }) as u32) as i32)
+                    == (102 as i32)
+                    && ((iLookAhead as u32) as i32) > (0 as i32)
+                {
+                    return unsafe {
+                        *unsafe {
+                            unsafe { std::ptr::addr_of!(yy_action.0) as *const u16 }
+                                .offset(j as isize)
+                        }
+                    };
+                }
+                // /* YYWILDCARD */
+                return unsafe {
+                    *unsafe {
+                        unsafe { std::ptr::addr_of!(yy_default.0) as *const u16 }
+                            .offset(((stateno as u32) as i32) as isize)
+                    }
+                };
+            }
+        } else {
+            0 as i32;
+            return unsafe {
+                *unsafe {
+                    unsafe { std::ptr::addr_of!(yy_action.0) as *const u16 }.offset(i as isize)
+                }
+            };
+        }
+        if !((1 as i32) != (0 as i32)) {
+            break;
+        }
+    }
+    return unsafe { std::mem::zeroed() };
+}
+
+// /* The look-ahead token */
+// /* Current state number */
+// /*
+// ** Find the appropriate action for a parser given the non-terminal
+// ** look-ahead token iLookAhead.
+// */
+fn yy_find_reduce_action(mut stateno: u16, mut iLookAhead: u16) -> u16 {
+    let mut i: i32 = 0 as i32;
+    0 as i32;
+    i = (unsafe {
+        *unsafe {
+            unsafe { std::ptr::addr_of!(yy_reduce_ofst.0) as *const i16 }
+                .offset(((stateno as u32) as i32) as isize)
+        }
+    }) as i32;
+    0 as i32;
+    let __v1075: i32 = i;
+    let __v1076: i32 = __v1075 + ((iLookAhead as u32) as i32);
+    i = __v1076;
+    0 as i32;
+    0 as i32;
+    return unsafe {
+        *unsafe { unsafe { std::ptr::addr_of!(yy_action.0) as *const u16 }.offset(i as isize) }
+    };
+}
+
+// /* Current state number */
+// /* The look-ahead token */
+// /*
+// ** The following routine is called if the stack overflows.
+// */
+fn yyStackOverflow(mut yypParser: *mut yyParser) {
+    let mut pParse: *mut Parse = unsafe { (*yypParser).pParse };
+    '__slate_break_1035: while (unsafe { (*yypParser).yytos }) > unsafe { (*yypParser).yystack } {
+        yy_pop_parser_stack(yypParser);
+    }
+    // /* Here code is inserted which will execute if the parser
+    //    ** stack every overflows */
+    // /******** Begin %stack_overflow code ******************************************/
+    if (unsafe { (*pParse).nErr }) == (0 as i32) {
+        unsafe {
+            sqlite3ErrorMsg(
+                pParse,
+                (b"Recursion limit\0".as_ptr() as *mut i8) as *const i8,
+            )
+        };
+    }
+    // /******** End %stack_overflow code ********************************************/
+    // /* Suppress warning about unused %extra_argument var */
+    unsafe {
+        (*yypParser).pParse = pParse;
+    }
+}
+
+// /*
+// ** Print tracing information for a SHIFT action
+// */
+// /*
+// ** Perform a shift action.
+// */
+fn yy_shift(
+    mut yypParser: *mut yyParser,
+    mut yyNewState: u16,
+    mut yyMajor: u16,
+    mut yyMinor: Token,
+) {
+    let mut yytos: *mut yyStackEntry = unsafe { std::mem::zeroed() };
+    let __v1077: *mut yyParser = yypParser;
+    let __v1078: *mut yyStackEntry = unsafe { (*__v1077).yytos };
+    let __v1079: *mut yyStackEntry = unsafe { __v1078.offset((1 as i32) as isize) };
+    unsafe {
+        (*__v1077).yytos = __v1079;
+    }
+    yytos = unsafe { (*yypParser).yytos };
+    if yytos > unsafe { (*yypParser).yystackEnd } {
+        if yyGrowStack(yypParser) != (0 as i32) {
+            let __v1080: *mut yyParser = yypParser;
+            let __v1081: *mut yyStackEntry = unsafe { (*__v1080).yytos };
+            let __v1082: *mut yyStackEntry = unsafe { __v1081.offset(-((1 as i32) as isize)) };
+            unsafe {
+                (*__v1080).yytos = __v1082;
+            }
+            yyStackOverflow(yypParser);
+            return;
+        }
+        yytos = unsafe { (*yypParser).yytos };
+        0 as i32;
+    }
+    if ((yyNewState as u32) as i32) > (599 as i32) {
+        let __v1083: u16 = yyNewState;
+        let __v1084: u16 =
+            ((((__v1083 as u32) as i32) + ((1282 as i32) - (867 as i32))) as i16) as u16;
+        yyNewState = __v1084;
+    }
+    unsafe {
+        (*yytos).stateno = yyNewState;
+    }
+    unsafe {
+        (*yytos).major = yyMajor;
+    }
+    unsafe {
+        (*yytos).minor.yy0 = yyMinor;
+    }
+    {}
+}
+
+// /* The parser */
+// /* The major type of the error token */
+// /* The minor type of the error token */
+// /*
+// ** The following is executed when the parser accepts
+// */
+fn yy_accept(mut yypParser: *mut yyParser) {
+    let mut pParse: *mut Parse = unsafe { (*yypParser).pParse };
+    0 as i32;
+    // /* Here code is inserted which will be executed whenever the
+    //   ** parser accepts */
+    // /*********** Begin %parse_accept code *****************************************/
+    // /*********** End %parse_accept code *******************************************/
+    // /* Suppress warning about unused %extra_argument variable */
+    unsafe {
+        (*yypParser).pParse = pParse;
+    }
+}
+
+// /* (0) explain ::= EXPLAIN */
+// /* (1) explain ::= EXPLAIN QUERY PLAN */
+// /* (2) cmdx ::= cmd */
+// /* (3) cmd ::= BEGIN transtype trans_opt */
+// /* (4) transtype ::= */
+// /* (5) transtype ::= DEFERRED */
+// /* (6) transtype ::= IMMEDIATE */
+// /* (7) transtype ::= EXCLUSIVE */
+// /* (8) cmd ::= COMMIT|END trans_opt */
+// /* (9) cmd ::= ROLLBACK trans_opt */
+// /* (10) cmd ::= SAVEPOINT nm */
+// /* (11) cmd ::= RELEASE savepoint_opt nm */
+// /* (12) cmd ::= ROLLBACK trans_opt TO savepoint_opt nm */
+// /* (13) create_table ::= createkw temp TABLE ifnotexists nm dbnm */
+// /* (14) createkw ::= CREATE */
+// /* (15) ifnotexists ::= */
+// /* (16) ifnotexists ::= IF NOT EXISTS */
+// /* (17) temp ::= TEMP */
+// /* (18) temp ::= */
+// /* (19) create_table_args ::= LP columnlist conslist_opt RP table_option_set */
+// /* (20) create_table_args ::= AS select */
+// /* (21) table_option_set ::= */
+// /* (22) table_option_set ::= table_option_set COMMA table_option */
+// /* (23) table_option ::= WITHOUT nm */
+// /* (24) table_option ::= nm */
+// /* (25) columnname ::= nm typetoken */
+// /* (26) typetoken ::= */
+// /* (27) typetoken ::= typename LP signed RP */
+// /* (28) typetoken ::= typename LP signed COMMA signed RP */
+// /* (29) typename ::= typename ID|STRING */
+// /* (30) scanpt ::= */
+// /* (31) scantok ::= */
+// /* (32) ccons ::= CONSTRAINT nm */
+// /* (33) ccons ::= DEFAULT scantok term */
+// /* (34) ccons ::= DEFAULT LP expr RP */
+// /* (35) ccons ::= DEFAULT PLUS scantok term */
+// /* (36) ccons ::= DEFAULT MINUS scantok term */
+// /* (37) ccons ::= DEFAULT scantok ID|INDEXED */
+// /* (38) ccons ::= NOT NULL onconf */
+// /* (39) ccons ::= PRIMARY KEY sortorder onconf autoinc */
+// /* (40) ccons ::= UNIQUE onconf */
+// /* (41) ccons ::= CHECK LP expr RP */
+// /* (42) ccons ::= REFERENCES nm eidlist_opt refargs */
+// /* (43) ccons ::= defer_subclause */
+// /* (44) ccons ::= COLLATE ID|STRING */
+// /* (45) generated ::= LP expr RP */
+// /* (46) generated ::= LP expr RP ID */
+// /* (47) autoinc ::= */
+// /* (48) autoinc ::= AUTOINCR */
+// /* (49) refargs ::= */
+// /* (50) refargs ::= refargs refarg */
+// /* (51) refarg ::= MATCH nm */
+// /* (52) refarg ::= ON INSERT refact */
+// /* (53) refarg ::= ON DELETE refact */
+// /* (54) refarg ::= ON UPDATE refact */
+// /* (55) refact ::= SET NULL */
+// /* (56) refact ::= SET DEFAULT */
+// /* (57) refact ::= CASCADE */
+// /* (58) refact ::= RESTRICT */
+// /* (59) refact ::= NO ACTION */
+// /* (60) defer_subclause ::= NOT DEFERRABLE init_deferred_pred_opt */
+// /* (61) defer_subclause ::= DEFERRABLE init_deferred_pred_opt */
+// /* (62) init_deferred_pred_opt ::= */
+// /* (63) init_deferred_pred_opt ::= INITIALLY DEFERRED */
+// /* (64) init_deferred_pred_opt ::= INITIALLY IMMEDIATE */
+// /* (65) conslist_opt ::= */
+// /* (66) tconscomma ::= COMMA */
+// /* (67) tcons ::= CONSTRAINT nm */
+// /* (68) tcons ::= PRIMARY KEY LP sortlist autoinc RP onconf */
+// /* (69) tcons ::= UNIQUE LP sortlist RP onconf */
+// /* (70) tcons ::= CHECK LP expr RP onconf */
+// /* (71) tcons ::= FOREIGN KEY LP eidlist RP REFERENCES nm eidlist_opt refargs defer_subclause_opt */
+// /* (72) defer_subclause_opt ::= */
+// /* (73) onconf ::= */
+// /* (74) onconf ::= ON CONFLICT resolvetype */
+// /* (75) orconf ::= */
+// /* (76) orconf ::= OR resolvetype */
+// /* (77) resolvetype ::= IGNORE */
+// /* (78) resolvetype ::= REPLACE */
+// /* (79) cmd ::= DROP TABLE ifexists fullname */
+// /* (80) ifexists ::= IF EXISTS */
+// /* (81) ifexists ::= */
+// /* (82) cmd ::= createkw temp VIEW ifnotexists nm dbnm eidlist_opt AS select */
+// /* (83) cmd ::= DROP VIEW ifexists fullname */
+// /* (84) cmd ::= select */
+// /* (85) select ::= WITH wqlist selectnowith */
+// /* (86) select ::= WITH RECURSIVE wqlist selectnowith */
+// /* (87) select ::= selectnowith */
+// /* (88) selectnowith ::= selectnowith multiselect_op oneselect */
+// /* (89) multiselect_op ::= UNION */
+// /* (90) multiselect_op ::= UNION ALL */
+// /* (91) multiselect_op ::= EXCEPT|INTERSECT */
+// /* (92) oneselect ::= SELECT distinct selcollist from where_opt groupby_opt having_opt orderby_opt limit_opt */
+// /* (93) oneselect ::= SELECT distinct selcollist from where_opt groupby_opt having_opt window_clause orderby_opt limit_opt */
+// /* (94) values ::= VALUES LP nexprlist RP */
+// /* (95) oneselect ::= mvalues */
+// /* (96) mvalues ::= values COMMA LP nexprlist RP */
+// /* (97) mvalues ::= mvalues COMMA LP nexprlist RP */
+// /* (98) distinct ::= DISTINCT */
+// /* (99) distinct ::= ALL */
+// /* (100) distinct ::= */
+// /* (101) sclp ::= */
+// /* (102) selcollist ::= sclp scanpt expr scanpt as */
+// /* (103) selcollist ::= sclp scanpt STAR */
+// /* (104) selcollist ::= sclp scanpt nm DOT STAR */
+// /* (105) as ::= AS nm */
+// /* (106) as ::= */
+// /* (107) from ::= */
+// /* (108) from ::= FROM seltablist */
+// /* (109) stl_prefix ::= seltablist joinop */
+// /* (110) stl_prefix ::= */
+// /* (111) seltablist ::= stl_prefix nm dbnm as on_using */
+// /* (112) seltablist ::= stl_prefix nm dbnm as indexed_by on_using */
+// /* (113) seltablist ::= stl_prefix nm dbnm LP exprlist RP as on_using */
+// /* (114) seltablist ::= stl_prefix LP select RP as on_using */
+// /* (115) seltablist ::= stl_prefix LP seltablist RP as on_using */
+// /* (116) dbnm ::= */
+// /* (117) dbnm ::= DOT nm */
+// /* (118) fullname ::= nm */
+// /* (119) fullname ::= nm DOT nm */
+// /* (120) xfullname ::= nm */
+// /* (121) xfullname ::= nm DOT nm */
+// /* (122) xfullname ::= nm AS nm */
+// /* (123) xfullname ::= nm DOT nm AS nm */
+// /* (124) joinop ::= COMMA|JOIN */
+// /* (125) joinop ::= JOIN_KW JOIN */
+// /* (126) joinop ::= JOIN_KW nm JOIN */
+// /* (127) joinop ::= JOIN_KW nm nm JOIN */
+// /* (128) on_using ::= ON expr */
+// /* (129) on_using ::= USING LP idlist RP */
+// /* (130) on_using ::= */
+// /* (131) indexed_opt ::= */
+// /* (132) indexed_by ::= INDEXED BY nm */
+// /* (133) indexed_by ::= NOT INDEXED */
+// /* (134) orderby_opt ::= */
+// /* (135) orderby_opt ::= ORDER BY sortlist */
+// /* (136) sortlist ::= sortlist COMMA expr sortorder nulls */
+// /* (137) sortlist ::= expr sortorder nulls */
+// /* (138) sortorder ::= ASC */
+// /* (139) sortorder ::= DESC */
+// /* (140) sortorder ::= */
+// /* (141) nulls ::= NULLS FIRST */
+// /* (142) nulls ::= NULLS LAST */
+// /* (143) nulls ::= */
+// /* (144) groupby_opt ::= */
+// /* (145) groupby_opt ::= GROUP BY nexprlist */
+// /* (146) having_opt ::= */
+// /* (147) having_opt ::= HAVING expr */
+// /* (148) limit_opt ::= */
+// /* (149) limit_opt ::= LIMIT expr */
+// /* (150) limit_opt ::= LIMIT expr OFFSET expr */
+// /* (151) limit_opt ::= LIMIT expr COMMA expr */
+// /* (152) cmd ::= with DELETE FROM xfullname indexed_opt where_opt_ret */
+// /* (153) where_opt ::= */
+// /* (154) where_opt ::= WHERE expr */
+// /* (155) where_opt_ret ::= */
+// /* (156) where_opt_ret ::= WHERE expr */
+// /* (157) where_opt_ret ::= RETURNING selcollist */
+// /* (158) where_opt_ret ::= WHERE expr RETURNING selcollist */
+// /* (159) cmd ::= with UPDATE orconf xfullname indexed_opt SET setlist from where_opt_ret */
+// /* (160) setlist ::= setlist COMMA nm EQ expr */
+// /* (161) setlist ::= setlist COMMA LP idlist RP EQ expr */
+// /* (162) setlist ::= nm EQ expr */
+// /* (163) setlist ::= LP idlist RP EQ expr */
+// /* (164) cmd ::= with insert_cmd INTO xfullname idlist_opt select upsert */
+// /* (165) cmd ::= with insert_cmd INTO xfullname idlist_opt DEFAULT VALUES returning */
+// /* (166) upsert ::= */
+// /* (167) upsert ::= RETURNING selcollist */
+// /* (168) upsert ::= ON CONFLICT LP sortlist RP where_opt DO UPDATE SET setlist where_opt upsert */
+// /* (169) upsert ::= ON CONFLICT LP sortlist RP where_opt DO NOTHING upsert */
+// /* (170) upsert ::= ON CONFLICT DO NOTHING returning */
+// /* (171) upsert ::= ON CONFLICT DO UPDATE SET setlist where_opt returning */
+// /* (172) returning ::= RETURNING selcollist */
+// /* (173) insert_cmd ::= INSERT orconf */
+// /* (174) insert_cmd ::= REPLACE */
+// /* (175) idlist_opt ::= */
+// /* (176) idlist_opt ::= LP idlist RP */
+// /* (177) idlist ::= idlist COMMA nm */
+// /* (178) idlist ::= nm */
+// /* (179) expr ::= LP expr RP */
+// /* (180) expr ::= ID|INDEXED|JOIN_KW */
+// /* (181) expr ::= nm DOT nm */
+// /* (182) expr ::= nm DOT nm DOT nm */
+// /* (183) term ::= NULL|FLOAT|BLOB */
+// /* (184) term ::= STRING */
+// /* (185) term ::= INTEGER */
+// /* (186) expr ::= VARIABLE */
+// /* (187) expr ::= expr COLLATE ID|STRING */
+// /* (188) expr ::= CAST LP expr AS typetoken RP */
+// /* (189) expr ::= ID|INDEXED|JOIN_KW LP distinct exprlist RP */
+// /* (190) expr ::= ID|INDEXED|JOIN_KW LP distinct exprlist ORDER BY sortlist RP */
+// /* (191) expr ::= ID|INDEXED|JOIN_KW LP STAR RP */
+// /* (192) expr ::= ID|INDEXED|JOIN_KW LP distinct exprlist RP filter_over */
+// /* (193) expr ::= ID|INDEXED|JOIN_KW LP distinct exprlist ORDER BY sortlist RP filter_over */
+// /* (194) expr ::= ID|INDEXED|JOIN_KW LP STAR RP filter_over */
+// /* (195) term ::= CTIME_KW */
+// /* (196) expr ::= LP nexprlist COMMA expr RP */
+// /* (197) expr ::= expr AND expr */
+// /* (198) expr ::= expr OR expr */
+// /* (199) expr ::= expr LT|GT|GE|LE expr */
+// /* (200) expr ::= expr EQ|NE expr */
+// /* (201) expr ::= expr BITAND|BITOR|LSHIFT|RSHIFT expr */
+// /* (202) expr ::= expr PLUS|MINUS expr */
+// /* (203) expr ::= expr STAR|SLASH|REM expr */
+// /* (204) expr ::= expr CONCAT expr */
+// /* (205) likeop ::= NOT LIKE_KW|MATCH */
+// /* (206) expr ::= expr likeop expr */
+// /* (207) expr ::= expr likeop expr ESCAPE expr */
+// /* (208) expr ::= expr ISNULL|NOTNULL */
+// /* (209) expr ::= expr NOT NULL */
+// /* (210) expr ::= expr IS expr */
+// /* (211) expr ::= expr IS NOT expr */
+// /* (212) expr ::= expr IS NOT DISTINCT FROM expr */
+// /* (213) expr ::= expr IS DISTINCT FROM expr */
+// /* (214) expr ::= NOT expr */
+// /* (215) expr ::= BITNOT expr */
+// /* (216) expr ::= PLUS|MINUS expr */
+// /* (217) expr ::= expr PTR expr */
+// /* (218) between_op ::= BETWEEN */
+// /* (219) between_op ::= NOT BETWEEN */
+// /* (220) expr ::= expr between_op expr AND expr */
+// /* (221) in_op ::= IN */
+// /* (222) in_op ::= NOT IN */
+// /* (223) expr ::= expr in_op LP exprlist RP */
+// /* (224) expr ::= LP select RP */
+// /* (225) expr ::= expr in_op LP select RP */
+// /* (226) expr ::= expr in_op nm dbnm paren_exprlist */
+// /* (227) expr ::= EXISTS LP select RP */
+// /* (228) expr ::= CASE case_operand case_exprlist case_else END */
+// /* (229) case_exprlist ::= case_exprlist WHEN expr THEN expr */
+// /* (230) case_exprlist ::= WHEN expr THEN expr */
+// /* (231) case_else ::= ELSE expr */
+// /* (232) case_else ::= */
+// /* (233) case_operand ::= */
+// /* (234) exprlist ::= */
+// /* (235) nexprlist ::= nexprlist COMMA expr */
+// /* (236) nexprlist ::= expr */
+// /* (237) paren_exprlist ::= */
+// /* (238) paren_exprlist ::= LP exprlist RP */
+// /* (239) cmd ::= createkw uniqueflag INDEX ifnotexists nm dbnm ON nm LP sortlist RP where_opt */
+// /* (240) uniqueflag ::= UNIQUE */
+// /* (241) uniqueflag ::= */
+// /* (242) eidlist_opt ::= */
+// /* (243) eidlist_opt ::= LP eidlist RP */
+// /* (244) eidlist ::= eidlist COMMA nm collate sortorder */
+// /* (245) eidlist ::= nm collate sortorder */
+// /* (246) collate ::= */
+// /* (247) collate ::= COLLATE ID|STRING */
+// /* (248) cmd ::= DROP INDEX ifexists fullname */
+// /* (249) cmd ::= VACUUM vinto */
+// /* (250) cmd ::= VACUUM nm vinto */
+// /* (251) vinto ::= INTO expr */
+// /* (252) vinto ::= */
+// /* (253) cmd ::= PRAGMA nm dbnm */
+// /* (254) cmd ::= PRAGMA nm dbnm EQ nmnum */
+// /* (255) cmd ::= PRAGMA nm dbnm LP nmnum RP */
+// /* (256) cmd ::= PRAGMA nm dbnm EQ minus_num */
+// /* (257) cmd ::= PRAGMA nm dbnm LP minus_num RP */
+// /* (258) plus_num ::= PLUS INTEGER|FLOAT */
+// /* (259) minus_num ::= MINUS INTEGER|FLOAT */
+// /* (260) cmd ::= createkw trigger_decl BEGIN trigger_cmd_list END */
+// /* (261) trigger_decl ::= temp TRIGGER ifnotexists nm dbnm trigger_time trigger_event ON fullname foreach_clause when_clause */
+// /* (262) trigger_time ::= BEFORE|AFTER */
+// /* (263) trigger_time ::= INSTEAD OF */
+// /* (264) trigger_time ::= */
+// /* (265) trigger_event ::= DELETE|INSERT */
+// /* (266) trigger_event ::= UPDATE */
+// /* (267) trigger_event ::= UPDATE OF idlist */
+// /* (268) when_clause ::= */
+// /* (269) when_clause ::= WHEN expr */
+// /* (270) trigger_cmd_list ::= trigger_cmd_list trigger_cmd SEMI */
+// /* (271) trigger_cmd_list ::= trigger_cmd SEMI */
+// /* (272) tridxby ::= INDEXED BY nm */
+// /* (273) tridxby ::= NOT INDEXED */
+// /* (274) trigger_cmd ::= UPDATE orconf xfullname tridxby SET setlist from where_opt scanpt */
+// /* (275) trigger_cmd ::= scanpt insert_cmd INTO xfullname idlist_opt select upsert scanpt */
+// /* (276) trigger_cmd ::= DELETE FROM xfullname tridxby where_opt scanpt */
+// /* (277) trigger_cmd ::= scanpt select scanpt */
+// /* (278) expr ::= RAISE LP IGNORE RP */
+// /* (279) expr ::= RAISE LP raisetype COMMA expr RP */
+// /* (280) raisetype ::= ROLLBACK */
+// /* (281) raisetype ::= ABORT */
+// /* (282) raisetype ::= FAIL */
+// /* (283) cmd ::= DROP TRIGGER ifexists fullname */
+// /* (284) cmd ::= ATTACH database_kw_opt expr AS expr key_opt */
+// /* (285) cmd ::= DETACH database_kw_opt expr */
+// /* (286) key_opt ::= */
+// /* (287) key_opt ::= KEY expr */
+// /* (288) cmd ::= REINDEX */
+// /* (289) cmd ::= REINDEX nm dbnm */
+// /* (290) cmd ::= ANALYZE */
+// /* (291) cmd ::= ANALYZE nm dbnm */
+// /* (292) cmd ::= ALTER TABLE fullname RENAME TO nm */
+// /* (293) cmd ::= alter_add carglist */
+// /* (294) alter_add ::= ALTER TABLE fullname ADD kwcolumn_opt nm typetoken */
+// /* (295) cmd ::= ALTER TABLE fullname DROP kwcolumn_opt nm */
+// /* (296) cmd ::= ALTER TABLE fullname RENAME kwcolumn_opt nm TO nm */
+// /* (297) cmd ::= ALTER TABLE fullname DROP CONSTRAINT nm */
+// /* (298) cmd ::= ALTER TABLE fullname ALTER kwcolumn_opt nm DROP NOT NULL */
+// /* (299) cmd ::= ALTER TABLE fullname ALTER kwcolumn_opt nm SET NOT NULL onconf */
+// /* (300) cmd ::= ALTER TABLE fullname ADD CONSTRAINT nm CHECK LP expr RP onconf */
+// /* (301) cmd ::= ALTER TABLE fullname ADD CHECK LP expr RP onconf */
+// /* (302) cmd ::= create_vtab */
+// /* (303) cmd ::= create_vtab LP vtabarglist RP */
+// /* (304) create_vtab ::= createkw VIRTUAL TABLE ifnotexists nm dbnm USING nm */
+// /* (305) vtabarg ::= */
+// /* (306) vtabargtoken ::= ANY */
+// /* (307) vtabargtoken ::= lp anylist RP */
+// /* (308) lp ::= LP */
+// /* (309) with ::= WITH wqlist */
+// /* (310) with ::= WITH RECURSIVE wqlist */
+// /* (311) wqas ::= AS */
+// /* (312) wqas ::= AS MATERIALIZED */
+// /* (313) wqas ::= AS NOT MATERIALIZED */
+// /* (314) wqitem ::= withnm eidlist_opt wqas LP select RP */
+// /* (315) withnm ::= nm */
+// /* (316) wqlist ::= wqitem */
+// /* (317) wqlist ::= wqlist COMMA wqitem */
+// /* (318) windowdefn_list ::= windowdefn_list COMMA windowdefn */
+// /* (319) windowdefn ::= nm AS LP window RP */
+// /* (320) window ::= PARTITION BY nexprlist orderby_opt frame_opt */
+// /* (321) window ::= nm PARTITION BY nexprlist orderby_opt frame_opt */
+// /* (322) window ::= ORDER BY sortlist frame_opt */
+// /* (323) window ::= nm ORDER BY sortlist frame_opt */
+// /* (324) window ::= nm frame_opt */
+// /* (325) frame_opt ::= */
+// /* (326) frame_opt ::= range_or_rows frame_bound_s frame_exclude_opt */
+// /* (327) frame_opt ::= range_or_rows BETWEEN frame_bound_s AND frame_bound_e frame_exclude_opt */
+// /* (328) range_or_rows ::= RANGE|ROWS|GROUPS */
+// /* (329) frame_bound_s ::= frame_bound */
+// /* (330) frame_bound_s ::= UNBOUNDED PRECEDING */
+// /* (331) frame_bound_e ::= frame_bound */
+// /* (332) frame_bound_e ::= UNBOUNDED FOLLOWING */
+// /* (333) frame_bound ::= expr PRECEDING|FOLLOWING */
+// /* (334) frame_bound ::= CURRENT ROW */
+// /* (335) frame_exclude_opt ::= */
+// /* (336) frame_exclude_opt ::= EXCLUDE frame_exclude */
+// /* (337) frame_exclude ::= NO OTHERS */
+// /* (338) frame_exclude ::= CURRENT ROW */
+// /* (339) frame_exclude ::= GROUP|TIES */
+// /* (340) window_clause ::= WINDOW windowdefn_list */
+// /* (341) filter_over ::= filter_clause over_clause */
+// /* (342) filter_over ::= over_clause */
+// /* (343) filter_over ::= filter_clause */
+// /* (344) over_clause ::= OVER LP window RP */
+// /* (345) over_clause ::= OVER nm */
+// /* (346) filter_clause ::= FILTER LP WHERE expr RP */
+// /* (347) term ::= QNUMBER */
+// /* (348) input ::= cmdlist */
+// /* (349) cmdlist ::= cmdlist ecmd */
+// /* (350) cmdlist ::= ecmd */
+// /* (351) ecmd ::= SEMI */
+// /* (352) ecmd ::= cmdx SEMI */
+// /* (353) ecmd ::= explain cmdx SEMI */
+// /* (354) trans_opt ::= */
+// /* (355) trans_opt ::= TRANSACTION */
+// /* (356) trans_opt ::= TRANSACTION nm */
+// /* (357) savepoint_opt ::= SAVEPOINT */
+// /* (358) savepoint_opt ::= */
+// /* (359) cmd ::= create_table create_table_args */
+// /* (360) table_option_set ::= table_option */
+// /* (361) columnlist ::= columnlist COMMA columnname carglist */
+// /* (362) columnlist ::= columnname carglist */
+// /* (363) nm ::= ID|INDEXED|JOIN_KW */
+// /* (364) nm ::= STRING */
+// /* (365) typetoken ::= typename */
+// /* (366) typename ::= ID|STRING */
+// /* (367) signed ::= plus_num */
+// /* (368) signed ::= minus_num */
+// /* (369) carglist ::= carglist ccons */
+// /* (370) carglist ::= */
+// /* (371) ccons ::= NULL onconf */
+// /* (372) ccons ::= GENERATED ALWAYS AS generated */
+// /* (373) ccons ::= AS generated */
+// /* (374) conslist_opt ::= COMMA conslist */
+// /* (375) conslist ::= conslist tconscomma tcons */
+// /* (376) conslist ::= tcons */
+// /* (377) tconscomma ::= */
+// /* (378) defer_subclause_opt ::= defer_subclause */
+// /* (379) resolvetype ::= raisetype */
+// /* (380) selectnowith ::= oneselect */
+// /* (381) oneselect ::= values */
+// /* (382) sclp ::= selcollist COMMA */
+// /* (383) as ::= ID|STRING */
+// /* (384) indexed_opt ::= indexed_by */
+// /* (385) returning ::= */
+// /* (386) expr ::= term */
+// /* (387) likeop ::= LIKE_KW|MATCH */
+// /* (388) case_operand ::= expr */
+// /* (389) exprlist ::= nexprlist */
+// /* (390) nmnum ::= plus_num */
+// /* (391) nmnum ::= nm */
+// /* (392) nmnum ::= ON */
+// /* (393) nmnum ::= DELETE */
+// /* (394) nmnum ::= DEFAULT */
+// /* (395) plus_num ::= INTEGER|FLOAT */
+// /* (396) foreach_clause ::= */
+// /* (397) foreach_clause ::= FOR EACH ROW */
+// /* (398) tridxby ::= */
+// /* (399) database_kw_opt ::= DATABASE */
+// /* (400) database_kw_opt ::= */
+// /* (401) kwcolumn_opt ::= */
+// /* (402) kwcolumn_opt ::= COLUMNKW */
+// /* (403) vtabarglist ::= vtabarg */
+// /* (404) vtabarglist ::= vtabarglist COMMA vtabarg */
+// /* (405) vtabarg ::= vtabarg vtabargtoken */
+// /* (406) anylist ::= */
+// /* (407) anylist ::= anylist LP anylist RP */
+// /* (408) anylist ::= anylist ANY */
+// /* (409) with ::= */
+// /* (410) windowdefn_list ::= windowdefn */
+// /* (411) window ::= frame_opt */
+// /* Forward Declaration */
+// /*
+// ** Perform a reduce action and the shift that must immediately
+// ** follow the reduce.
+// **
+// ** The yyLookahead and yyLookaheadToken parameters provide reduce actions
+// ** access to the lookahead token (if any).  The yyLookahead will be YYNOCODE
+// ** if the lookahead token has already been consumed.  As this procedure is
+// ** only called from one place, optimizing compilers will in-line it, which
+// ** means that the extra parameters have no performance impact.
+// */
+fn yy_reduce(
+    mut yypParser: *mut yyParser,
+    mut yyruleno: u32,
+    mut yyLookahead: i32,
+    mut yyLookaheadToken: Token,
+    mut pParse: *mut Parse,
+) -> u16 {
+    let mut __slate_storage_1118: std::mem::MaybeUninit<*mut yyStackEntry> =
+        std::mem::MaybeUninit::uninit();
+    let __slate_slot_1118: *mut *mut yyStackEntry =
+        std::ptr::addr_of_mut!(__slate_storage_1118) as *mut *mut yyStackEntry;
+    let mut __slate_storage_1117: std::mem::MaybeUninit<*mut yyStackEntry> =
+        std::mem::MaybeUninit::uninit();
+    let __slate_slot_1117: *mut *mut yyStackEntry =
+        std::ptr::addr_of_mut!(__slate_storage_1117) as *mut *mut yyStackEntry;
+    let mut __slate_storage_592: std::mem::MaybeUninit<Token> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_592: *mut Token = std::ptr::addr_of_mut!(__slate_storage_592) as *mut Token;
+    let mut __slate_storage_1116: std::mem::MaybeUninit<*mut ExprList> =
+        std::mem::MaybeUninit::uninit();
+    let __slate_slot_1116: *mut *mut ExprList =
+        std::ptr::addr_of_mut!(__slate_storage_1116) as *mut *mut ExprList;
+    let mut __slate_storage_1115: std::mem::MaybeUninit<*mut Expr> =
+        std::mem::MaybeUninit::uninit();
+    let __slate_slot_1115: *mut *mut Expr =
+        std::ptr::addr_of_mut!(__slate_storage_1115) as *mut *mut Expr;
+    let mut __slate_storage_591: std::mem::MaybeUninit<*mut Expr> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_591: *mut *mut Expr =
+        std::ptr::addr_of_mut!(__slate_storage_591) as *mut *mut Expr;
+    let mut __slate_storage_590: std::mem::MaybeUninit<*mut Select> =
+        std::mem::MaybeUninit::uninit();
+    let __slate_slot_590: *mut *mut Select =
+        std::ptr::addr_of_mut!(__slate_storage_590) as *mut *mut Select;
+    let mut __slate_storage_589: std::mem::MaybeUninit<*mut SrcList> =
+        std::mem::MaybeUninit::uninit();
+    let __slate_slot_589: *mut *mut SrcList =
+        std::ptr::addr_of_mut!(__slate_storage_589) as *mut *mut SrcList;
+    let mut __slate_storage_585: std::mem::MaybeUninit<*mut Expr> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_585: *mut *mut Expr =
+        std::ptr::addr_of_mut!(__slate_storage_585) as *mut *mut Expr;
+    let mut __slate_storage_588: std::mem::MaybeUninit<*mut Select> =
+        std::mem::MaybeUninit::uninit();
+    let __slate_slot_588: *mut *mut Select =
+        std::ptr::addr_of_mut!(__slate_storage_588) as *mut *mut Select;
+    let mut __slate_storage_587: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_587: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_587) as *mut i32;
+    let mut __slate_storage_1114: std::mem::MaybeUninit<bool> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_1114: *mut bool = std::ptr::addr_of_mut!(__slate_storage_1114) as *mut bool;
+    let mut __slate_storage_586: std::mem::MaybeUninit<*mut Expr> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_586: *mut *mut Expr =
+        std::ptr::addr_of_mut!(__slate_storage_586) as *mut *mut Expr;
+    let mut __slate_storage_584: std::mem::MaybeUninit<*mut ExprList> =
+        std::mem::MaybeUninit::uninit();
+    let __slate_slot_584: *mut *mut ExprList =
+        std::ptr::addr_of_mut!(__slate_storage_584) as *mut *mut ExprList;
+    let mut __slate_storage_583: std::mem::MaybeUninit<*mut ExprList> =
+        std::mem::MaybeUninit::uninit();
+    let __slate_slot_583: *mut *mut ExprList =
+        std::ptr::addr_of_mut!(__slate_storage_583) as *mut *mut ExprList;
+    let mut __slate_storage_582: std::mem::MaybeUninit<u8> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_582: *mut u8 = std::ptr::addr_of_mut!(__slate_storage_582) as *mut u8;
+    let mut __slate_storage_581: std::mem::MaybeUninit<*mut Expr> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_581: *mut *mut Expr =
+        std::ptr::addr_of_mut!(__slate_storage_581) as *mut *mut Expr;
+    let mut __slate_storage_1113: std::mem::MaybeUninit<u32> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_1113: *mut u32 = std::ptr::addr_of_mut!(__slate_storage_1113) as *mut u32;
+    let mut __slate_storage_1112: std::mem::MaybeUninit<u32> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_1112: *mut u32 = std::ptr::addr_of_mut!(__slate_storage_1112) as *mut u32;
+    let mut __slate_storage_1111: std::mem::MaybeUninit<*mut Expr> =
+        std::mem::MaybeUninit::uninit();
+    let __slate_slot_1111: *mut *mut Expr =
+        std::ptr::addr_of_mut!(__slate_storage_1111) as *mut *mut Expr;
+    let mut __slate_storage_1110: std::mem::MaybeUninit<u32> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_1110: *mut u32 = std::ptr::addr_of_mut!(__slate_storage_1110) as *mut u32;
+    let mut __slate_storage_1109: std::mem::MaybeUninit<u32> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_1109: *mut u32 = std::ptr::addr_of_mut!(__slate_storage_1109) as *mut u32;
+    let mut __slate_storage_1108: std::mem::MaybeUninit<*mut yyStackEntry> =
+        std::mem::MaybeUninit::uninit();
+    let __slate_slot_1108: *mut *mut yyStackEntry =
+        std::ptr::addr_of_mut!(__slate_storage_1108) as *mut *mut yyStackEntry;
+    let mut __slate_storage_580: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_580: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_580) as *mut i32;
+    let mut __slate_storage_579: std::mem::MaybeUninit<*mut ExprList> =
+        std::mem::MaybeUninit::uninit();
+    let __slate_slot_579: *mut *mut ExprList =
+        std::ptr::addr_of_mut!(__slate_storage_579) as *mut *mut ExprList;
+    let mut __slate_storage_1107: std::mem::MaybeUninit<u32> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_1107: *mut u32 = std::ptr::addr_of_mut!(__slate_storage_1107) as *mut u32;
+    let mut __slate_storage_1106: std::mem::MaybeUninit<u32> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_1106: *mut u32 = std::ptr::addr_of_mut!(__slate_storage_1106) as *mut u32;
+    let mut __slate_storage_1105: std::mem::MaybeUninit<*mut Expr> =
+        std::mem::MaybeUninit::uninit();
+    let __slate_slot_1105: *mut *mut Expr =
+        std::ptr::addr_of_mut!(__slate_storage_1105) as *mut *mut Expr;
+    let mut __slate_storage_1104: std::mem::MaybeUninit<u32> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_1104: *mut u32 = std::ptr::addr_of_mut!(__slate_storage_1104) as *mut u32;
+    let mut __slate_storage_1103: std::mem::MaybeUninit<u32> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_1103: *mut u32 = std::ptr::addr_of_mut!(__slate_storage_1103) as *mut u32;
+    let mut __slate_storage_1102: std::mem::MaybeUninit<*mut yyStackEntry> =
+        std::mem::MaybeUninit::uninit();
+    let __slate_slot_1102: *mut *mut yyStackEntry =
+        std::ptr::addr_of_mut!(__slate_storage_1102) as *mut *mut yyStackEntry;
+    let mut __slate_storage_578: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_578: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_578) as *mut i32;
+    let mut __slate_storage_577: std::mem::MaybeUninit<*mut ExprList> =
+        std::mem::MaybeUninit::uninit();
+    let __slate_slot_577: *mut *mut ExprList =
+        std::ptr::addr_of_mut!(__slate_storage_577) as *mut *mut ExprList;
+    let mut __slate_storage_1101: std::mem::MaybeUninit<u32> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_1101: *mut u32 = std::ptr::addr_of_mut!(__slate_storage_1101) as *mut u32;
+    let mut __slate_storage_1100: std::mem::MaybeUninit<u32> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_1100: *mut u32 = std::ptr::addr_of_mut!(__slate_storage_1100) as *mut u32;
+    let mut __slate_storage_1099: std::mem::MaybeUninit<*mut yyStackEntry> =
+        std::mem::MaybeUninit::uninit();
+    let __slate_slot_1099: *mut *mut yyStackEntry =
+        std::ptr::addr_of_mut!(__slate_storage_1099) as *mut *mut yyStackEntry;
+    let mut __slate_storage_1095: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_1095: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_1095) as *mut i32;
+    let mut __slate_storage_1094: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_1094: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_1094) as *mut i32;
+    let mut __slate_storage_1098: std::mem::MaybeUninit<u32> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_1098: *mut u32 = std::ptr::addr_of_mut!(__slate_storage_1098) as *mut u32;
+    let mut __slate_storage_1097: std::mem::MaybeUninit<u32> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_1097: *mut u32 = std::ptr::addr_of_mut!(__slate_storage_1097) as *mut u32;
+    let mut __slate_storage_1096: std::mem::MaybeUninit<*mut Expr> =
+        std::mem::MaybeUninit::uninit();
+    let __slate_slot_1096: *mut *mut Expr =
+        std::ptr::addr_of_mut!(__slate_storage_1096) as *mut *mut Expr;
+    let mut __slate_storage_576: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_576: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_576) as *mut i32;
+    let mut __slate_storage_575: std::mem::MaybeUninit<*mut ExprList> =
+        std::mem::MaybeUninit::uninit();
+    let __slate_slot_575: *mut *mut ExprList =
+        std::ptr::addr_of_mut!(__slate_storage_575) as *mut *mut ExprList;
+    let mut __slate_storage_573: std::mem::MaybeUninit<u32> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_573: *mut u32 = std::ptr::addr_of_mut!(__slate_storage_573) as *mut u32;
+    let mut __slate_storage_574: std::mem::MaybeUninit<Token> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_574: *mut Token = std::ptr::addr_of_mut!(__slate_storage_574) as *mut Token;
+    let mut __slate_storage_572: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_572: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_572) as *mut i32;
+    let mut __slate_storage_571: std::mem::MaybeUninit<*mut Expr> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_571: *mut *mut Expr =
+        std::ptr::addr_of_mut!(__slate_storage_571) as *mut *mut Expr;
+    let mut __slate_storage_570: std::mem::MaybeUninit<*mut Expr> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_570: *mut *mut Expr =
+        std::ptr::addr_of_mut!(__slate_storage_570) as *mut *mut Expr;
+    let mut __slate_storage_569: std::mem::MaybeUninit<*mut Expr> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_569: *mut *mut Expr =
+        std::ptr::addr_of_mut!(__slate_storage_569) as *mut *mut Expr;
+    let mut __slate_storage_568: std::mem::MaybeUninit<*mut Expr> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_568: *mut *mut Expr =
+        std::ptr::addr_of_mut!(__slate_storage_568) as *mut *mut Expr;
+    let mut __slate_storage_567: std::mem::MaybeUninit<*mut Expr> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_567: *mut *mut Expr =
+        std::ptr::addr_of_mut!(__slate_storage_567) as *mut *mut Expr;
+    let mut __slate_storage_566: std::mem::MaybeUninit<*mut Expr> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_566: *mut *mut Expr =
+        std::ptr::addr_of_mut!(__slate_storage_566) as *mut *mut Expr;
+    let mut __slate_storage_565: std::mem::MaybeUninit<Token> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_565: *mut Token = std::ptr::addr_of_mut!(__slate_storage_565) as *mut Token;
+    let mut __slate_storage_564: std::mem::MaybeUninit<*mut Select> =
+        std::mem::MaybeUninit::uninit();
+    let __slate_slot_564: *mut *mut Select =
+        std::ptr::addr_of_mut!(__slate_storage_564) as *mut *mut Select;
+    let mut __slate_storage_563: std::mem::MaybeUninit<*mut SrcList> =
+        std::mem::MaybeUninit::uninit();
+    let __slate_slot_563: *mut *mut SrcList =
+        std::ptr::addr_of_mut!(__slate_storage_563) as *mut *mut SrcList;
+    let mut __slate_storage_561: std::mem::MaybeUninit<*mut SrcItem> =
+        std::mem::MaybeUninit::uninit();
+    let __slate_slot_561: *mut *mut SrcItem =
+        std::ptr::addr_of_mut!(__slate_storage_561) as *mut *mut SrcItem;
+    let mut __slate_storage_560: std::mem::MaybeUninit<*mut SrcItem> =
+        std::mem::MaybeUninit::uninit();
+    let __slate_slot_560: *mut *mut SrcItem =
+        std::ptr::addr_of_mut!(__slate_storage_560) as *mut *mut SrcItem;
+    let mut __slate_storage_562: std::mem::MaybeUninit<*mut Select> =
+        std::mem::MaybeUninit::uninit();
+    let __slate_slot_562: *mut *mut Select =
+        std::ptr::addr_of_mut!(__slate_storage_562) as *mut *mut Select;
+    let mut __slate_storage_559: std::mem::MaybeUninit<*mut Expr> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_559: *mut *mut Expr =
+        std::ptr::addr_of_mut!(__slate_storage_559) as *mut *mut Expr;
+    let mut __slate_storage_558: std::mem::MaybeUninit<*mut Expr> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_558: *mut *mut Expr =
+        std::ptr::addr_of_mut!(__slate_storage_558) as *mut *mut Expr;
+    let mut __slate_storage_557: std::mem::MaybeUninit<*mut Expr> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_557: *mut *mut Expr =
+        std::ptr::addr_of_mut!(__slate_storage_557) as *mut *mut Expr;
+    let mut __slate_storage_556: std::mem::MaybeUninit<*mut Expr> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_556: *mut *mut Expr =
+        std::ptr::addr_of_mut!(__slate_storage_556) as *mut *mut Expr;
+    let mut __slate_storage_1093: std::mem::MaybeUninit<u32> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_1093: *mut u32 = std::ptr::addr_of_mut!(__slate_storage_1093) as *mut u32;
+    let mut __slate_storage_1092: std::mem::MaybeUninit<u32> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_1092: *mut u32 = std::ptr::addr_of_mut!(__slate_storage_1092) as *mut u32;
+    let mut __slate_storage_1091: std::mem::MaybeUninit<*mut Select> =
+        std::mem::MaybeUninit::uninit();
+    let __slate_slot_1091: *mut *mut Select =
+        std::ptr::addr_of_mut!(__slate_storage_1091) as *mut *mut Select;
+    let mut __slate_storage_1090: std::mem::MaybeUninit<u32> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_1090: *mut u32 = std::ptr::addr_of_mut!(__slate_storage_1090) as *mut u32;
+    let mut __slate_storage_1089: std::mem::MaybeUninit<u32> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_1089: *mut u32 = std::ptr::addr_of_mut!(__slate_storage_1089) as *mut u32;
+    let mut __slate_storage_1088: std::mem::MaybeUninit<*mut Select> =
+        std::mem::MaybeUninit::uninit();
+    let __slate_slot_1088: *mut *mut Select =
+        std::ptr::addr_of_mut!(__slate_storage_1088) as *mut *mut Select;
+    let mut __slate_storage_555: std::mem::MaybeUninit<Token> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_555: *mut Token = std::ptr::addr_of_mut!(__slate_storage_555) as *mut Token;
+    let mut __slate_storage_554: std::mem::MaybeUninit<*mut SrcList> =
+        std::mem::MaybeUninit::uninit();
+    let __slate_slot_554: *mut *mut SrcList =
+        std::ptr::addr_of_mut!(__slate_storage_554) as *mut *mut SrcList;
+    let mut __slate_storage_553: std::mem::MaybeUninit<*mut Select> =
+        std::mem::MaybeUninit::uninit();
+    let __slate_slot_553: *mut *mut Select =
+        std::ptr::addr_of_mut!(__slate_storage_553) as *mut *mut Select;
+    let mut __slate_storage_552: std::mem::MaybeUninit<*mut Select> =
+        std::mem::MaybeUninit::uninit();
+    let __slate_slot_552: *mut *mut Select =
+        std::ptr::addr_of_mut!(__slate_storage_552) as *mut *mut Select;
+    let mut __slate_storage_551: std::mem::MaybeUninit<*mut Select> =
+        std::mem::MaybeUninit::uninit();
+    let __slate_slot_551: *mut *mut Select =
+        std::ptr::addr_of_mut!(__slate_storage_551) as *mut *mut Select;
+    let mut __slate_storage_1087: std::mem::MaybeUninit<bool> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_1087: *mut bool = std::ptr::addr_of_mut!(__slate_storage_1087) as *mut bool;
+    let mut __slate_storage_550: std::mem::MaybeUninit<SelectDest> =
+        std::mem::MaybeUninit::uninit();
+    let __slate_slot_550: *mut SelectDest =
+        std::ptr::addr_of_mut!(__slate_storage_550) as *mut SelectDest;
+    let mut __slate_storage_549: std::mem::MaybeUninit<*mut Expr> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_549: *mut *mut Expr =
+        std::ptr::addr_of_mut!(__slate_storage_549) as *mut *mut Expr;
+    let mut __slate_storage_548: std::mem::MaybeUninit<*mut Expr> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_548: *mut *mut Expr =
+        std::ptr::addr_of_mut!(__slate_storage_548) as *mut *mut Expr;
+    let mut __slate_storage_1086: std::mem::MaybeUninit<bool> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_1086: *mut bool = std::ptr::addr_of_mut!(__slate_storage_1086) as *mut bool;
+    let mut __slate_storage_1085: std::mem::MaybeUninit<bool> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_1085: *mut bool = std::ptr::addr_of_mut!(__slate_storage_1085) as *mut bool;
+    let mut __slate_storage_547: std::mem::MaybeUninit<__SlateRecord190> =
+        std::mem::MaybeUninit::uninit();
+    let __slate_slot_547: *mut __SlateRecord190 =
+        std::ptr::addr_of_mut!(__slate_storage_547) as *mut __SlateRecord190;
+    let mut __slate_storage_546: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_546: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_546) as *mut i32;
+    let mut __slate_storage_545: std::mem::MaybeUninit<*mut yyStackEntry> =
+        std::mem::MaybeUninit::uninit();
+    let __slate_slot_545: *mut *mut yyStackEntry =
+        std::ptr::addr_of_mut!(__slate_storage_545) as *mut *mut yyStackEntry;
+    let mut __slate_storage_544: std::mem::MaybeUninit<u16> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_544: *mut u16 = std::ptr::addr_of_mut!(__slate_storage_544) as *mut u16;
+    let mut __slate_storage_543: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_543: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_543) as *mut i32;
+    unsafe {
+        '__join_0: {
+            '__join_436: {
+                '__join_437: {
+                    '__join_438: {
+                        '__join_435: {
+                            '__join_423: {
+                                '__join_424: {
+                                    '__join_425: {
+                                        '__join_426: {
+                                            '__join_427: {
+                                                '__join_428: {
+                                                    '__join_429: {
+                                                        '__join_401: {
+                                                            '__join_402: {
+                                                                '__join_395: {
+                                                                    '__join_364: {
+                                                                        '__join_365: {
+                                                                            '__join_360: {
+                                                                                '__join_361: {
+                                                                                    '__join_362: {
+                                                                                        '__join_363: {
+                                                                                            '__join_353: {
+                                                                                                '__join_350: {
+                                                                                                    '__join_327: {
+                                                                                                        '__join_319: {
+                                                                                                            '__join_312: {
+                                                                                                                '__join_313: {
+                                                                                                                    '__join_314: {
+                                                                                                                        '__join_315: {
+                                                                                                                            '__join_316: {
+                                                                                                                                '__join_304: {
+                                                                                                                                    '__join_305: {
+                                                                                                                                        '__join_306: {
+                                                                                                                                            '__join_303: {
+                                                                                                                                                '__join_282: {
+                                                                                                                                                    '__join_281: {
+                                                                                                                                                        '__join_278: {
+                                                                                                                                                            '__join_256: {
+                                                                                                                                                                '__join_251: {
+                                                                                                                                                                    '__join_243: {
+                                                                                                                                                                        '__join_244: {
+                                                                                                                                                                            '__join_245: {
+                                                                                                                                                                                '__join_246: {
+                                                                                                                                                                                    '__join_247: {
+                                                                                                                                                                                        '__join_248: {
+                                                                                                                                                                                            '__join_239: {
+                                                                                                                                                                                                '__join_240: {
+                                                                                                                                                                                                    '__join_241: {
+                                                                                                                                                                                                        '__join_242: {
+                                                                                                                                                                                                            '__join_204: {
+                                                                                                                                                                                                                '__join_171: {
+                                                                                                                                                                                                                    '__join_172: {
+                                                                                                                                                                                                                        '__join_173: {
+                                                                                                                                                                                                                            '__join_174: {
+                                                                                                                                                                                                                                '__join_175: {
+                                                                                                                                                                                                                                    '__join_176: {
+                                                                                                                                                                                                                                        '__join_155: {
+                                                                                                                                                                                                                                            '__join_150: {
+                                                                                                                                                                                                                                                '__join_105: {
+                                                                                                                                                                                                                                                    '__join_102: {
+                                                                                                                                                                                                                                                        '__join_85: {
+                                                                                                                                                                                                                                                            '__join_83: {
+                                                                                                                                                                                                                                                                '__join_82: {
+                                                                                                                                                                                                                                                                    '__join_45: {
+                                                                                                                                                                                                                                                                        '__join_46: {
+                                                                                                                                                                                                                                                                            '__join_44: {
+                                                                                                                                                                                                                                                                                '__join_24: {
+                                                                                                                                                                                                                                                                                    '__join_22: {
+                                                                                                                                                                                                                                                                                        '__join_23: {
+                                                                                                                                                                                                                                                                                            // /* The next state */
+                                                                                                                                                                                                                                                                                            // /* The next action */
+                                                                                                                                                                                                                                                                                            // /* The top of the parser's stack */
+                                                                                                                                                                                                                                                                                            // /* Amount to pop the stack */
+                                                                                                                                                                                                                                                                                            yyLookahead;
+                                                                                                                                                                                                                                                                                            yyLookaheadToken;
+                                                                                                                                                                                                                                                                                            *__slate_slot_545 = unsafe { (*yypParser).yytos };
+                                                                                                                                                                                                                                                                                            let __t0: u32 = yyruleno;
+                                                                                                                                                                                                                                                                                            if __t0 == (0 as u32) {
+if (unsafe { (*pParse).pReprepare }) == std::ptr::null_mut::<Vdbe>() {
+unsafe {
+(*pParse).explain = ((1 as i32) as i8) as u8;
+}
+break '__join_0;
+} else {
+break '__join_0;
+}
+} else {
+if __t0 == (1 as u32) {
+if (unsafe { (*pParse).pReprepare }) == std::ptr::null_mut::<Vdbe>() {
+unsafe {
+(*pParse).explain = ((2 as i32) as i8) as u8;
+}
+break '__join_0;
+} else {
+break '__join_0;
+}
+} else {
+if __t0 == (2 as u32) {
+unsafe { sqlite3FinishCoding(pParse) };
+break '__join_0;
+} else {
+if __t0 == (3 as u32) {
+unsafe { sqlite3BeginTransaction(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy144 }) };
+break '__join_0;
+} else {
+if __t0 == (4 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset((1 as i32) as isize) }).minor.yy144 = 7 as i32;
+}
+break '__join_0;
+} else {
+if __t0 == (5 as u32) {
+break '__join_438;
+} else {
+if __t0 == (6 as u32) {
+break '__join_438;
+} else {
+if __t0 == (7 as u32) {
+break '__join_437;
+} else {
+if __t0 == (328 as u32) {
+break '__join_436;
+} else {
+if __t0 == (8 as u32) {
+break '__join_435;
+} else {
+if __t0 == (9 as u32) {
+break '__join_435;
+} else {
+if __t0 == (10 as u32) {
+unsafe { sqlite3Savepoint(pParse, 0 as i32, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0) }) };
+break '__join_0;
+} else {
+if __t0 == (11 as u32) {
+unsafe { sqlite3Savepoint(pParse, 1 as i32, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0) }) };
+break '__join_0;
+} else {
+if __t0 == (12 as u32) {
+unsafe { sqlite3Savepoint(pParse, 2 as i32, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0) }) };
+break '__join_0;
+} else {
+if __t0 == (13 as u32) {
+unsafe { sqlite3StartTable(pParse, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy0) }, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0) }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy144 }, 0 as i32, 0 as i32, unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy144 }) };
+break '__join_0;
+} else {
+if __t0 == (14 as u32) {
+disableLookaside(pParse);
+break '__join_0;
+} else {
+if __t0 == (15 as u32) {
+break '__join_429;
+} else {
+if __t0 == (18 as u32) {
+break '__join_429;
+} else {
+if __t0 == (47 as u32) {
+break '__join_428;
+} else {
+if __t0 == (62 as u32) {
+break '__join_427;
+} else {
+if __t0 == (72 as u32) {
+break '__join_426;
+} else {
+if __t0 == (81 as u32) {
+break '__join_425;
+} else {
+if __t0 == (100 as u32) {
+break '__join_424;
+} else {
+if __t0 == (246 as u32) {
+break '__join_423;
+} else {
+if __t0 == (16 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy144 = 1 as i32;
+}
+break '__join_0;
+} else {
+if __t0 == (17 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy144 = ((((unsafe { (*unsafe { (*pParse).db }).init.busy }) as u32) as i32) == (0 as i32)) as i32;
+}
+break '__join_0;
+} else {
+if __t0 == (19 as u32) {
+unsafe { sqlite3EndTable(pParse, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy0) }, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy0) }, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy391 }, std::ptr::null_mut::<Select>()) };
+break '__join_0;
+} else {
+if __t0 == (20 as u32) {
+unsafe { sqlite3EndTable(pParse, std::ptr::null_mut::<Token>(), std::ptr::null_mut::<Token>(), (0 as i32) as u32, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy555 }) };
+unsafe { sqlite3SelectDelete(unsafe { (*pParse).db }, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy555 }) };
+break '__join_0;
+} else {
+if __t0 == (21 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset((1 as i32) as isize) }).minor.yy391 = (0 as i32) as u32;
+}
+break '__join_0;
+} else {
+if __t0 == (22 as u32) {
+unsafe {
+(*__slate_slot_547).yy391 = (unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy391 }) | unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy391 };
+}
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy391 = unsafe { (*__slate_slot_547).yy391 };
+}
+break '__join_0;
+} else {
+if __t0 == (23 as u32) {
+'__join_413: {
+if (unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0.n }) == ((5 as i32) as u32) {
+*__slate_slot_1085 = (unsafe { sqlite3_strnicmp(unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0.z }, (b"rowid\0".as_ptr() as *mut i8) as *const i8, 5 as i32) }) == (0 as i32);
+} else {
+*__slate_slot_1085 = false as bool;
+}
+}
+if *__slate_slot_1085 {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy391 = ((128 as i32) | (512 as i32)) as u32;
+}
+break '__join_0;
+} else {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy391 = (0 as i32) as u32;
+}
+unsafe { sqlite3ErrorMsg(pParse, (b"unknown table option: %.*s\0".as_ptr() as *mut i8) as *const i8, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0.n }, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0.z }) };
+break '__join_0;
+}
+} else {
+if __t0 == (24 as u32) {
+'__join_407: {
+if (unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0.n }) == ((6 as i32) as u32) {
+*__slate_slot_1086 = (unsafe { sqlite3_strnicmp(unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0.z }, (b"strict\0".as_ptr() as *mut i8) as *const i8, 6 as i32) }) == (0 as i32);
+} else {
+*__slate_slot_1086 = false as bool;
+}
+}
+'__join_404: {
+if *__slate_slot_1086 {
+unsafe {
+(*__slate_slot_547).yy391 = (65536 as i32) as u32;
+}
+} else {
+unsafe {
+(*__slate_slot_547).yy391 = (0 as i32) as u32;
+}
+unsafe { sqlite3ErrorMsg(pParse, (b"unknown table option: %.*s\0".as_ptr() as *mut i8) as *const i8, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0.n }, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0.z }) };
+}
+}
+unsafe {
+(*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy391 = unsafe { (*__slate_slot_547).yy391 };
+}
+break '__join_0;
+} else {
+if __t0 == (25 as u32) {
+unsafe { sqlite3AddColumn(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy0 }, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0 }) };
+break '__join_0;
+} else {
+if __t0 == (26 as u32) {
+break '__join_402;
+} else {
+if __t0 == (65 as u32) {
+break '__join_402;
+} else {
+if __t0 == (106 as u32) {
+break '__join_401;
+} else {
+if __t0 == (27 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy0.n = (((unsafe { unsafe { unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0.z }.offset((unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0.n }) as isize) }.offset_from((unsafe { (*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy0.z }) as *const i8) }) as i64) as i32) as u32;
+}
+break '__join_0;
+} else {
+if __t0 == (28 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(5 as i32) as isize) }).minor.yy0.n = (((unsafe { unsafe { unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0.z }.offset((unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0.n }) as isize) }.offset_from((unsafe { (*unsafe { (*__slate_slot_545).offset(-(5 as i32) as isize) }).minor.yy0.z }) as *const i8) }) as i64) as i32) as u32;
+}
+break '__join_0;
+} else {
+if __t0 == (29 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy0.n = unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0.n }.wrapping_add((((unsafe { unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0.z }.offset_from((unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy0.z }) as *const i8) }) as i64) as i32) as u32);
+}
+break '__join_0;
+} else {
+if __t0 == (30 as u32) {
+0 as i32;
+unsafe {
+(*unsafe { (*__slate_slot_545).offset((1 as i32) as isize) }).minor.yy168 = yyLookaheadToken.z;
+}
+break '__join_0;
+} else {
+if __t0 == (31 as u32) {
+0 as i32;
+unsafe {
+(*unsafe { (*__slate_slot_545).offset((1 as i32) as isize) }).minor.yy0 = yyLookaheadToken;
+}
+break '__join_0;
+} else {
+if __t0 == (32 as u32) {
+break '__join_395;
+} else {
+if __t0 == (67 as u32) {
+break '__join_395;
+} else {
+if __t0 == (33 as u32) {
+unsafe { sqlite3AddDefaultValue(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy454 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy0.z }, unsafe { unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy0.z }.offset((unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy0.n }) as isize) }) };
+break '__join_0;
+} else {
+if __t0 == (34 as u32) {
+unsafe { sqlite3AddDefaultValue(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy454 }, unsafe { unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy0.z }.offset((1 as i32) as isize) }, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0.z }) };
+break '__join_0;
+} else {
+if __t0 == (35 as u32) {
+unsafe { sqlite3AddDefaultValue(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy454 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy0.z }, unsafe { unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy0.z }.offset((unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy0.n }) as isize) }) };
+break '__join_0;
+} else {
+if __t0 == (36 as u32) {
+std::ptr::write(__slate_slot_548, unsafe { sqlite3PExpr(pParse, 174 as i32, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy454 }, std::ptr::null_mut::<Expr>()) });
+unsafe { sqlite3AddDefaultValue(pParse, *__slate_slot_548, unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy0.z }, unsafe { unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy0.z }.offset((unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy0.n }) as isize) }) };
+break '__join_0;
+} else {
+if __t0 == (37 as u32) {
+'__join_388: {
+std::ptr::write(__slate_slot_549, tokenExpr(pParse, 118 as i32, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0 }));
+if *__slate_slot_549 != std::ptr::null_mut::<Expr>() {
+unsafe { sqlite3ExprIdToTrueFalse(*__slate_slot_549) };
+{
+}
+}
+}
+unsafe { sqlite3AddDefaultValue(pParse, *__slate_slot_549, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0.z }, unsafe { unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0.z }.offset((unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0.n }) as isize) }) };
+break '__join_0;
+} else {
+if __t0 == (38 as u32) {
+unsafe { sqlite3AddNotNull(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy144 }) };
+break '__join_0;
+} else {
+if __t0 == (39 as u32) {
+unsafe { sqlite3AddPrimaryKey(pParse, std::ptr::null_mut::<ExprList>(), unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy144 }, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy144 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy144 }) };
+break '__join_0;
+} else {
+if __t0 == (40 as u32) {
+unsafe { sqlite3CreateIndex(pParse, std::ptr::null_mut::<Token>(), std::ptr::null_mut::<Token>(), std::ptr::null_mut::<SrcList>(), std::ptr::null_mut::<ExprList>(), unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy144 }, std::ptr::null_mut::<Token>(), std::ptr::null_mut::<Expr>(), 0 as i32, 0 as i32, ((1 as i32) as i8) as u8) };
+break '__join_0;
+} else {
+if __t0 == (41 as u32) {
+unsafe { sqlite3AddCheckConstraint(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy454 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy0.z }, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0.z }) };
+break '__join_0;
+} else {
+if __t0 == (42 as u32) {
+unsafe { sqlite3CreateForeignKey(pParse, std::ptr::null_mut::<ExprList>(), unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy0) }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy14 }, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy144 }) };
+break '__join_0;
+} else {
+if __t0 == (43 as u32) {
+unsafe { sqlite3DeferForeignKey(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy144 }) };
+break '__join_0;
+} else {
+if __t0 == (44 as u32) {
+unsafe { sqlite3AddCollateType(pParse, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0) }) };
+break '__join_0;
+} else {
+if __t0 == (45 as u32) {
+unsafe { sqlite3AddGenerated(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy454 }, std::ptr::null_mut::<Token>()) };
+break '__join_0;
+} else {
+if __t0 == (46 as u32) {
+unsafe { sqlite3AddGenerated(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy454 }, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0) }) };
+break '__join_0;
+} else {
+if __t0 == (48 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy144 = 1 as i32;
+}
+break '__join_0;
+} else {
+if __t0 == (49 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset((1 as i32) as isize) }).minor.yy144 = (0 as i32) * (257 as i32);
+}
+// /* EV: R-19803-45884 */
+break '__join_0;
+} else {
+if __t0 == (50 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy144 = (unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy144 }) & !unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy383.mask } | unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy383.value };
+}
+break '__join_0;
+} else {
+if __t0 == (51 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy383.value = 0 as i32;
+}
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy383.mask = 0 as i32;
+}
+break '__join_0;
+} else {
+if __t0 == (52 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy383.value = 0 as i32;
+}
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy383.mask = 0 as i32;
+}
+break '__join_0;
+} else {
+if __t0 == (53 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy383.value = unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy144 };
+}
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy383.mask = 255 as i32;
+}
+break '__join_0;
+} else {
+if __t0 == (54 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy383.value = (unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy144 }) << (8 as i32);
+}
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy383.mask = 65280 as i32;
+}
+break '__join_0;
+} else {
+if __t0 == (55 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy144 = 8 as i32;
+}
+// /* EV: R-33326-45252 */
+break '__join_0;
+} else {
+if __t0 == (56 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy144 = 9 as i32;
+}
+// /* EV: R-33326-45252 */
+break '__join_0;
+} else {
+if __t0 == (57 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy144 = 10 as i32;
+}
+// /* EV: R-33326-45252 */
+break '__join_0;
+} else {
+if __t0 == (58 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy144 = 7 as i32;
+}
+// /* EV: R-33326-45252 */
+break '__join_0;
+} else {
+if __t0 == (59 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy144 = 0 as i32;
+}
+// /* EV: R-33326-45252 */
+break '__join_0;
+} else {
+if __t0 == (60 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy144 = 0 as i32;
+}
+break '__join_0;
+} else {
+if __t0 == (61 as u32) {
+break '__join_365;
+} else {
+if __t0 == (76 as u32) {
+break '__join_365;
+} else {
+if __t0 == (173 as u32) {
+break '__join_364;
+} else {
+if __t0 == (63 as u32) {
+break '__join_363;
+} else {
+if __t0 == (80 as u32) {
+break '__join_363;
+} else {
+if __t0 == (219 as u32) {
+break '__join_362;
+} else {
+if __t0 == (222 as u32) {
+break '__join_361;
+} else {
+if __t0 == (247 as u32) {
+break '__join_360;
+} else {
+if __t0 == (64 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy144 = 0 as i32;
+}
+break '__join_0;
+} else {
+if __t0 == (66 as u32) {
+0 as i32;
+unsafe {
+(*pParse).u1.cr.constraintName.n = (0 as i32) as u32;
+}
+break '__join_0;
+} else {
+if __t0 == (68 as u32) {
+unsafe { sqlite3AddPrimaryKey(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy14 }, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy144 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy144 }, 0 as i32) };
+break '__join_0;
+} else {
+if __t0 == (69 as u32) {
+unsafe { sqlite3CreateIndex(pParse, std::ptr::null_mut::<Token>(), std::ptr::null_mut::<Token>(), std::ptr::null_mut::<SrcList>(), unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy14 }, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy144 }, std::ptr::null_mut::<Token>(), std::ptr::null_mut::<Expr>(), 0 as i32, 0 as i32, ((1 as i32) as i8) as u8) };
+break '__join_0;
+} else {
+if __t0 == (70 as u32) {
+unsafe { sqlite3AddCheckConstraint(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy454 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy0.z }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy0.z }) };
+break '__join_0;
+} else {
+if __t0 == (71 as u32) {
+unsafe { sqlite3CreateForeignKey(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(6 as i32) as isize) }).minor.yy14 }, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy0) }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy14 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy144 }) };
+unsafe { sqlite3DeferForeignKey(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy144 }) };
+break '__join_0;
+} else {
+if __t0 == (73 as u32) {
+break '__join_353;
+} else {
+if __t0 == (75 as u32) {
+break '__join_353;
+} else {
+if __t0 == (74 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy144 = unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy144 };
+}
+break '__join_0;
+} else {
+if __t0 == (77 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy144 = 4 as i32;
+}
+break '__join_0;
+} else {
+if __t0 == (78 as u32) {
+break '__join_350;
+} else {
+if __t0 == (174 as u32) {
+break '__join_350;
+} else {
+if __t0 == (79 as u32) {
+unsafe { sqlite3DropTable(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy203 }, 0 as i32, unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy144 }) };
+break '__join_0;
+} else {
+if __t0 == (82 as u32) {
+unsafe { sqlite3CreateView(pParse, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(8 as i32) as isize) }).minor.yy0) }, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy0) }, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy0) }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy14 }, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy555 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(7 as i32) as isize) }).minor.yy144 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(5 as i32) as isize) }).minor.yy144 }) };
+break '__join_0;
+} else {
+if __t0 == (83 as u32) {
+unsafe { sqlite3DropTable(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy203 }, 1 as i32, unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy144 }) };
+break '__join_0;
+} else {
+if __t0 == (84 as u32) {
+std::ptr::write(__slate_slot_550, SelectDest { eDest: ((7 as i32) as i8) as u8, iSDParm: 0 as i32, iSDParm2: 0 as i32, iSdst: 0 as i32, nSdst: 0 as i32, zAffSdst: std::ptr::null_mut::<i8>(), pOrderBy: std::ptr::null_mut::<ExprList>() });
+if (unsafe { (*unsafe { (*pParse).db }).mDbFlags }) & ((64 as i32) as u32) != ((0 as i32) as u32) {
+*__slate_slot_1087 = true as bool;
+} else {
+*__slate_slot_1087 = (unsafe { sqlite3ReadSchema(pParse) }) == (0 as i32);
+}
+if *__slate_slot_1087 {
+unsafe { sqlite3Select(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy555 }, std::ptr::addr_of_mut!(*__slate_slot_550)) };
+}
+unsafe { sqlite3SelectDelete(unsafe { (*pParse).db }, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy555 }) };
+break '__join_0;
+} else {
+if __t0 == (85 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy555 = attachWithToSelect(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy555 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy59 });
+}
+break '__join_0;
+} else {
+if __t0 == (86 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy555 = attachWithToSelect(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy555 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy59 });
+}
+break '__join_0;
+} else {
+if __t0 == (87 as u32) {
+std::ptr::write(__slate_slot_551, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy555 });
+if *__slate_slot_551 != std::ptr::null_mut::<Select>() {
+parserDoubleLinkSelect(pParse, *__slate_slot_551);
+break '__join_0;
+} else {
+break '__join_0;
+}
+} else {
+if __t0 == (88 as u32) {
+std::ptr::write(__slate_slot_552, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy555 });
+std::ptr::write(__slate_slot_553, unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy555 });
+if *__slate_slot_552 != std::ptr::null_mut::<Select>() && (unsafe { (*(*__slate_slot_552)).pPrior }) != std::ptr::null_mut::<Select>() {
+(*__slate_slot_555).n = (0 as i32) as u32;
+parserDoubleLinkSelect(pParse, *__slate_slot_552);
+*__slate_slot_554 = unsafe { sqlite3SrcListAppendFromTerm(pParse, std::ptr::null_mut::<SrcList>(), std::ptr::null_mut::<Token>(), std::ptr::null_mut::<Token>(), std::ptr::addr_of_mut!(*__slate_slot_555), *__slate_slot_552, std::ptr::null_mut::<OnOrUsing>()) };
+*__slate_slot_552 = unsafe { sqlite3SelectNew(pParse, std::ptr::null_mut::<ExprList>(), *__slate_slot_554, std::ptr::null_mut::<Expr>(), std::ptr::null_mut::<ExprList>(), std::ptr::null_mut::<Expr>(), std::ptr::null_mut::<ExprList>(), (0 as i32) as u32, std::ptr::null_mut::<Expr>()) };
+}
+if *__slate_slot_552 != std::ptr::null_mut::<Select>() {
+unsafe {
+(*(*__slate_slot_552)).op = ((unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy144 }) as i8) as u8;
+}
+unsafe {
+(*(*__slate_slot_552)).pPrior = *__slate_slot_553;
+}
+if *__slate_slot_553 != std::ptr::null_mut::<Select>() {
+std::ptr::write(__slate_slot_1088, *__slate_slot_553);
+std::ptr::write(__slate_slot_1089, unsafe { (*(*__slate_slot_1088)).selFlags });
+std::ptr::write(__slate_slot_1090, *__slate_slot_1089 & !((1024 as i32) as u32));
+unsafe {
+(*(*__slate_slot_1088)).selFlags = *__slate_slot_1090;
+}
+}
+std::ptr::write(__slate_slot_1091, *__slate_slot_552);
+std::ptr::write(__slate_slot_1092, unsafe { (*(*__slate_slot_1091)).selFlags });
+std::ptr::write(__slate_slot_1093, *__slate_slot_1092 & !((1024 as i32) as u32));
+unsafe {
+(*(*__slate_slot_1091)).selFlags = *__slate_slot_1093;
+}
+if (unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy144 }) != (136 as i32) {
+unsafe {
+(*pParse).__slate_bits_0.__set_hasCompound((1 as i32) as u32);
+}
+}
+} else {
+unsafe { sqlite3SelectDelete(unsafe { (*pParse).db }, *__slate_slot_553) };
+}
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy555 = *__slate_slot_552;
+}
+break '__join_0;
+} else {
+if __t0 == (89 as u32) {
+break '__join_327;
+} else {
+if __t0 == (91 as u32) {
+break '__join_327;
+} else {
+if __t0 == (90 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy144 = 136 as i32;
+}
+break '__join_0;
+} else {
+if __t0 == (92 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(8 as i32) as isize) }).minor.yy555 = unsafe { sqlite3SelectNew(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(6 as i32) as isize) }).minor.yy14 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(5 as i32) as isize) }).minor.yy203 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy454 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy14 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy454 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy14 }, (unsafe { (*unsafe { (*__slate_slot_545).offset(-(7 as i32) as isize) }).minor.yy144 }) as u32, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy454 }) };
+}
+break '__join_0;
+} else {
+if __t0 == (93 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(9 as i32) as isize) }).minor.yy555 = unsafe { sqlite3SelectNew(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(7 as i32) as isize) }).minor.yy14 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(6 as i32) as isize) }).minor.yy203 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(5 as i32) as isize) }).minor.yy454 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy14 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy454 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy14 }, (unsafe { (*unsafe { (*__slate_slot_545).offset(-(8 as i32) as isize) }).minor.yy144 }) as u32, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy454 }) };
+}
+if (unsafe { (*unsafe { (*__slate_slot_545).offset(-(9 as i32) as isize) }).minor.yy555 }) != std::ptr::null_mut::<Select>() {
+unsafe {
+(*unsafe { (*unsafe { (*__slate_slot_545).offset(-(9 as i32) as isize) }).minor.yy555 }).pWinDefn = unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy211 };
+}
+break '__join_0;
+} else {
+unsafe { sqlite3WindowListDelete(unsafe { (*pParse).db }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy211 }) };
+break '__join_0;
+}
+} else {
+if __t0 == (94 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy555 = unsafe { sqlite3SelectNew(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy14 }, std::ptr::null_mut::<SrcList>(), std::ptr::null_mut::<Expr>(), std::ptr::null_mut::<ExprList>(), std::ptr::null_mut::<Expr>(), std::ptr::null_mut::<ExprList>(), (512 as i32) as u32, std::ptr::null_mut::<Expr>()) };
+}
+break '__join_0;
+} else {
+if __t0 == (95 as u32) {
+unsafe { sqlite3MultiValuesEnd(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy555 }) };
+break '__join_0;
+} else {
+if __t0 == (96 as u32) {
+break '__join_319;
+} else {
+if __t0 == (97 as u32) {
+break '__join_319;
+} else {
+if __t0 == (98 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy144 = 1 as i32;
+}
+break '__join_0;
+} else {
+if __t0 == (99 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy144 = 2 as i32;
+}
+break '__join_0;
+} else {
+if __t0 == (101 as u32) {
+break '__join_316;
+} else {
+if __t0 == (134 as u32) {
+break '__join_316;
+} else {
+if __t0 == (144 as u32) {
+break '__join_315;
+} else {
+if __t0 == (234 as u32) {
+break '__join_314;
+} else {
+if __t0 == (237 as u32) {
+break '__join_313;
+} else {
+if __t0 == (242 as u32) {
+break '__join_312;
+} else {
+if __t0 == (102 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy14 = unsafe { sqlite3ExprListAppend(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy14 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy454 }) };
+}
+if (unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0.n }) > ((0 as i32) as u32) {
+unsafe { sqlite3ExprListSetName(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy14 }, (unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0) }) as *const Token, 1 as i32) };
+}
+unsafe { sqlite3ExprListSetSpan(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy14 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy168 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy168 }) };
+break '__join_0;
+} else {
+if __t0 == (103 as u32) {
+std::ptr::write(__slate_slot_556, unsafe { sqlite3Expr(unsafe { (*pParse).db }, 180 as i32, std::ptr::null::<i8>()) });
+unsafe { sqlite3ExprSetErrorOffset(*__slate_slot_556, ((unsafe { unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0.z }.offset_from((unsafe { (*pParse).zTail }) as *const i8) }) as i64) as i32) };
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy14 = unsafe { sqlite3ExprListAppend(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy14 }, *__slate_slot_556) };
+}
+break '__join_0;
+} else {
+if __t0 == (104 as u32) {
+*__slate_slot_557 = unsafe { sqlite3PExpr(pParse, 180 as i32, std::ptr::null_mut::<Expr>(), std::ptr::null_mut::<Expr>()) };
+unsafe { sqlite3ExprSetErrorOffset(*__slate_slot_557, ((unsafe { unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0.z }.offset_from((unsafe { (*pParse).zTail }) as *const i8) }) as i64) as i32) };
+*__slate_slot_558 = tokenExpr(pParse, 60 as i32, unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy0 });
+*__slate_slot_559 = unsafe { sqlite3PExpr(pParse, 142 as i32, *__slate_slot_558, *__slate_slot_557) };
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy14 = unsafe { sqlite3ExprListAppend(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy14 }, *__slate_slot_559) };
+}
+break '__join_0;
+} else {
+if __t0 == (105 as u32) {
+break '__join_306;
+} else {
+if __t0 == (117 as u32) {
+break '__join_306;
+} else {
+if __t0 == (258 as u32) {
+break '__join_305;
+} else {
+if __t0 == (259 as u32) {
+break '__join_304;
+} else {
+if __t0 == (107 as u32) {
+break '__join_303;
+} else {
+if __t0 == (110 as u32) {
+break '__join_303;
+} else {
+if __t0 == (108 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy203 = unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy203 };
+}
+unsafe { sqlite3SrcListShiftJoinType(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy203 }) };
+break '__join_0;
+} else {
+if __t0 == (109 as u32) {
+if (unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy203 }) != std::ptr::null_mut::<SrcList>() && (unsafe { (*unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy203 }).nSrc }) > (0 as i32) {
+unsafe {
+(*unsafe { unsafe { std::ptr::addr_of_mut!((*unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy203 }).a) as *mut SrcItem }.offset(((unsafe { (*unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy203 }).nSrc }) - (1 as i32)) as isize) }).fg.jointype = ((unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy144 }) as i8) as u8;
+}
+break '__join_0;
+} else {
+break '__join_0;
+}
+} else {
+if __t0 == (111 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy203 = unsafe { sqlite3SrcListAppendFromTerm(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy203 }, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy0) }, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy0) }, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy0) }, std::ptr::null_mut::<Select>(), unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy269) }) };
+}
+break '__join_0;
+} else {
+if __t0 == (112 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(5 as i32) as isize) }).minor.yy203 = unsafe { sqlite3SrcListAppendFromTerm(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(5 as i32) as isize) }).minor.yy203 }, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy0) }, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy0) }, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy0) }, std::ptr::null_mut::<Select>(), unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy269) }) };
+}
+unsafe { sqlite3SrcListIndexedBy(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(5 as i32) as isize) }).minor.yy203 }, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy0) }) };
+break '__join_0;
+} else {
+if __t0 == (113 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(7 as i32) as isize) }).minor.yy203 = unsafe { sqlite3SrcListAppendFromTerm(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(7 as i32) as isize) }).minor.yy203 }, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(6 as i32) as isize) }).minor.yy0) }, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(5 as i32) as isize) }).minor.yy0) }, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy0) }, std::ptr::null_mut::<Select>(), unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy269) }) };
+}
+unsafe { sqlite3SrcListFuncArgs(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(7 as i32) as isize) }).minor.yy203 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy14 }) };
+break '__join_0;
+} else {
+if __t0 == (114 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(5 as i32) as isize) }).minor.yy203 = unsafe { sqlite3SrcListAppendFromTerm(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(5 as i32) as isize) }).minor.yy203 }, std::ptr::null_mut::<Token>(), std::ptr::null_mut::<Token>(), unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy0) }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy555 }, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy269) }) };
+}
+break '__join_0;
+} else {
+if __t0 == (115 as u32) {
+if (unsafe { (*unsafe { (*__slate_slot_545).offset(-(5 as i32) as isize) }).minor.yy203 }) == std::ptr::null_mut::<SrcList>() && (unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy0.n }) == ((0 as i32) as u32) && (unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy269.pOn }) == std::ptr::null_mut::<Expr>() && (unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy269.pUsing }) == std::ptr::null_mut::<IdList>() {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(5 as i32) as isize) }).minor.yy203 = unsafe { (*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy203 };
+}
+break '__join_0;
+} else {
+if (unsafe { (*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy203 }) != std::ptr::null_mut::<SrcList>() && (unsafe { (*unsafe { (*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy203 }).nSrc }) == (1 as i32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(5 as i32) as isize) }).minor.yy203 = unsafe { sqlite3SrcListAppendFromTerm(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(5 as i32) as isize) }).minor.yy203 }, std::ptr::null_mut::<Token>(), std::ptr::null_mut::<Token>(), unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy0) }, std::ptr::null_mut::<Select>(), unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy269) }) };
+}
+if (unsafe { (*unsafe { (*__slate_slot_545).offset(-(5 as i32) as isize) }).minor.yy203 }) != std::ptr::null_mut::<SrcList>() {
+std::ptr::write(__slate_slot_560, unsafe { unsafe { std::ptr::addr_of_mut!((*unsafe { (*unsafe { (*__slate_slot_545).offset(-(5 as i32) as isize) }).minor.yy203 }).a) as *mut SrcItem }.offset(((unsafe { (*unsafe { (*unsafe { (*__slate_slot_545).offset(-(5 as i32) as isize) }).minor.yy203 }).nSrc }) - (1 as i32)) as isize) });
+std::ptr::write(__slate_slot_561, unsafe { std::ptr::addr_of_mut!((*unsafe { (*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy203 }).a) as *mut SrcItem });
+0 as i32;
+unsafe {
+(*(*__slate_slot_560)).zName = unsafe { (*(*__slate_slot_561)).zName };
+}
+0 as i32;
+if ((unsafe { (*(*__slate_slot_561)).fg.__slate_bits_0.__get_isSubquery() }) as i32) != (0 as i32) {
+unsafe {
+(*(*__slate_slot_560)).fg.__slate_bits_0.__set_isSubquery((1 as i32) as u32);
+}
+unsafe {
+(*(*__slate_slot_560)).u4.pSubq = unsafe { (*(*__slate_slot_561)).u4.pSubq };
+}
+unsafe {
+(*(*__slate_slot_561)).u4.pSubq = std::ptr::null_mut::<Subquery>();
+}
+unsafe {
+(*(*__slate_slot_561)).fg.__slate_bits_0.__set_isSubquery((0 as i32) as u32);
+}
+0 as i32;
+if (unsafe { (*unsafe { (*unsafe { (*(*__slate_slot_560)).u4.pSubq }).pSelect }).selFlags }) & ((2048 as i32) as u32) != ((0 as i32) as u32) {
+unsafe {
+(*(*__slate_slot_560)).fg.__slate_bits_0.__set_isNestedFrom((1 as i32) as u32);
+}
+}
+} else {
+unsafe {
+(*(*__slate_slot_560)).u4.zDatabase = unsafe { (*(*__slate_slot_561)).u4.zDatabase };
+}
+unsafe {
+(*(*__slate_slot_561)).u4.zDatabase = std::ptr::null_mut::<i8>();
+}
+}
+if ((unsafe { (*(*__slate_slot_561)).fg.__slate_bits_0.__get_isTabFunc() }) as i32) != (0 as i32) {
+unsafe {
+(*(*__slate_slot_560)).u1.pFuncArg = unsafe { (*(*__slate_slot_561)).u1.pFuncArg };
+}
+unsafe {
+(*(*__slate_slot_561)).u1.pFuncArg = std::ptr::null_mut::<ExprList>();
+}
+unsafe {
+(*(*__slate_slot_561)).fg.__slate_bits_0.__set_isTabFunc((0 as i32) as u32);
+}
+unsafe {
+(*(*__slate_slot_560)).fg.__slate_bits_0.__set_isTabFunc((1 as i32) as u32);
+}
+}
+unsafe {
+(*(*__slate_slot_561)).zName = std::ptr::null_mut::<i8>();
+}
+}
+unsafe { sqlite3SrcListDelete(unsafe { (*pParse).db }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy203 }) };
+break '__join_0;
+} else {
+unsafe { sqlite3SrcListShiftJoinType(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy203 }) };
+*__slate_slot_562 = unsafe { sqlite3SelectNew(pParse, std::ptr::null_mut::<ExprList>(), unsafe { (*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy203 }, std::ptr::null_mut::<Expr>(), std::ptr::null_mut::<ExprList>(), std::ptr::null_mut::<Expr>(), std::ptr::null_mut::<ExprList>(), (2048 as i32) as u32, std::ptr::null_mut::<Expr>()) };
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(5 as i32) as isize) }).minor.yy203 = unsafe { sqlite3SrcListAppendFromTerm(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(5 as i32) as isize) }).minor.yy203 }, std::ptr::null_mut::<Token>(), std::ptr::null_mut::<Token>(), unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy0) }, *__slate_slot_562, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy269) }) };
+}
+break '__join_0;
+}
+}
+} else {
+if __t0 == (116 as u32) {
+break '__join_282;
+} else {
+if __t0 == (131 as u32) {
+break '__join_282;
+} else {
+if __t0 == (118 as u32) {
+break '__join_281;
+} else {
+if __t0 == (120 as u32) {
+break '__join_281;
+} else {
+if __t0 == (119 as u32) {
+break '__join_278;
+} else {
+if __t0 == (121 as u32) {
+break '__join_278;
+} else {
+if __t0 == (122 as u32) {
+unsafe {
+(*__slate_slot_547).yy203 = unsafe { sqlite3SrcListAppend(pParse, std::ptr::null_mut::<SrcList>(), unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy0) }, std::ptr::null_mut::<Token>()) };
+}
+if (unsafe { (*__slate_slot_547).yy203 }) != std::ptr::null_mut::<SrcList>() {
+if (((unsafe { (*pParse).eParseMode }) as u32) as i32) >= (2 as i32) {
+unsafe { sqlite3RenameTokenMap(pParse, (unsafe { (*unsafe { unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_547).yy203 }).a) as *mut SrcItem }.offset((0 as i32) as isize) }).zName }) as *const (), (unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy0) }) as *const Token) };
+} else {
+unsafe {
+(*unsafe { unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_547).yy203 }).a) as *mut SrcItem }.offset((0 as i32) as isize) }).zAlias = unsafe { sqlite3NameFromToken(unsafe { (*pParse).db }, (unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0) }) as *const Token) };
+}
+}
+}
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy203 = unsafe { (*__slate_slot_547).yy203 };
+}
+break '__join_0;
+} else {
+if __t0 == (123 as u32) {
+unsafe {
+(*__slate_slot_547).yy203 = unsafe { sqlite3SrcListAppend(pParse, std::ptr::null_mut::<SrcList>(), unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy0) }, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy0) }) };
+}
+if (unsafe { (*__slate_slot_547).yy203 }) != std::ptr::null_mut::<SrcList>() {
+if (((unsafe { (*pParse).eParseMode }) as u32) as i32) >= (2 as i32) {
+unsafe { sqlite3RenameTokenMap(pParse, (unsafe { (*unsafe { unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_547).yy203 }).a) as *mut SrcItem }.offset((0 as i32) as isize) }).zName }) as *const (), (unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy0) }) as *const Token) };
+} else {
+unsafe {
+(*unsafe { unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_547).yy203 }).a) as *mut SrcItem }.offset((0 as i32) as isize) }).zAlias = unsafe { sqlite3NameFromToken(unsafe { (*pParse).db }, (unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0) }) as *const Token) };
+}
+}
+}
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy203 = unsafe { (*__slate_slot_547).yy203 };
+}
+break '__join_0;
+} else {
+if __t0 == (124 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy144 = 1 as i32;
+}
+break '__join_0;
+} else {
+if __t0 == (125 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy144 = unsafe { sqlite3JoinType(pParse, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy0) }, std::ptr::null_mut::<Token>(), std::ptr::null_mut::<Token>()) };
+}
+// /*X-overwrites-A*/
+break '__join_0;
+} else {
+if __t0 == (126 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy144 = unsafe { sqlite3JoinType(pParse, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy0) }, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy0) }, std::ptr::null_mut::<Token>()) };
+}
+// /*X-overwrites-A*/
+break '__join_0;
+} else {
+if __t0 == (127 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy144 = unsafe { sqlite3JoinType(pParse, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy0) }, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy0) }, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy0) }) };
+}
+// /*X-overwrites-A*/
+break '__join_0;
+} else {
+if __t0 == (128 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy269.pOn = unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy454 };
+}
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy269.pUsing = std::ptr::null_mut::<IdList>();
+}
+break '__join_0;
+} else {
+if __t0 == (129 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy269.pOn = std::ptr::null_mut::<Expr>();
+}
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy269.pUsing = unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy132 };
+}
+break '__join_0;
+} else {
+if __t0 == (130 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset((1 as i32) as isize) }).minor.yy269.pOn = std::ptr::null_mut::<Expr>();
+}
+unsafe {
+(*unsafe { (*__slate_slot_545).offset((1 as i32) as isize) }).minor.yy269.pUsing = std::ptr::null_mut::<IdList>();
+}
+break '__join_0;
+} else {
+if __t0 == (132 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy0 = unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0 };
+}
+break '__join_0;
+} else {
+if __t0 == (133 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy0.z = std::ptr::null::<i8>();
+}
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy0.n = (1 as i32) as u32;
+}
+break '__join_0;
+} else {
+if __t0 == (135 as u32) {
+break '__join_256;
+} else {
+if __t0 == (145 as u32) {
+break '__join_256;
+} else {
+if __t0 == (136 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy14 = unsafe { sqlite3ExprListAppend(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy14 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy454 }) };
+}
+unsafe { sqlite3ExprListSetSortOrder(unsafe { (*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy14 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy144 }, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy144 }) };
+break '__join_0;
+} else {
+if __t0 == (137 as u32) {
+// /*A-overwrites-Y*/
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy14 = unsafe { sqlite3ExprListAppend(pParse, std::ptr::null_mut::<ExprList>(), unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy454 }) };
+}
+unsafe { sqlite3ExprListSetSortOrder(unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy14 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy144 }, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy144 }) };
+break '__join_0;
+} else {
+if __t0 == (138 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy144 = 0 as i32;
+}
+break '__join_0;
+} else {
+if __t0 == (139 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy144 = 1 as i32;
+}
+break '__join_0;
+} else {
+if __t0 == (140 as u32) {
+break '__join_251;
+} else {
+if __t0 == (143 as u32) {
+break '__join_251;
+} else {
+if __t0 == (141 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy144 = 0 as i32;
+}
+break '__join_0;
+} else {
+if __t0 == (142 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy144 = 1 as i32;
+}
+break '__join_0;
+} else {
+if __t0 == (146 as u32) {
+break '__join_248;
+} else {
+if __t0 == (148 as u32) {
+break '__join_248;
+} else {
+if __t0 == (153 as u32) {
+break '__join_247;
+} else {
+if __t0 == (155 as u32) {
+break '__join_246;
+} else {
+if __t0 == (232 as u32) {
+break '__join_245;
+} else {
+if __t0 == (233 as u32) {
+break '__join_244;
+} else {
+if __t0 == (252 as u32) {
+break '__join_243;
+} else {
+if __t0 == (147 as u32) {
+break '__join_242;
+} else {
+if __t0 == (154 as u32) {
+break '__join_242;
+} else {
+if __t0 == (156 as u32) {
+break '__join_241;
+} else {
+if __t0 == (231 as u32) {
+break '__join_240;
+} else {
+if __t0 == (251 as u32) {
+break '__join_239;
+} else {
+if __t0 == (149 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy454 = unsafe { sqlite3PExpr(pParse, 149 as i32, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy454 }, std::ptr::null_mut::<Expr>()) };
+}
+break '__join_0;
+} else {
+if __t0 == (150 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy454 = unsafe { sqlite3PExpr(pParse, 149 as i32, unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy454 }, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy454 }) };
+}
+break '__join_0;
+} else {
+if __t0 == (151 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy454 = unsafe { sqlite3PExpr(pParse, 149 as i32, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy454 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy454 }) };
+}
+break '__join_0;
+} else {
+if __t0 == (152 as u32) {
+unsafe { sqlite3SrcListIndexedBy(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy203 }, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy0) }) };
+unsafe { sqlite3DeleteFrom(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy203 }, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy454 }, std::ptr::null_mut::<ExprList>(), std::ptr::null_mut::<Expr>()) };
+break '__join_0;
+} else {
+if __t0 == (157 as u32) {
+unsafe { sqlite3AddReturning(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy14 }) };
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy454 = std::ptr::null_mut::<Expr>();
+}
+break '__join_0;
+} else {
+if __t0 == (158 as u32) {
+unsafe { sqlite3AddReturning(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy14 }) };
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy454 = unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy454 };
+}
+break '__join_0;
+} else {
+if __t0 == (159 as u32) {
+unsafe { sqlite3SrcListIndexedBy(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(5 as i32) as isize) }).minor.yy203 }, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy0) }) };
+unsafe { sqlite3ExprListCheckLength(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy14 }, (b"set list\0".as_ptr() as *mut i8) as *const i8) };
+if (unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy203 }) != std::ptr::null_mut::<SrcList>() {
+std::ptr::write(__slate_slot_563, unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy203 });
+if (unsafe { (*(*__slate_slot_563)).nSrc }) > (1 as i32) {
+*__slate_slot_564 = unsafe { sqlite3SelectNew(pParse, std::ptr::null_mut::<ExprList>(), *__slate_slot_563, std::ptr::null_mut::<Expr>(), std::ptr::null_mut::<ExprList>(), std::ptr::null_mut::<Expr>(), std::ptr::null_mut::<ExprList>(), (2048 as i32) as u32, std::ptr::null_mut::<Expr>()) };
+(*__slate_slot_565).n = (0 as i32) as u32;
+(*__slate_slot_565).z = std::ptr::null::<i8>();
+*__slate_slot_563 = unsafe { sqlite3SrcListAppendFromTerm(pParse, std::ptr::null_mut::<SrcList>(), std::ptr::null_mut::<Token>(), std::ptr::null_mut::<Token>(), std::ptr::addr_of_mut!(*__slate_slot_565), *__slate_slot_564, std::ptr::null_mut::<OnOrUsing>()) };
+}
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(5 as i32) as isize) }).minor.yy203 = unsafe { sqlite3SrcListAppendList(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(5 as i32) as isize) }).minor.yy203 }, *__slate_slot_563) };
+}
+}
+unsafe { sqlite3Update(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(5 as i32) as isize) }).minor.yy203 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy14 }, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy454 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(6 as i32) as isize) }).minor.yy144 }, std::ptr::null_mut::<ExprList>(), std::ptr::null_mut::<Expr>(), std::ptr::null_mut::<Upsert>()) };
+break '__join_0;
+} else {
+if __t0 == (160 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy14 = unsafe { sqlite3ExprListAppend(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy14 }, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy454 }) };
+}
+unsafe { sqlite3ExprListSetName(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy14 }, (unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy0) }) as *const Token, 1 as i32) };
+break '__join_0;
+} else {
+if __t0 == (161 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(6 as i32) as isize) }).minor.yy14 = unsafe { sqlite3ExprListAppendVector(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(6 as i32) as isize) }).minor.yy14 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy132 }, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy454 }) };
+}
+break '__join_0;
+} else {
+if __t0 == (162 as u32) {
+unsafe {
+(*__slate_slot_547).yy14 = unsafe { sqlite3ExprListAppend(pParse, std::ptr::null_mut::<ExprList>(), unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy454 }) };
+}
+unsafe { sqlite3ExprListSetName(pParse, unsafe { (*__slate_slot_547).yy14 }, (unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy0) }) as *const Token, 1 as i32) };
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy14 = unsafe { (*__slate_slot_547).yy14 };
+}
+break '__join_0;
+} else {
+if __t0 == (163 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy14 = unsafe { sqlite3ExprListAppendVector(pParse, std::ptr::null_mut::<ExprList>(), unsafe { (*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy132 }, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy454 }) };
+}
+break '__join_0;
+} else {
+if __t0 == (164 as u32) {
+unsafe { sqlite3Insert(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy203 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy555 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy132 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(5 as i32) as isize) }).minor.yy144 }, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy122 }) };
+break '__join_0;
+} else {
+if __t0 == (165 as u32) {
+unsafe { sqlite3Insert(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy203 }, std::ptr::null_mut::<Select>(), unsafe { (*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy132 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(6 as i32) as isize) }).minor.yy144 }, std::ptr::null_mut::<Upsert>()) };
+break '__join_0;
+} else {
+if __t0 == (166 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset((1 as i32) as isize) }).minor.yy122 = std::ptr::null_mut::<Upsert>();
+}
+break '__join_0;
+} else {
+if __t0 == (167 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy122 = std::ptr::null_mut::<Upsert>();
+}
+unsafe { sqlite3AddReturning(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy14 }) };
+break '__join_0;
+} else {
+if __t0 == (168 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(11 as i32) as isize) }).minor.yy122 = unsafe { sqlite3UpsertNew(unsafe { (*pParse).db }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(8 as i32) as isize) }).minor.yy14 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(6 as i32) as isize) }).minor.yy454 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy14 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy454 }, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy122 }) };
+}
+break '__join_0;
+} else {
+if __t0 == (169 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(8 as i32) as isize) }).minor.yy122 = unsafe { sqlite3UpsertNew(unsafe { (*pParse).db }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(5 as i32) as isize) }).minor.yy14 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy454 }, std::ptr::null_mut::<ExprList>(), std::ptr::null_mut::<Expr>(), unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy122 }) };
+}
+break '__join_0;
+} else {
+if __t0 == (170 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy122 = unsafe { sqlite3UpsertNew(unsafe { (*pParse).db }, std::ptr::null_mut::<ExprList>(), std::ptr::null_mut::<Expr>(), std::ptr::null_mut::<ExprList>(), std::ptr::null_mut::<Expr>(), std::ptr::null_mut::<Upsert>()) };
+}
+break '__join_0;
+} else {
+if __t0 == (171 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(7 as i32) as isize) }).minor.yy122 = unsafe { sqlite3UpsertNew(unsafe { (*pParse).db }, std::ptr::null_mut::<ExprList>(), std::ptr::null_mut::<Expr>(), unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy14 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy454 }, std::ptr::null_mut::<Upsert>()) };
+}
+break '__join_0;
+} else {
+if __t0 == (172 as u32) {
+unsafe { sqlite3AddReturning(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy14 }) };
+break '__join_0;
+} else {
+if __t0 == (175 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset((1 as i32) as isize) }).minor.yy132 = std::ptr::null_mut::<IdList>();
+}
+break '__join_0;
+} else {
+if __t0 == (176 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy132 = unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy132 };
+}
+break '__join_0;
+} else {
+if __t0 == (177 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy132 = unsafe { sqlite3IdListAppend(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy132 }, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0) }) };
+}
+break '__join_0;
+} else {
+if __t0 == (178 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy132 = unsafe { sqlite3IdListAppend(pParse, std::ptr::null_mut::<IdList>(), unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0) }) };
+}
+// /*A-overwrites-Y*/
+break '__join_0;
+} else {
+if __t0 == (179 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy454 = unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy454 };
+}
+break '__join_0;
+} else {
+if __t0 == (180 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy454 = tokenExpr(pParse, 60 as i32, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0 });
+}
+// /*A-overwrites-X*/
+break '__join_0;
+} else {
+if __t0 == (181 as u32) {
+std::ptr::write(__slate_slot_566, tokenExpr(pParse, 60 as i32, unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy0 }));
+std::ptr::write(__slate_slot_567, tokenExpr(pParse, 60 as i32, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0 }));
+unsafe {
+(*__slate_slot_547).yy454 = unsafe { sqlite3PExpr(pParse, 142 as i32, *__slate_slot_566, *__slate_slot_567) };
+}
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy454 = unsafe { (*__slate_slot_547).yy454 };
+}
+break '__join_0;
+} else {
+if __t0 == (182 as u32) {
+std::ptr::write(__slate_slot_568, tokenExpr(pParse, 60 as i32, unsafe { (*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy0 }));
+std::ptr::write(__slate_slot_569, tokenExpr(pParse, 60 as i32, unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy0 }));
+std::ptr::write(__slate_slot_570, tokenExpr(pParse, 60 as i32, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0 }));
+std::ptr::write(__slate_slot_571, unsafe { sqlite3PExpr(pParse, 142 as i32, *__slate_slot_569, *__slate_slot_570) });
+if (((unsafe { (*pParse).eParseMode }) as u32) as i32) >= (2 as i32) {
+unsafe { sqlite3RenameTokenRemap(pParse, std::ptr::null::<()>(), *__slate_slot_568 as *const ()) };
+}
+unsafe {
+(*__slate_slot_547).yy454 = unsafe { sqlite3PExpr(pParse, 142 as i32, *__slate_slot_568, *__slate_slot_571) };
+}
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy454 = unsafe { (*__slate_slot_547).yy454 };
+}
+break '__join_0;
+} else {
+if __t0 == (183 as u32) {
+break '__join_204;
+} else {
+if __t0 == (184 as u32) {
+break '__join_204;
+} else {
+if __t0 == (185 as u32) {
+if (unsafe { sqlite3GetInt32(unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0.z }, std::ptr::addr_of_mut!(*__slate_slot_572)) }) == (0 as i32) {
+unsafe {
+(*__slate_slot_547).yy454 = unsafe { sqlite3ExprAlloc(unsafe { (*pParse).db }, 156 as i32, (unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0) }) as *const Token, 0 as i32) };
+}
+} else {
+unsafe {
+(*__slate_slot_547).yy454 = unsafe { sqlite3ExprInt32(unsafe { (*pParse).db }, *__slate_slot_572) };
+}
+}
+if (unsafe { (*__slate_slot_547).yy454 }) != std::ptr::null_mut::<Expr>() {
+unsafe {
+(*unsafe { (*__slate_slot_547).yy454 }).w.iOfst = ((unsafe { unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0.z }.offset_from((unsafe { (*pParse).zTail }) as *const i8) }) as i64) as i32;
+}
+}
+unsafe {
+(*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy454 = unsafe { (*__slate_slot_547).yy454 };
+}
+break '__join_0;
+} else {
+if __t0 == (186 as u32) {
+if !(((unsafe { *unsafe { unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0.z }.offset((0 as i32) as isize) } }) as i32) == (35 as i32) && (((unsafe { *unsafe { unsafe { std::ptr::addr_of!(sqlite3CtypeMap) as *const u8 }.offset(((((unsafe { *unsafe { unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0.z }.offset((1 as i32) as isize) } }) as u8) as u32) as i32) as isize) } }) as u32) as i32) & (4 as i32) != (0 as i32)) {
+std::ptr::write(__slate_slot_573, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0.n });
+unsafe {
+(*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy454 = tokenExpr(pParse, 157 as i32, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0 });
+}
+unsafe { sqlite3ExprAssignVarNumber(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy454 }, *__slate_slot_573) };
+break '__join_0;
+} else {
+// /* When doing a nested parse, one can include terms in an expression
+//     ** that look like this:   #1 #2 ...  These terms refer to registers
+//     ** in the virtual machine.  #N is the N-th register. */
+// /*A-overwrites-X*/
+std::ptr::write(__slate_slot_574, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0 });
+0 as i32;
+if (((unsafe { (*pParse).nested }) as u32) as i32) == (0 as i32) {
+parserSyntaxError(pParse, std::ptr::addr_of_mut!(*__slate_slot_574));
+unsafe {
+(*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy454 = std::ptr::null_mut::<Expr>();
+}
+break '__join_0;
+} else {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy454 = unsafe { sqlite3PExpr(pParse, 176 as i32, std::ptr::null_mut::<Expr>(), std::ptr::null_mut::<Expr>()) };
+}
+if (unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy454 }) != std::ptr::null_mut::<Expr>() {
+unsafe { sqlite3GetInt32(unsafe { (*__slate_slot_574).z.offset((1 as i32) as isize) }, unsafe { std::ptr::addr_of_mut!((*unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy454 }).iTable) }) };
+break '__join_0;
+} else {
+break '__join_0;
+}
+}
+}
+} else {
+if __t0 == (187 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy454 = unsafe { sqlite3ExprAddCollateToken(pParse as *const Parse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy454 }, (unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0) }) as *const Token, 1 as i32) };
+}
+break '__join_0;
+} else {
+if __t0 == (188 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(5 as i32) as isize) }).minor.yy454 = unsafe { sqlite3ExprAlloc(unsafe { (*pParse).db }, 36 as i32, (unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy0) }) as *const Token, 1 as i32) };
+}
+unsafe { sqlite3ExprAttachSubtrees(unsafe { (*pParse).db }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(5 as i32) as isize) }).minor.yy454 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy454 }, std::ptr::null_mut::<Expr>()) };
+break '__join_0;
+} else {
+if __t0 == (189 as u32) {
+unsafe {
+(*__slate_slot_547).yy454 = unsafe { sqlite3ExprFunction(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy14 }, (unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy0) }) as *const Token, unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy144 }) };
+}
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy454 = unsafe { (*__slate_slot_547).yy454 };
+}
+break '__join_0;
+} else {
+if __t0 == (190 as u32) {
+unsafe {
+(*__slate_slot_547).yy454 = unsafe { sqlite3ExprFunction(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy14 }, (unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(7 as i32) as isize) }).minor.yy0) }) as *const Token, unsafe { (*unsafe { (*__slate_slot_545).offset(-(5 as i32) as isize) }).minor.yy144 }) };
+}
+unsafe { sqlite3ExprAddFunctionOrderBy(pParse, unsafe { (*__slate_slot_547).yy454 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy14 }) };
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(7 as i32) as isize) }).minor.yy454 = unsafe { (*__slate_slot_547).yy454 };
+}
+break '__join_0;
+} else {
+if __t0 == (191 as u32) {
+unsafe {
+(*__slate_slot_547).yy454 = unsafe { sqlite3ExprFunction(pParse, std::ptr::null_mut::<ExprList>(), (unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy0) }) as *const Token, 0 as i32) };
+}
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy454 = unsafe { (*__slate_slot_547).yy454 };
+}
+break '__join_0;
+} else {
+if __t0 == (192 as u32) {
+unsafe {
+(*__slate_slot_547).yy454 = unsafe { sqlite3ExprFunction(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy14 }, (unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(5 as i32) as isize) }).minor.yy0) }) as *const Token, unsafe { (*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy144 }) };
+}
+unsafe { sqlite3WindowAttach(pParse, unsafe { (*__slate_slot_547).yy454 }, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy211 }) };
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(5 as i32) as isize) }).minor.yy454 = unsafe { (*__slate_slot_547).yy454 };
+}
+break '__join_0;
+} else {
+if __t0 == (193 as u32) {
+unsafe {
+(*__slate_slot_547).yy454 = unsafe { sqlite3ExprFunction(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(5 as i32) as isize) }).minor.yy14 }, (unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(8 as i32) as isize) }).minor.yy0) }) as *const Token, unsafe { (*unsafe { (*__slate_slot_545).offset(-(6 as i32) as isize) }).minor.yy144 }) };
+}
+unsafe { sqlite3WindowAttach(pParse, unsafe { (*__slate_slot_547).yy454 }, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy211 }) };
+unsafe { sqlite3ExprAddFunctionOrderBy(pParse, unsafe { (*__slate_slot_547).yy454 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy14 }) };
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(8 as i32) as isize) }).minor.yy454 = unsafe { (*__slate_slot_547).yy454 };
+}
+break '__join_0;
+} else {
+if __t0 == (194 as u32) {
+unsafe {
+(*__slate_slot_547).yy454 = unsafe { sqlite3ExprFunction(pParse, std::ptr::null_mut::<ExprList>(), (unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy0) }) as *const Token, 0 as i32) };
+}
+unsafe { sqlite3WindowAttach(pParse, unsafe { (*__slate_slot_547).yy454 }, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy211 }) };
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy454 = unsafe { (*__slate_slot_547).yy454 };
+}
+break '__join_0;
+} else {
+if __t0 == (195 as u32) {
+unsafe {
+(*__slate_slot_547).yy454 = unsafe { sqlite3ExprFunction(pParse, std::ptr::null_mut::<ExprList>(), (unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0) }) as *const Token, 0 as i32) };
+}
+unsafe {
+(*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy454 = unsafe { (*__slate_slot_547).yy454 };
+}
+break '__join_0;
+} else {
+if __t0 == (196 as u32) {
+std::ptr::write(__slate_slot_575, unsafe { sqlite3ExprListAppend(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy14 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy454 }) });
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy454 = unsafe { sqlite3PExpr(pParse, 177 as i32, std::ptr::null_mut::<Expr>(), std::ptr::null_mut::<Expr>()) };
+}
+if (unsafe { (*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy454 }) != std::ptr::null_mut::<Expr>() {
+unsafe {
+(*unsafe { (*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy454 }).x.pList = *__slate_slot_575;
+}
+*__slate_slot_576 = 0 as i32;
+loop {
+if *__slate_slot_576 < unsafe { (*(*__slate_slot_575)).nExpr } {
+0 as i32;
+std::ptr::write(__slate_slot_1096, unsafe { (*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy454 });
+std::ptr::write(__slate_slot_1097, unsafe { (*(*__slate_slot_1096)).flags });
+std::ptr::write(__slate_slot_1098, *__slate_slot_1097 | (unsafe { (*unsafe { (*unsafe { unsafe { std::ptr::addr_of_mut!((*(*__slate_slot_575)).a) as *mut ExprList_item }.offset(*__slate_slot_576 as isize) }).pExpr }).flags }) & (((512 as i32) | (4194304 as i32) | (8 as i32)) as u32));
+unsafe {
+(*(*__slate_slot_1096)).flags = *__slate_slot_1098;
+}
+std::ptr::write(__slate_slot_1094, *__slate_slot_576);
+std::ptr::write(__slate_slot_1095, *__slate_slot_1094 + (1 as i32));
+*__slate_slot_576 = *__slate_slot_1095;
+} else {
+break '__join_0;
+}
+}
+} else {
+unsafe { sqlite3ExprListDelete(unsafe { (*pParse).db }, *__slate_slot_575) };
+break '__join_0;
+}
+} else {
+if __t0 == (197 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy454 = unsafe { sqlite3ExprAnd(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy454 }, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy454 }) };
+}
+break '__join_0;
+} else {
+if __t0 == (198 as u32) {
+break '__join_176;
+} else {
+if __t0 == (199 as u32) {
+break '__join_176;
+} else {
+if __t0 == (200 as u32) {
+break '__join_175;
+} else {
+if __t0 == (201 as u32) {
+break '__join_174;
+} else {
+if __t0 == (202 as u32) {
+break '__join_173;
+} else {
+if __t0 == (203 as u32) {
+break '__join_172;
+} else {
+if __t0 == (204 as u32) {
+break '__join_171;
+} else {
+if __t0 == (205 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy0 = unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0 };
+}
+std::ptr::write(__slate_slot_1099, unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) });
+std::ptr::write(__slate_slot_1100, unsafe { (*(*__slate_slot_1099)).minor.yy0.n });
+std::ptr::write(__slate_slot_1101, *__slate_slot_1100 | (2147483648 as u32));
+unsafe {
+(*(*__slate_slot_1099)).minor.yy0.n = *__slate_slot_1101;
+}
+// /*yymsp[-1].minor.yy0-overwrite-yymsp[0].minor.yy0*/
+break '__join_0;
+} else {
+if __t0 == (206 as u32) {
+std::ptr::write(__slate_slot_578, ((unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy0.n }) & (2147483648 as u32)) as i32);
+std::ptr::write(__slate_slot_1102, unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) });
+std::ptr::write(__slate_slot_1103, unsafe { (*(*__slate_slot_1102)).minor.yy0.n });
+std::ptr::write(__slate_slot_1104, *__slate_slot_1103 & ((2147483647 as i32) as u32));
+unsafe {
+(*(*__slate_slot_1102)).minor.yy0.n = *__slate_slot_1104;
+}
+*__slate_slot_577 = unsafe { sqlite3ExprListAppend(pParse, std::ptr::null_mut::<ExprList>(), unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy454 }) };
+*__slate_slot_577 = unsafe { sqlite3ExprListAppend(pParse, *__slate_slot_577, unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy454 }) };
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy454 = unsafe { sqlite3ExprFunction(pParse, *__slate_slot_577, (unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy0) }) as *const Token, 0 as i32) };
+}
+if *__slate_slot_578 != (0 as i32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy454 = unsafe { sqlite3PExpr(pParse, 19 as i32, unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy454 }, std::ptr::null_mut::<Expr>()) };
+}
+}
+if (unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy454 }) != std::ptr::null_mut::<Expr>() {
+std::ptr::write(__slate_slot_1105, unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy454 });
+std::ptr::write(__slate_slot_1106, unsafe { (*(*__slate_slot_1105)).flags });
+std::ptr::write(__slate_slot_1107, *__slate_slot_1106 | ((256 as i32) as u32));
+unsafe {
+(*(*__slate_slot_1105)).flags = *__slate_slot_1107;
+}
+break '__join_0;
+} else {
+break '__join_0;
+}
+} else {
+if __t0 == (207 as u32) {
+std::ptr::write(__slate_slot_580, ((unsafe { (*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy0.n }) & (2147483648 as u32)) as i32);
+std::ptr::write(__slate_slot_1108, unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) });
+std::ptr::write(__slate_slot_1109, unsafe { (*(*__slate_slot_1108)).minor.yy0.n });
+std::ptr::write(__slate_slot_1110, *__slate_slot_1109 & ((2147483647 as i32) as u32));
+unsafe {
+(*(*__slate_slot_1108)).minor.yy0.n = *__slate_slot_1110;
+}
+*__slate_slot_579 = unsafe { sqlite3ExprListAppend(pParse, std::ptr::null_mut::<ExprList>(), unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy454 }) };
+*__slate_slot_579 = unsafe { sqlite3ExprListAppend(pParse, *__slate_slot_579, unsafe { (*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy454 }) };
+*__slate_slot_579 = unsafe { sqlite3ExprListAppend(pParse, *__slate_slot_579, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy454 }) };
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy454 = unsafe { sqlite3ExprFunction(pParse, *__slate_slot_579, (unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy0) }) as *const Token, 0 as i32) };
+}
+if *__slate_slot_580 != (0 as i32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy454 = unsafe { sqlite3PExpr(pParse, 19 as i32, unsafe { (*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy454 }, std::ptr::null_mut::<Expr>()) };
+}
+}
+if (unsafe { (*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy454 }) != std::ptr::null_mut::<Expr>() {
+std::ptr::write(__slate_slot_1111, unsafe { (*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy454 });
+std::ptr::write(__slate_slot_1112, unsafe { (*(*__slate_slot_1111)).flags });
+std::ptr::write(__slate_slot_1113, *__slate_slot_1112 | ((256 as i32) as u32));
+unsafe {
+(*(*__slate_slot_1111)).flags = *__slate_slot_1113;
+}
+break '__join_0;
+} else {
+break '__join_0;
+}
+} else {
+if __t0 == (208 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy454 = sqlite3PExprIsNull(pParse, ((unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).major }) as u32) as i32, unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy454 });
+}
+break '__join_0;
+} else {
+if __t0 == (209 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy454 = sqlite3PExprIsNull(pParse, 52 as i32, unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy454 });
+}
+break '__join_0;
+} else {
+if __t0 == (210 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy454 = sqlite3PExprIs(pParse, 45 as i32, unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy454 }, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy454 });
+}
+break '__join_0;
+} else {
+if __t0 == (211 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy454 = sqlite3PExprIs(pParse, 46 as i32, unsafe { (*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy454 }, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy454 });
+}
+break '__join_0;
+} else {
+if __t0 == (212 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(5 as i32) as isize) }).minor.yy454 = sqlite3PExprIs(pParse, 45 as i32, unsafe { (*unsafe { (*__slate_slot_545).offset(-(5 as i32) as isize) }).minor.yy454 }, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy454 });
+}
+break '__join_0;
+} else {
+if __t0 == (213 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy454 = sqlite3PExprIs(pParse, 46 as i32, unsafe { (*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy454 }, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy454 });
+}
+break '__join_0;
+} else {
+if __t0 == (214 as u32) {
+break '__join_155;
+} else {
+if __t0 == (215 as u32) {
+break '__join_155;
+} else {
+if __t0 == (216 as u32) {
+std::ptr::write(__slate_slot_581, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy454 });
+std::ptr::write(__slate_slot_582, (((((unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).major }) as u32) as i32) + ((173 as i32) - (107 as i32))) as i8) as u8);
+0 as i32;
+0 as i32;
+if *__slate_slot_581 != std::ptr::null_mut::<Expr>() && (((unsafe { (*(*__slate_slot_581)).op }) as u32) as i32) == (173 as i32) {
+unsafe {
+(*(*__slate_slot_581)).op = *__slate_slot_582;
+}
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy454 = *__slate_slot_581;
+}
+break '__join_0;
+} else {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy454 = unsafe { sqlite3PExpr(pParse, (*__slate_slot_582 as u32) as i32, *__slate_slot_581, std::ptr::null_mut::<Expr>()) };
+}
+// /*A-overwrites-B*/
+break '__join_0;
+}
+} else {
+if __t0 == (217 as u32) {
+std::ptr::write(__slate_slot_583, unsafe { sqlite3ExprListAppend(pParse, std::ptr::null_mut::<ExprList>(), unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy454 }) });
+*__slate_slot_583 = unsafe { sqlite3ExprListAppend(pParse, *__slate_slot_583, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy454 }) };
+unsafe {
+(*__slate_slot_547).yy454 = unsafe { sqlite3ExprFunction(pParse, *__slate_slot_583, (unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy0) }) as *const Token, 0 as i32) };
+}
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy454 = unsafe { (*__slate_slot_547).yy454 };
+}
+break '__join_0;
+} else {
+if __t0 == (218 as u32) {
+break '__join_150;
+} else {
+if __t0 == (221 as u32) {
+break '__join_150;
+} else {
+if __t0 == (220 as u32) {
+std::ptr::write(__slate_slot_584, unsafe { sqlite3ExprListAppend(pParse, std::ptr::null_mut::<ExprList>(), unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy454 }) });
+*__slate_slot_584 = unsafe { sqlite3ExprListAppend(pParse, *__slate_slot_584, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy454 }) };
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy454 = unsafe { sqlite3PExpr(pParse, 49 as i32, unsafe { (*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy454 }, std::ptr::null_mut::<Expr>()) };
+}
+if (unsafe { (*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy454 }) != std::ptr::null_mut::<Expr>() {
+unsafe {
+(*unsafe { (*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy454 }).x.pList = *__slate_slot_584;
+}
+unsafe { sqlite3ExprSetHeightAndFlags(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy454 }) };
+} else {
+unsafe { sqlite3ExprListDelete(unsafe { (*pParse).db }, *__slate_slot_584) };
+}
+if (unsafe { (*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy144 }) != (0 as i32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy454 = unsafe { sqlite3PExpr(pParse, 19 as i32, unsafe { (*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy454 }, std::ptr::null_mut::<Expr>()) };
+}
+break '__join_0;
+} else {
+break '__join_0;
+}
+} else {
+if __t0 == (223 as u32) {
+if (unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy14 }) == std::ptr::null_mut::<ExprList>() {
+// /* Expressions of the form
+//       **
+//       **      expr1 IN ()
+//       **      expr1 NOT IN ()
+//       **
+//       ** simplify to constants 0 (false) and 1 (true), respectively.
+//       **
+//       ** Except, do not apply this optimization if expr1 contains a function
+//       ** because that function might be an aggregate (we don't know yet whether
+//       ** it is or not) and if it is an aggregate, that could change the meaning
+//       ** of the whole query.
+//       */
+std::ptr::write(__slate_slot_585, unsafe { sqlite3Expr(unsafe { (*pParse).db }, 118 as i32, (if (unsafe { (*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy144 }) != (0 as i32) { b"true\0".as_ptr() as *mut i8 } else { b"false\0".as_ptr() as *mut i8 }) as *const i8) });
+if *__slate_slot_585 != std::ptr::null_mut::<Expr>() {
+unsafe { sqlite3ExprIdToTrueFalse(*__slate_slot_585) };
+}
+if !((unsafe { (*unsafe { (*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy454 }).flags }) & ((8 as i32) as u32) != ((0 as i32) as u32)) {
+unsafe { sqlite3ExprUnmapAndDelete(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy454 }) };
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy454 = *__slate_slot_585;
+}
+break '__join_0;
+} else {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy454 = unsafe { sqlite3PExpr(pParse, if (unsafe { (*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy144 }) != (0 as i32) { 43 as i32 } else { 44 as i32 }, *__slate_slot_585, unsafe { (*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy454 }) };
+}
+break '__join_0;
+}
+} else {
+std::ptr::write(__slate_slot_586, unsafe { (*unsafe { unsafe { std::ptr::addr_of_mut!((*unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy14 }).a) as *mut ExprList_item }.offset((0 as i32) as isize) }).pExpr });
+if (unsafe { (*unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy14 }).nExpr }) == (1 as i32) {
+*__slate_slot_1114 = (unsafe { sqlite3ExprIsConstant(pParse, *__slate_slot_586) }) != (0 as i32);
+} else {
+*__slate_slot_1114 = false as bool;
+}
+if *__slate_slot_1114 && (((unsafe { (*unsafe { (*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy454 }).op }) as u32) as i32) != (177 as i32) {
+unsafe {
+(*unsafe { unsafe { std::ptr::addr_of_mut!((*unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy14 }).a) as *mut ExprList_item }.offset((0 as i32) as isize) }).pExpr = std::ptr::null_mut::<Expr>();
+}
+unsafe { sqlite3ExprListDelete(unsafe { (*pParse).db }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy14 }) };
+*__slate_slot_586 = unsafe { sqlite3PExpr(pParse, 173 as i32, *__slate_slot_586, std::ptr::null_mut::<Expr>()) };
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy454 = unsafe { sqlite3PExpr(pParse, 54 as i32, unsafe { (*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy454 }, *__slate_slot_586) };
+}
+} else {
+if (unsafe { (*unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy14 }).nExpr }) == (1 as i32) && (((unsafe { (*(*__slate_slot_586)).op }) as u32) as i32) == (139 as i32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy454 = unsafe { sqlite3PExpr(pParse, 50 as i32, unsafe { (*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy454 }, std::ptr::null_mut::<Expr>()) };
+}
+unsafe { sqlite3PExprAddSelect(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy454 }, unsafe { (*(*__slate_slot_586)).x.pSelect }) };
+unsafe {
+(*(*__slate_slot_586)).x.pSelect = std::ptr::null_mut::<Select>();
+}
+unsafe { sqlite3ExprListDelete(unsafe { (*pParse).db }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy14 }) };
+} else {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy454 = unsafe { sqlite3PExpr(pParse, 50 as i32, unsafe { (*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy454 }, std::ptr::null_mut::<Expr>()) };
+}
+if (unsafe { (*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy454 }) == std::ptr::null_mut::<Expr>() {
+unsafe { sqlite3ExprListDelete(unsafe { (*pParse).db }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy14 }) };
+} else {
+if (((unsafe { (*unsafe { (*unsafe { (*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy454 }).pLeft }).op }) as u32) as i32) == (177 as i32) {
+std::ptr::write(__slate_slot_587, unsafe { (*unsafe { (*unsafe { (*unsafe { (*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy454 }).pLeft }).x.pList }).nExpr });
+std::ptr::write(__slate_slot_588, unsafe { sqlite3ExprListToValues(pParse, *__slate_slot_587, unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy14 }) });
+if *__slate_slot_588 != std::ptr::null_mut::<Select>() {
+parserDoubleLinkSelect(pParse, *__slate_slot_588);
+unsafe { sqlite3PExprAddSelect(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy454 }, *__slate_slot_588) };
+}
+} else {
+unsafe {
+(*unsafe { (*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy454 }).x.pList = unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy14 };
+}
+unsafe { sqlite3ExprSetHeightAndFlags(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy454 }) };
+}
+}
+}
+}
+if (unsafe { (*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy144 }) != (0 as i32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy454 = unsafe { sqlite3PExpr(pParse, 19 as i32, unsafe { (*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy454 }, std::ptr::null_mut::<Expr>()) };
+}
+break '__join_0;
+} else {
+break '__join_0;
+}
+}
+} else {
+if __t0 == (224 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy454 = unsafe { sqlite3PExpr(pParse, 139 as i32, std::ptr::null_mut::<Expr>(), std::ptr::null_mut::<Expr>()) };
+}
+unsafe { sqlite3PExprAddSelect(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy454 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy555 }) };
+break '__join_0;
+} else {
+if __t0 == (225 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy454 = unsafe { sqlite3PExpr(pParse, 50 as i32, unsafe { (*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy454 }, std::ptr::null_mut::<Expr>()) };
+}
+unsafe { sqlite3PExprAddSelect(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy454 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy555 }) };
+if (unsafe { (*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy144 }) != (0 as i32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy454 = unsafe { sqlite3PExpr(pParse, 19 as i32, unsafe { (*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy454 }, std::ptr::null_mut::<Expr>()) };
+}
+break '__join_0;
+} else {
+break '__join_0;
+}
+} else {
+if __t0 == (226 as u32) {
+std::ptr::write(__slate_slot_589, unsafe { sqlite3SrcListAppend(pParse, std::ptr::null_mut::<SrcList>(), unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy0) }, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy0) }) });
+std::ptr::write(__slate_slot_590, unsafe { sqlite3SelectNew(pParse, std::ptr::null_mut::<ExprList>(), *__slate_slot_589, std::ptr::null_mut::<Expr>(), std::ptr::null_mut::<ExprList>(), std::ptr::null_mut::<Expr>(), std::ptr::null_mut::<ExprList>(), (0 as i32) as u32, std::ptr::null_mut::<Expr>()) });
+if (unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy14 }) != std::ptr::null_mut::<ExprList>() {
+unsafe { sqlite3SrcListFuncArgs(pParse, if *__slate_slot_590 != std::ptr::null_mut::<Select>() { *__slate_slot_589 } else { std::ptr::null_mut::<SrcList>() }, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy14 }) };
+}
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy454 = unsafe { sqlite3PExpr(pParse, 50 as i32, unsafe { (*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy454 }, std::ptr::null_mut::<Expr>()) };
+}
+unsafe { sqlite3PExprAddSelect(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy454 }, *__slate_slot_590) };
+if (unsafe { (*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy144 }) != (0 as i32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy454 = unsafe { sqlite3PExpr(pParse, 19 as i32, unsafe { (*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy454 }, std::ptr::null_mut::<Expr>()) };
+}
+break '__join_0;
+} else {
+break '__join_0;
+}
+} else {
+if __t0 == (227 as u32) {
+std::ptr::write(__slate_slot_1115, unsafe { sqlite3PExpr(pParse, 20 as i32, std::ptr::null_mut::<Expr>(), std::ptr::null_mut::<Expr>()) });
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy454 = *__slate_slot_1115;
+}
+*__slate_slot_591 = *__slate_slot_1115;
+unsafe { sqlite3PExprAddSelect(pParse, *__slate_slot_591, unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy555 }) };
+break '__join_0;
+} else {
+if __t0 == (228 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy454 = unsafe { sqlite3PExpr(pParse, 158 as i32, unsafe { (*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy454 }, std::ptr::null_mut::<Expr>()) };
+}
+if (unsafe { (*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy454 }) != std::ptr::null_mut::<Expr>() {
+if (unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy454 }) != std::ptr::null_mut::<Expr>() {
+*__slate_slot_1116 = unsafe { sqlite3ExprListAppend(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy14 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy454 }) };
+} else {
+*__slate_slot_1116 = unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy14 };
+}
+unsafe {
+(*unsafe { (*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy454 }).x.pList = *__slate_slot_1116;
+}
+unsafe { sqlite3ExprSetHeightAndFlags(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy454 }) };
+break '__join_0;
+} else {
+unsafe { sqlite3ExprListDelete(unsafe { (*pParse).db }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy14 }) };
+unsafe { sqlite3ExprDelete(unsafe { (*pParse).db }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy454 }) };
+break '__join_0;
+}
+} else {
+if __t0 == (229 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy14 = unsafe { sqlite3ExprListAppend(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy14 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy454 }) };
+}
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy14 = unsafe { sqlite3ExprListAppend(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy14 }, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy454 }) };
+}
+break '__join_0;
+} else {
+if __t0 == (230 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy14 = unsafe { sqlite3ExprListAppend(pParse, std::ptr::null_mut::<ExprList>(), unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy454 }) };
+}
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy14 = unsafe { sqlite3ExprListAppend(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy14 }, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy454 }) };
+}
+break '__join_0;
+} else {
+if __t0 == (235 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy14 = unsafe { sqlite3ExprListAppend(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy14 }, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy454 }) };
+}
+break '__join_0;
+} else {
+if __t0 == (236 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy14 = unsafe { sqlite3ExprListAppend(pParse, std::ptr::null_mut::<ExprList>(), unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy454 }) };
+}
+// /*A-overwrites-Y*/
+break '__join_0;
+} else {
+if __t0 == (238 as u32) {
+break '__join_105;
+} else {
+if __t0 == (243 as u32) {
+break '__join_105;
+} else {
+if __t0 == (239 as u32) {
+unsafe { sqlite3CreateIndex(pParse, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(7 as i32) as isize) }).minor.yy0) }, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(6 as i32) as isize) }).minor.yy0) }, unsafe { sqlite3SrcListAppend(pParse, std::ptr::null_mut::<SrcList>(), unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy0) }, std::ptr::null_mut::<Token>()) }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy14 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(10 as i32) as isize) }).minor.yy144 }, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(11 as i32) as isize) }).minor.yy0) }, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy454 }, 0 as i32, unsafe { (*unsafe { (*__slate_slot_545).offset(-(8 as i32) as isize) }).minor.yy144 }, ((0 as i32) as i8) as u8) };
+if (((unsafe { (*pParse).eParseMode }) as u32) as i32) >= (2 as i32) && (unsafe { (*pParse).pNewIndex }) != std::ptr::null_mut::<Index>() {
+unsafe { sqlite3RenameTokenMap(pParse, (unsafe { (*unsafe { (*pParse).pNewIndex }).zName }) as *const (), (unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy0) }) as *const Token) };
+break '__join_0;
+} else {
+break '__join_0;
+}
+} else {
+if __t0 == (240 as u32) {
+break '__join_102;
+} else {
+if __t0 == (281 as u32) {
+break '__join_102;
+} else {
+if __t0 == (241 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset((1 as i32) as isize) }).minor.yy144 = 0 as i32;
+}
+break '__join_0;
+} else {
+if __t0 == (244 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy14 = parserAddExprIdListTerm(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy14 }, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy0) }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy144 }, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy144 });
+}
+break '__join_0;
+} else {
+if __t0 == (245 as u32) {
+// /*A-overwrites-Y*/
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy14 = parserAddExprIdListTerm(pParse, std::ptr::null_mut::<ExprList>(), unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy0) }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy144 }, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy144 });
+}
+break '__join_0;
+} else {
+if __t0 == (248 as u32) {
+unsafe { sqlite3DropIndex(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy203 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy144 }) };
+break '__join_0;
+} else {
+if __t0 == (249 as u32) {
+unsafe { sqlite3Vacuum(pParse, std::ptr::null_mut::<Token>(), unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy454 }) };
+break '__join_0;
+} else {
+if __t0 == (250 as u32) {
+unsafe { sqlite3Vacuum(pParse, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy0) }, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy454 }) };
+break '__join_0;
+} else {
+if __t0 == (253 as u32) {
+unsafe { sqlite3Pragma(pParse, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy0) }, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0) }, std::ptr::null_mut::<Token>(), 0 as i32) };
+break '__join_0;
+} else {
+if __t0 == (254 as u32) {
+unsafe { sqlite3Pragma(pParse, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy0) }, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy0) }, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0) }, 0 as i32) };
+break '__join_0;
+} else {
+if __t0 == (255 as u32) {
+unsafe { sqlite3Pragma(pParse, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy0) }, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy0) }, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy0) }, 0 as i32) };
+break '__join_0;
+} else {
+if __t0 == (256 as u32) {
+unsafe { sqlite3Pragma(pParse, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy0) }, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy0) }, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0) }, 1 as i32) };
+break '__join_0;
+} else {
+if __t0 == (257 as u32) {
+unsafe { sqlite3Pragma(pParse, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy0) }, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy0) }, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy0) }, 1 as i32) };
+break '__join_0;
+} else {
+if __t0 == (260 as u32) {
+(*__slate_slot_592).z = unsafe { (*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy0.z };
+(*__slate_slot_592).n = ((((unsafe { unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0.z }.offset_from((unsafe { (*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy0.z }) as *const i8) }) as i64) as i32) as u32).wrapping_add(unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0.n });
+unsafe { sqlite3FinishTrigger(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy427 }, std::ptr::addr_of_mut!(*__slate_slot_592)) };
+break '__join_0;
+} else {
+if __t0 == (261 as u32) {
+unsafe { sqlite3BeginTrigger(pParse, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(7 as i32) as isize) }).minor.yy0) }, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(6 as i32) as isize) }).minor.yy0) }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(5 as i32) as isize) }).minor.yy144 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy286.a }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy286.b }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy203 }, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy454 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(10 as i32) as isize) }).minor.yy144 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(8 as i32) as isize) }).minor.yy144 }) };
+// /*A-overwrites-T*/
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(10 as i32) as isize) }).minor.yy0 = if (unsafe { (*unsafe { (*__slate_slot_545).offset(-(6 as i32) as isize) }).minor.yy0.n }) == ((0 as i32) as u32) { unsafe { (*unsafe { (*__slate_slot_545).offset(-(7 as i32) as isize) }).minor.yy0 } } else { unsafe { (*unsafe { (*__slate_slot_545).offset(-(6 as i32) as isize) }).minor.yy0 } };
+}
+break '__join_0;
+} else {
+if __t0 == (262 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy144 = ((unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).major }) as u32) as i32;
+}
+// /*A-overwrites-X*/
+break '__join_0;
+} else {
+if __t0 == (263 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy144 = 66 as i32;
+}
+break '__join_0;
+} else {
+if __t0 == (264 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset((1 as i32) as isize) }).minor.yy144 = 33 as i32;
+}
+break '__join_0;
+} else {
+if __t0 == (265 as u32) {
+break '__join_85;
+} else {
+if __t0 == (266 as u32) {
+break '__join_85;
+} else {
+if __t0 == (267 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy286.a = 130 as i32;
+}
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy286.b = unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy132 };
+}
+break '__join_0;
+} else {
+if __t0 == (268 as u32) {
+break '__join_83;
+} else {
+if __t0 == (286 as u32) {
+break '__join_83;
+} else {
+if __t0 == (269 as u32) {
+break '__join_82;
+} else {
+if __t0 == (287 as u32) {
+break '__join_82;
+} else {
+if __t0 == (270 as u32) {
+unsafe {
+(*unsafe { (*unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy427 }).pLast }).pNext = unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy427 };
+}
+unsafe {
+(*unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy427 }).pLast = unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy427 };
+}
+break '__join_0;
+} else {
+if __t0 == (271 as u32) {
+unsafe {
+(*unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy427 }).pLast = unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy427 };
+}
+break '__join_0;
+} else {
+if __t0 == (272 as u32) {
+unsafe { sqlite3ErrorMsg(pParse, (b"the INDEXED BY clause is not allowed on UPDATE or DELETE statements within triggers\0".as_ptr() as *mut i8) as *const i8) };
+break '__join_0;
+} else {
+if __t0 == (273 as u32) {
+unsafe { sqlite3ErrorMsg(pParse, (b"the NOT INDEXED clause is not allowed on UPDATE or DELETE statements within triggers\0".as_ptr() as *mut i8) as *const i8) };
+break '__join_0;
+} else {
+if __t0 == (274 as u32) {
+unsafe {
+(*__slate_slot_547).yy427 = unsafe { sqlite3TriggerUpdateStep(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(6 as i32) as isize) }).minor.yy203 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy203 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy14 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy454 }, ((unsafe { (*unsafe { (*__slate_slot_545).offset(-(7 as i32) as isize) }).minor.yy144 }) as i8) as u8, unsafe { (*unsafe { (*__slate_slot_545).offset(-(8 as i32) as isize) }).minor.yy0.z }, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy168 }) };
+}
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(8 as i32) as isize) }).minor.yy427 = unsafe { (*__slate_slot_547).yy427 };
+}
+break '__join_0;
+} else {
+if __t0 == (275 as u32) {
+// /*yylhsminor.yy427-overwrites-yymsp[-6].minor.yy144*/
+unsafe {
+(*__slate_slot_547).yy427 = unsafe { sqlite3TriggerInsertStep(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy203 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy132 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy555 }, ((unsafe { (*unsafe { (*__slate_slot_545).offset(-(6 as i32) as isize) }).minor.yy144 }) as i8) as u8, unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy122 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(7 as i32) as isize) }).minor.yy168 }, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy168 }) };
+}
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(7 as i32) as isize) }).minor.yy427 = unsafe { (*__slate_slot_547).yy427 };
+}
+break '__join_0;
+} else {
+if __t0 == (276 as u32) {
+unsafe {
+(*__slate_slot_547).yy427 = unsafe { sqlite3TriggerDeleteStep(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy203 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy454 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(5 as i32) as isize) }).minor.yy0.z }, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy168 }) };
+}
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(5 as i32) as isize) }).minor.yy427 = unsafe { (*__slate_slot_547).yy427 };
+}
+break '__join_0;
+} else {
+if __t0 == (277 as u32) {
+unsafe {
+(*__slate_slot_547).yy427 = unsafe { sqlite3TriggerSelectStep(unsafe { (*pParse).db }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy555 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy168 }, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy168 }) };
+}
+// /*yylhsminor.yy427-overwrites-yymsp[-1].minor.yy555*/
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy427 = unsafe { (*__slate_slot_547).yy427 };
+}
+break '__join_0;
+} else {
+if __t0 == (278 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy454 = unsafe { sqlite3PExpr(pParse, 72 as i32, std::ptr::null_mut::<Expr>(), std::ptr::null_mut::<Expr>()) };
+}
+if (unsafe { (*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy454 }) != std::ptr::null_mut::<Expr>() {
+unsafe {
+(*unsafe { (*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy454 }).affExpr = (4 as i32) as i8;
+}
+break '__join_0;
+} else {
+break '__join_0;
+}
+} else {
+if __t0 == (279 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(5 as i32) as isize) }).minor.yy454 = unsafe { sqlite3PExpr(pParse, 72 as i32, unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy454 }, std::ptr::null_mut::<Expr>()) };
+}
+if (unsafe { (*unsafe { (*__slate_slot_545).offset(-(5 as i32) as isize) }).minor.yy454 }) != std::ptr::null_mut::<Expr>() {
+unsafe {
+(*unsafe { (*unsafe { (*__slate_slot_545).offset(-(5 as i32) as isize) }).minor.yy454 }).affExpr = (unsafe { (*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy144 }) as i8;
+}
+break '__join_0;
+} else {
+break '__join_0;
+}
+} else {
+if __t0 == (280 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy144 = 1 as i32;
+}
+break '__join_0;
+} else {
+if __t0 == (282 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy144 = 3 as i32;
+}
+break '__join_0;
+} else {
+if __t0 == (283 as u32) {
+unsafe { sqlite3DropTrigger(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy203 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy144 }) };
+break '__join_0;
+} else {
+if __t0 == (284 as u32) {
+unsafe { sqlite3Attach(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy454 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy454 }, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy454 }) };
+break '__join_0;
+} else {
+if __t0 == (285 as u32) {
+unsafe { sqlite3Detach(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy454 }) };
+break '__join_0;
+} else {
+if __t0 == (288 as u32) {
+unsafe { sqlite3Reindex(pParse, std::ptr::null_mut::<Token>(), std::ptr::null_mut::<Token>()) };
+break '__join_0;
+} else {
+if __t0 == (289 as u32) {
+unsafe { sqlite3Reindex(pParse, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy0) }, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0) }) };
+break '__join_0;
+} else {
+if __t0 == (290 as u32) {
+unsafe { sqlite3Analyze(pParse, std::ptr::null_mut::<Token>(), std::ptr::null_mut::<Token>()) };
+break '__join_0;
+} else {
+if __t0 == (291 as u32) {
+unsafe { sqlite3Analyze(pParse, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy0) }, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0) }) };
+break '__join_0;
+} else {
+if __t0 == (292 as u32) {
+unsafe { sqlite3AlterRenameTable(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy203 }, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0) }) };
+break '__join_0;
+} else {
+if __t0 == (293 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy0.n = ((((unsafe { unsafe { (*pParse).sLastToken.z }.offset_from((unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy0.z }) as *const i8) }) as i64) as i32) as u32).wrapping_add(unsafe { (*pParse).sLastToken.n });
+}
+unsafe { sqlite3AlterFinishAddColumn(pParse, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy0) }) };
+break '__join_0;
+} else {
+if __t0 == (294 as u32) {
+disableLookaside(pParse);
+unsafe { sqlite3AlterBeginAddColumn(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy203 }) };
+unsafe { sqlite3AddColumn(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy0 }, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0 }) };
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(6 as i32) as isize) }).minor.yy0 = unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy0 };
+}
+break '__join_0;
+} else {
+if __t0 == (295 as u32) {
+unsafe { sqlite3AlterDropColumn(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy203 }, (unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0) }) as *const Token) };
+break '__join_0;
+} else {
+if __t0 == (296 as u32) {
+unsafe { sqlite3AlterRenameColumn(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(5 as i32) as isize) }).minor.yy203 }, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy0) }, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0) }) };
+break '__join_0;
+} else {
+if __t0 == (297 as u32) {
+unsafe { sqlite3AlterDropConstraint(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy203 }, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0) }, std::ptr::null_mut::<Token>()) };
+break '__join_0;
+} else {
+if __t0 == (298 as u32) {
+unsafe { sqlite3AlterDropConstraint(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(6 as i32) as isize) }).minor.yy203 }, std::ptr::null_mut::<Token>(), unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy0) }) };
+break '__join_0;
+} else {
+if __t0 == (299 as u32) {
+unsafe { sqlite3AlterSetNotNull(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(7 as i32) as isize) }).minor.yy203 }, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy0) }, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy0) }) };
+break '__join_0;
+} else {
+if __t0 == (300 as u32) {
+unsafe { sqlite3AlterAddConstraint(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(8 as i32) as isize) }).minor.yy203 }, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(6 as i32) as isize) }).minor.yy0) }, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(5 as i32) as isize) }).minor.yy0) }, unsafe { unsafe { (*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy0.z }.offset((1 as i32) as isize) }, (((unsafe { unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy0.z }.offset_from((unsafe { (*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy0.z }) as *const i8) }) as i64) - ((1 as i32) as i64)) as i32, unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy454 }) };
+break '__join_0;
+} else {
+if __t0 == (301 as u32) {
+unsafe { sqlite3AlterAddConstraint(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(6 as i32) as isize) }).minor.yy203 }, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy0) }, std::ptr::null_mut::<Token>(), unsafe { unsafe { (*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy0.z }.offset((1 as i32) as isize) }, (((unsafe { unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy0.z }.offset_from((unsafe { (*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy0.z }) as *const i8) }) as i64) - ((1 as i32) as i64)) as i32, unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy454 }) };
+break '__join_0;
+} else {
+if __t0 == (302 as u32) {
+unsafe { sqlite3VtabFinishParse(pParse, std::ptr::null_mut::<Token>()) };
+break '__join_0;
+} else {
+if __t0 == (303 as u32) {
+unsafe { sqlite3VtabFinishParse(pParse, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0) }) };
+break '__join_0;
+} else {
+if __t0 == (304 as u32) {
+unsafe { sqlite3VtabBeginParse(pParse, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy0) }, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy0) }, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0) }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy144 }) };
+break '__join_0;
+} else {
+if __t0 == (305 as u32) {
+unsafe { sqlite3VtabArgInit(pParse) };
+break '__join_0;
+} else {
+if __t0 == (306 as u32) {
+break '__join_46;
+} else {
+if __t0 == (307 as u32) {
+break '__join_46;
+} else {
+if __t0 == (308 as u32) {
+break '__join_45;
+} else {
+if __t0 == (309 as u32) {
+break '__join_44;
+} else {
+if __t0 == (310 as u32) {
+break '__join_44;
+} else {
+if __t0 == (311 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy462 = ((1 as i32) as i8) as u8;
+}
+break '__join_0;
+} else {
+if __t0 == (312 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy462 = ((0 as i32) as i8) as u8;
+}
+break '__join_0;
+} else {
+if __t0 == (313 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy462 = ((2 as i32) as i8) as u8;
+}
+break '__join_0;
+} else {
+if __t0 == (314 as u32) {
+// /*A-overwrites-X*/
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(5 as i32) as isize) }).minor.yy67 = unsafe { sqlite3CteNew(pParse, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(5 as i32) as isize) }).minor.yy0) }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy14 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy555 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy462 }) };
+}
+break '__join_0;
+} else {
+if __t0 == (315 as u32) {
+unsafe {
+(*pParse).__slate_bits_0.__set_bHasWith((1 as i32) as u32);
+}
+break '__join_0;
+} else {
+if __t0 == (316 as u32) {
+// /*A-overwrites-X*/
+unsafe {
+(*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy59 = unsafe { sqlite3WithAdd(pParse, std::ptr::null_mut::<With>(), unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy67 }) };
+}
+break '__join_0;
+} else {
+if __t0 == (317 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy59 = unsafe { sqlite3WithAdd(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy59 }, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy67 }) };
+}
+break '__join_0;
+} else {
+if __t0 == (318 as u32) {
+0 as i32;
+unsafe { sqlite3WindowChain(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy211 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy211 }) };
+unsafe {
+(*unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy211 }).pNextWin = unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy211 };
+}
+unsafe {
+(*__slate_slot_547).yy211 = unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy211 };
+}
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy211 = unsafe { (*__slate_slot_547).yy211 };
+}
+break '__join_0;
+} else {
+if __t0 == (319 as u32) {
+if (unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy211 }) != std::ptr::null_mut::<Window>() {
+unsafe {
+(*unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy211 }).zName = unsafe { sqlite3DbStrNDup(unsafe { (*pParse).db }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy0.z }, (unsafe { (*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy0.n }) as u64) };
+}
+}
+unsafe {
+(*__slate_slot_547).yy211 = unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy211 };
+}
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy211 = unsafe { (*__slate_slot_547).yy211 };
+}
+break '__join_0;
+} else {
+if __t0 == (320 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy211 = unsafe { sqlite3WindowAssemble(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy211 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy14 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy14 }, std::ptr::null_mut::<Token>()) };
+}
+break '__join_0;
+} else {
+if __t0 == (321 as u32) {
+unsafe {
+(*__slate_slot_547).yy211 = unsafe { sqlite3WindowAssemble(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy211 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy14 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy14 }, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(5 as i32) as isize) }).minor.yy0) }) };
+}
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(5 as i32) as isize) }).minor.yy211 = unsafe { (*__slate_slot_547).yy211 };
+}
+break '__join_0;
+} else {
+if __t0 == (322 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy211 = unsafe { sqlite3WindowAssemble(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy211 }, std::ptr::null_mut::<ExprList>(), unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy14 }, std::ptr::null_mut::<Token>()) };
+}
+break '__join_0;
+} else {
+if __t0 == (323 as u32) {
+unsafe {
+(*__slate_slot_547).yy211 = unsafe { sqlite3WindowAssemble(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy211 }, std::ptr::null_mut::<ExprList>(), unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy14 }, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy0) }) };
+}
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy211 = unsafe { (*__slate_slot_547).yy211 };
+}
+break '__join_0;
+} else {
+if __t0 == (324 as u32) {
+unsafe {
+(*__slate_slot_547).yy211 = unsafe { sqlite3WindowAssemble(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy211 }, std::ptr::null_mut::<ExprList>(), std::ptr::null_mut::<ExprList>(), unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy0) }) };
+}
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy211 = unsafe { (*__slate_slot_547).yy211 };
+}
+break '__join_0;
+} else {
+if __t0 == (325 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset((1 as i32) as isize) }).minor.yy211 = unsafe { sqlite3WindowAlloc(pParse, 0 as i32, 91 as i32, std::ptr::null_mut::<Expr>(), 86 as i32, std::ptr::null_mut::<Expr>(), ((0 as i32) as i8) as u8) };
+}
+break '__join_0;
+} else {
+if __t0 == (326 as u32) {
+unsafe {
+(*__slate_slot_547).yy211 = unsafe { sqlite3WindowAlloc(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy144 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy509.eType }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy509.pExpr }, 86 as i32, std::ptr::null_mut::<Expr>(), unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy462 }) };
+}
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy211 = unsafe { (*__slate_slot_547).yy211 };
+}
+break '__join_0;
+} else {
+if __t0 == (327 as u32) {
+unsafe {
+(*__slate_slot_547).yy211 = unsafe { sqlite3WindowAlloc(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(5 as i32) as isize) }).minor.yy144 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy509.eType }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy509.pExpr }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy509.eType }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy509.pExpr }, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy462 }) };
+}
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(5 as i32) as isize) }).minor.yy211 = unsafe { (*__slate_slot_547).yy211 };
+}
+break '__join_0;
+} else {
+if __t0 == (329 as u32) {
+break '__join_24;
+} else {
+if __t0 == (331 as u32) {
+break '__join_24;
+} else {
+if __t0 == (330 as u32) {
+break '__join_23;
+} else {
+if __t0 == (332 as u32) {
+break '__join_23;
+} else {
+if __t0 == (334 as u32) {
+break '__join_22;
+} else {
+if __t0 == (333 as u32) {
+unsafe {
+(*__slate_slot_547).yy509.eType = ((unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).major }) as u32) as i32;
+}
+unsafe {
+(*__slate_slot_547).yy509.pExpr = unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy454 };
+}
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy509 = unsafe { (*__slate_slot_547).yy509 };
+}
+break '__join_0;
+} else {
+if __t0 == (335 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset((1 as i32) as isize) }).minor.yy462 = ((0 as i32) as i8) as u8;
+}
+break '__join_0;
+} else {
+if __t0 == (336 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy462 = unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy462 };
+}
+break '__join_0;
+} else {
+if __t0 == (337 as u32) {
+} else {
+if __t0 == (338 as u32) {
+} else {
+if __t0 == (339 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy462 = (unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).major }) as u8;
+}
+// /*A-overwrites-X*/
+break '__join_0;
+} else {
+if __t0 == (340 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy211 = unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy211 };
+}
+break '__join_0;
+} else {
+if __t0 == (341 as u32) {
+if (unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy211 }) != std::ptr::null_mut::<Window>() {
+unsafe {
+(*unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy211 }).pFilter = unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy454 };
+}
+} else {
+unsafe { sqlite3ExprDelete(unsafe { (*pParse).db }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy454 }) };
+}
+unsafe {
+(*__slate_slot_547).yy211 = unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy211 };
+}
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy211 = unsafe { (*__slate_slot_547).yy211 };
+}
+break '__join_0;
+} else {
+if __t0 == (342 as u32) {
+unsafe {
+(*__slate_slot_547).yy211 = unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy211 };
+}
+unsafe {
+(*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy211 = unsafe { (*__slate_slot_547).yy211 };
+}
+break '__join_0;
+} else {
+if __t0 == (343 as u32) {
+unsafe {
+(*__slate_slot_547).yy211 = (unsafe { sqlite3DbMallocZero(unsafe { (*pParse).db }, 144 as u64) }) as *mut Window;
+}
+if (unsafe { (*__slate_slot_547).yy211 }) != std::ptr::null_mut::<Window>() {
+unsafe {
+(*unsafe { (*__slate_slot_547).yy211 }).eFrmType = ((167 as i32) as i8) as u8;
+}
+unsafe {
+(*unsafe { (*__slate_slot_547).yy211 }).pFilter = unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy454 };
+}
+} else {
+unsafe { sqlite3ExprDelete(unsafe { (*pParse).db }, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy454 }) };
+}
+unsafe {
+(*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy211 = unsafe { (*__slate_slot_547).yy211 };
+}
+break '__join_0;
+} else {
+if __t0 == (344 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(3 as i32) as isize) }).minor.yy211 = unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy211 };
+}
+0 as i32;
+break '__join_0;
+} else {
+if __t0 == (345 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy211 = (unsafe { sqlite3DbMallocZero(unsafe { (*pParse).db }, 144 as u64) }) as *mut Window;
+}
+if (unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy211 }) != std::ptr::null_mut::<Window>() {
+unsafe {
+(*unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy211 }).zName = unsafe { sqlite3DbStrNDup(unsafe { (*pParse).db }, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0.z }, (unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0.n }) as u64) };
+}
+break '__join_0;
+} else {
+break '__join_0;
+}
+} else {
+if __t0 == (346 as u32) {
+unsafe {
+(*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy454 = unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy454 };
+}
+break '__join_0;
+} else {
+if __t0 == (347 as u32) {
+unsafe {
+(*__slate_slot_547).yy454 = tokenExpr(pParse, ((unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).major }) as u32) as i32, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0 });
+}
+unsafe { sqlite3DequoteNumber(pParse, unsafe { (*__slate_slot_547).yy454 }) };
+unsafe {
+(*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy454 = unsafe { (*__slate_slot_547).yy454 };
+}
+break '__join_0;
+} else {
+{
+}
+// /* (348) input ::= cmdlist */
+// /* (349) cmdlist ::= cmdlist ecmd */
+{
+}
+// /* (350) cmdlist ::= ecmd (OPTIMIZED OUT) */
+0 as i32;
+// /* (351) ecmd ::= SEMI */
+{
+}
+// /* (352) ecmd ::= cmdx SEMI */
+{
+}
+// /* (353) ecmd ::= explain cmdx SEMI (NEVER REDUCES) */
+0 as i32;
+// /* (354) trans_opt ::= */
+{
+}
+// /* (355) trans_opt ::= TRANSACTION */
+{
+}
+// /* (356) trans_opt ::= TRANSACTION nm */
+{
+}
+// /* (357) savepoint_opt ::= SAVEPOINT */
+{
+}
+// /* (358) savepoint_opt ::= */
+{
+}
+// /* (359) cmd ::= create_table create_table_args */
+{
+}
+// /* (360) table_option_set ::= table_option (OPTIMIZED OUT) */
+0 as i32;
+// /* (361) columnlist ::= columnlist COMMA columnname carglist */
+{
+}
+// /* (362) columnlist ::= columnname carglist */
+{
+}
+// /* (363) nm ::= ID|INDEXED|JOIN_KW */
+{
+}
+// /* (364) nm ::= STRING */
+{
+}
+// /* (365) typetoken ::= typename */
+{
+}
+// /* (366) typename ::= ID|STRING */
+{
+}
+// /* (367) signed ::= plus_num (OPTIMIZED OUT) */
+0 as i32;
+// /* (368) signed ::= minus_num (OPTIMIZED OUT) */
+0 as i32;
+// /* (369) carglist ::= carglist ccons */
+{
+}
+// /* (370) carglist ::= */
+{
+}
+// /* (371) ccons ::= NULL onconf */
+{
+}
+// /* (372) ccons ::= GENERATED ALWAYS AS generated */
+{
+}
+// /* (373) ccons ::= AS generated */
+{
+}
+// /* (374) conslist_opt ::= COMMA conslist */
+{
+}
+// /* (375) conslist ::= conslist tconscomma tcons */
+{
+}
+// /* (376) conslist ::= tcons (OPTIMIZED OUT) */
+0 as i32;
+// /* (377) tconscomma ::= */
+{
+}
+// /* (378) defer_subclause_opt ::= defer_subclause (OPTIMIZED OUT) */
+0 as i32;
+// /* (379) resolvetype ::= raisetype (OPTIMIZED OUT) */
+0 as i32;
+// /* (380) selectnowith ::= oneselect (OPTIMIZED OUT) */
+0 as i32;
+// /* (381) oneselect ::= values */
+{
+}
+// /* (382) sclp ::= selcollist COMMA */
+{
+}
+// /* (383) as ::= ID|STRING */
+{
+}
+// /* (384) indexed_opt ::= indexed_by (OPTIMIZED OUT) */
+0 as i32;
+// /* (385) returning ::= */
+{
+}
+// /* (386) expr ::= term (OPTIMIZED OUT) */
+0 as i32;
+// /* (387) likeop ::= LIKE_KW|MATCH */
+{
+}
+// /* (388) case_operand ::= expr */
+{
+}
+// /* (389) exprlist ::= nexprlist */
+{
+}
+// /* (390) nmnum ::= plus_num (OPTIMIZED OUT) */
+0 as i32;
+// /* (391) nmnum ::= nm (OPTIMIZED OUT) */
+0 as i32;
+// /* (392) nmnum ::= ON */
+{
+}
+// /* (393) nmnum ::= DELETE */
+{
+}
+// /* (394) nmnum ::= DEFAULT */
+{
+}
+// /* (395) plus_num ::= INTEGER|FLOAT */
+{
+}
+// /* (396) foreach_clause ::= */
+{
+}
+// /* (397) foreach_clause ::= FOR EACH ROW */
+{
+}
+// /* (398) tridxby ::= */
+{
+}
+// /* (399) database_kw_opt ::= DATABASE */
+{
+}
+// /* (400) database_kw_opt ::= */
+{
+}
+// /* (401) kwcolumn_opt ::= */
+{
+}
+// /* (402) kwcolumn_opt ::= COLUMNKW */
+{
+}
+// /* (403) vtabarglist ::= vtabarg */
+{
+}
+// /* (404) vtabarglist ::= vtabarglist COMMA vtabarg */
+{
+}
+// /* (405) vtabarg ::= vtabarg vtabargtoken */
+{
+}
+// /* (406) anylist ::= */
+{
+}
+// /* (407) anylist ::= anylist LP anylist RP */
+{
+}
+// /* (408) anylist ::= anylist ANY */
+{
+}
+// /* (409) with ::= */
+{
+}
+// /* (410) windowdefn_list ::= windowdefn (OPTIMIZED OUT) */
+0 as i32;
+// /* (411) window ::= frame_opt (OPTIMIZED OUT) */
+0 as i32;
+break '__join_0;
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+                                                                                                                                                                                                                                                                                            {
+                                                                                                                                                                                                                                                                                            }
+                                                                                                                                                                                                                                                                                            // /* frame_exclude ::= CURRENT ROW */
+                                                                                                                                                                                                                                                                                            // /*A-overwrites-X*/
+                                                                                                                                                                                                                                                                                            unsafe {
+                                                                                                                                                                                                                                                                                                (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy462 = (unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).major }) as u8;
+                                                                                                                                                                                                                                                                                            }
+                                                                                                                                                                                                                                                                                            break '__join_0;
+                                                                                                                                                                                                                                                                                        }
+                                                                                                                                                                                                                                                                                        {
+                                                                                                                                                                                                                                                                                        }
+                                                                                                                                                                                                                                                                                        // /* frame_bound_e ::= UNBOUNDED FOLLOWING */
+                                                                                                                                                                                                                                                                                        // /* frame_bound ::= CURRENT ROW */
+                                                                                                                                                                                                                                                                                    }
+                                                                                                                                                                                                                                                                                    {
+                                                                                                                                                                                                                                                                                    }
+                                                                                                                                                                                                                                                                                    unsafe {
+                                                                                                                                                                                                                                                                                        (*__slate_slot_547).yy509.eType = ((unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).major }) as u32) as i32;
+                                                                                                                                                                                                                                                                                    }
+                                                                                                                                                                                                                                                                                    unsafe {
+                                                                                                                                                                                                                                                                                        (*__slate_slot_547).yy509.pExpr = std::ptr::null_mut::<Expr>();
+                                                                                                                                                                                                                                                                                    }
+                                                                                                                                                                                                                                                                                    unsafe {
+                                                                                                                                                                                                                                                                                        (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy509 = unsafe { (*__slate_slot_547).yy509 };
+                                                                                                                                                                                                                                                                                    }
+                                                                                                                                                                                                                                                                                    break '__join_0;
+                                                                                                                                                                                                                                                                                }
+                                                                                                                                                                                                                                                                                {
+                                                                                                                                                                                                                                                                                }
+                                                                                                                                                                                                                                                                                // /* frame_bound_e ::= frame_bound */
+                                                                                                                                                                                                                                                                                unsafe {
+                                                                                                                                                                                                                                                                                    (*__slate_slot_547).yy509 = unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy509 };
+                                                                                                                                                                                                                                                                                }
+                                                                                                                                                                                                                                                                                unsafe {
+                                                                                                                                                                                                                                                                                    (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy509 = unsafe { (*__slate_slot_547).yy509 };
+                                                                                                                                                                                                                                                                                }
+                                                                                                                                                                                                                                                                                break '__join_0;
+                                                                                                                                                                                                                                                                            }
+                                                                                                                                                                                                                                                                            {
+                                                                                                                                                                                                                                                                            }
+                                                                                                                                                                                                                                                                            // /* with ::= WITH RECURSIVE wqlist */
+                                                                                                                                                                                                                                                                            unsafe { sqlite3WithPush(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy59 }, ((1 as i32) as i8) as u8) };
+                                                                                                                                                                                                                                                                            break '__join_0;
+                                                                                                                                                                                                                                                                        }
+                                                                                                                                                                                                                                                                        {
+                                                                                                                                                                                                                                                                        }
+                                                                                                                                                                                                                                                                        // /* vtabargtoken ::= lp anylist RP */
+                                                                                                                                                                                                                                                                        // /* lp ::= LP */
+                                                                                                                                                                                                                                                                    }
+                                                                                                                                                                                                                                                                    {
+                                                                                                                                                                                                                                                                    }
+                                                                                                                                                                                                                                                                    unsafe { sqlite3VtabArgExtend(pParse, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0) }) };
+                                                                                                                                                                                                                                                                    break '__join_0;
+                                                                                                                                                                                                                                                                }
+                                                                                                                                                                                                                                                                {
+                                                                                                                                                                                                                                                                }
+                                                                                                                                                                                                                                                                // /* key_opt ::= KEY expr */
+                                                                                                                                                                                                                                                                unsafe {
+                                                                                                                                                                                                                                                                    (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy454 = unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy454 };
+                                                                                                                                                                                                                                                                }
+                                                                                                                                                                                                                                                                break '__join_0;
+                                                                                                                                                                                                                                                            }
+                                                                                                                                                                                                                                                            {
+                                                                                                                                                                                                                                                            }
+                                                                                                                                                                                                                                                            // /* key_opt ::= */
+                                                                                                                                                                                                                                                            unsafe {
+                                                                                                                                                                                                                                                                (*unsafe { (*__slate_slot_545).offset((1 as i32) as isize) }).minor.yy454 = std::ptr::null_mut::<Expr>();
+                                                                                                                                                                                                                                                            }
+                                                                                                                                                                                                                                                            break '__join_0;
+                                                                                                                                                                                                                                                        }
+                                                                                                                                                                                                                                                        {
+                                                                                                                                                                                                                                                        }
+                                                                                                                                                                                                                                                        // /* trigger_event ::= UPDATE */
+                                                                                                                                                                                                                                                        // /*A-overwrites-X*/
+                                                                                                                                                                                                                                                        unsafe {
+                                                                                                                                                                                                                                                            (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy286.a = ((unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).major }) as u32) as i32;
+                                                                                                                                                                                                                                                        }
+                                                                                                                                                                                                                                                        unsafe {
+                                                                                                                                                                                                                                                            (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy286.b = std::ptr::null_mut::<IdList>();
+                                                                                                                                                                                                                                                        }
+                                                                                                                                                                                                                                                        break '__join_0;
+                                                                                                                                                                                                                                                    }
+                                                                                                                                                                                                                                                    {
+                                                                                                                                                                                                                                                    }
+                                                                                                                                                                                                                                                    // /* raisetype ::= ABORT */
+                                                                                                                                                                                                                                                    unsafe {
+                                                                                                                                                                                                                                                        (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy144 = 2 as i32;
+                                                                                                                                                                                                                                                    }
+                                                                                                                                                                                                                                                    break '__join_0;
+                                                                                                                                                                                                                                                }
+                                                                                                                                                                                                                                                {
+                                                                                                                                                                                                                                                }
+                                                                                                                                                                                                                                                // /* eidlist_opt ::= LP eidlist RP */
+                                                                                                                                                                                                                                                unsafe {
+                                                                                                                                                                                                                                                    (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy14 = unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy14 };
+                                                                                                                                                                                                                                                }
+                                                                                                                                                                                                                                                break '__join_0;
+                                                                                                                                                                                                                                            }
+                                                                                                                                                                                                                                            {
+                                                                                                                                                                                                                                            }
+                                                                                                                                                                                                                                            // /* in_op ::= IN */
+                                                                                                                                                                                                                                            unsafe {
+                                                                                                                                                                                                                                                (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy144 = 0 as i32;
+                                                                                                                                                                                                                                            }
+                                                                                                                                                                                                                                            break '__join_0;
+                                                                                                                                                                                                                                        }
+                                                                                                                                                                                                                                        {
+                                                                                                                                                                                                                                        }
+                                                                                                                                                                                                                                        // /* expr ::= BITNOT expr */
+                                                                                                                                                                                                                                        // /*A-overwrites-B*/
+                                                                                                                                                                                                                                        unsafe {
+                                                                                                                                                                                                                                            (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy454 = unsafe { sqlite3PExpr(pParse, ((unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).major }) as u32) as i32, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy454 }, std::ptr::null_mut::<Expr>()) };
+                                                                                                                                                                                                                                        }
+                                                                                                                                                                                                                                        break '__join_0;
+                                                                                                                                                                                                                                    }
+                                                                                                                                                                                                                                    {
+                                                                                                                                                                                                                                    }
+                                                                                                                                                                                                                                    // /* expr ::= expr LT|GT|GE|LE expr */
+                                                                                                                                                                                                                                    // /* expr ::= expr EQ|NE expr */
+                                                                                                                                                                                                                                }
+                                                                                                                                                                                                                                {
+                                                                                                                                                                                                                                }
+                                                                                                                                                                                                                                // /* expr ::= expr BITAND|BITOR|LSHIFT|RSHIFT expr */
+                                                                                                                                                                                                                            }
+                                                                                                                                                                                                                            {
+                                                                                                                                                                                                                            }
+                                                                                                                                                                                                                            // /* expr ::= expr PLUS|MINUS expr */
+                                                                                                                                                                                                                        }
+                                                                                                                                                                                                                        {
+                                                                                                                                                                                                                        }
+                                                                                                                                                                                                                        // /* expr ::= expr STAR|SLASH|REM expr */
+                                                                                                                                                                                                                    }
+                                                                                                                                                                                                                    {
+                                                                                                                                                                                                                    }
+                                                                                                                                                                                                                    // /* expr ::= expr CONCAT expr */
+                                                                                                                                                                                                                }
+                                                                                                                                                                                                                {
+                                                                                                                                                                                                                }
+                                                                                                                                                                                                                unsafe {
+                                                                                                                                                                                                                    (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy454 = unsafe { sqlite3PExpr(pParse, ((unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).major }) as u32) as i32, unsafe { (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy454 }, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy454 }) };
+                                                                                                                                                                                                                }
+                                                                                                                                                                                                                break '__join_0;
+                                                                                                                                                                                                            }
+                                                                                                                                                                                                            {
+                                                                                                                                                                                                            }
+                                                                                                                                                                                                            // /* term ::= STRING */
+                                                                                                                                                                                                            // /*A-overwrites-X*/
+                                                                                                                                                                                                            unsafe {
+                                                                                                                                                                                                                (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy454 = tokenExpr(pParse, ((unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).major }) as u32) as i32, unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0 });
+                                                                                                                                                                                                            }
+                                                                                                                                                                                                            break '__join_0;
+                                                                                                                                                                                                        }
+                                                                                                                                                                                                        {
+                                                                                                                                                                                                        }
+                                                                                                                                                                                                        // /* where_opt ::= WHERE expr */
+                                                                                                                                                                                                        // /* where_opt_ret ::= WHERE expr */
+                                                                                                                                                                                                    }
+                                                                                                                                                                                                    {
+                                                                                                                                                                                                    }
+                                                                                                                                                                                                    // /* case_else ::= ELSE expr */
+                                                                                                                                                                                                }
+                                                                                                                                                                                                {
+                                                                                                                                                                                                }
+                                                                                                                                                                                                // /* vinto ::= INTO expr */
+                                                                                                                                                                                            }
+                                                                                                                                                                                            {
+                                                                                                                                                                                            }
+                                                                                                                                                                                            unsafe {
+                                                                                                                                                                                                (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy454 = unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy454 };
+                                                                                                                                                                                            }
+                                                                                                                                                                                            break '__join_0;
+                                                                                                                                                                                        }
+                                                                                                                                                                                        {
+                                                                                                                                                                                        }
+                                                                                                                                                                                        // /* limit_opt ::= */
+                                                                                                                                                                                        // /* where_opt ::= */
+                                                                                                                                                                                    }
+                                                                                                                                                                                    {
+                                                                                                                                                                                    }
+                                                                                                                                                                                    // /* where_opt_ret ::= */
+                                                                                                                                                                                }
+                                                                                                                                                                                {
+                                                                                                                                                                                }
+                                                                                                                                                                                // /* case_else ::= */
+                                                                                                                                                                            }
+                                                                                                                                                                            {
+                                                                                                                                                                            }
+                                                                                                                                                                            // /* case_operand ::= */
+                                                                                                                                                                        }
+                                                                                                                                                                        {
+                                                                                                                                                                        }
+                                                                                                                                                                        // /* vinto ::= */
+                                                                                                                                                                    }
+                                                                                                                                                                    {
+                                                                                                                                                                    }
+                                                                                                                                                                    unsafe {
+                                                                                                                                                                        (*unsafe { (*__slate_slot_545).offset((1 as i32) as isize) }).minor.yy454 = std::ptr::null_mut::<Expr>();
+                                                                                                                                                                    }
+                                                                                                                                                                    break '__join_0;
+                                                                                                                                                                }
+                                                                                                                                                                {
+                                                                                                                                                                }
+                                                                                                                                                                // /* nulls ::= */
+                                                                                                                                                                unsafe {
+                                                                                                                                                                    (*unsafe { (*__slate_slot_545).offset((1 as i32) as isize) }).minor.yy144 = -(1 as i32);
+                                                                                                                                                                }
+                                                                                                                                                                break '__join_0;
+                                                                                                                                                            }
+                                                                                                                                                            {
+                                                                                                                                                            }
+                                                                                                                                                            // /* groupby_opt ::= GROUP BY nexprlist */
+                                                                                                                                                            unsafe {
+                                                                                                                                                                (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy14 = unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy14 };
+                                                                                                                                                            }
+                                                                                                                                                            break '__join_0;
+                                                                                                                                                        }
+                                                                                                                                                        {
+                                                                                                                                                        }
+                                                                                                                                                        // /* xfullname ::= nm DOT nm */
+                                                                                                                                                        unsafe {
+                                                                                                                                                            (*__slate_slot_547).yy203 = unsafe { sqlite3SrcListAppend(pParse, std::ptr::null_mut::<SrcList>(), unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy0) }, unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0) }) };
+                                                                                                                                                        }
+                                                                                                                                                        if (((unsafe { (*pParse).eParseMode }) as u32) as i32) >= (2 as i32) && (unsafe { (*__slate_slot_547).yy203 }) != std::ptr::null_mut::<SrcList>() {
+unsafe { sqlite3RenameTokenMap(pParse, (unsafe { (*unsafe { unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_547).yy203 }).a) as *mut SrcItem }.offset((0 as i32) as isize) }).zName }) as *const (), (unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0) }) as *const Token) };
+}
+                                                                                                                                                        unsafe {
+                                                                                                                                                            (*unsafe { (*__slate_slot_545).offset(-(2 as i32) as isize) }).minor.yy203 = unsafe { (*__slate_slot_547).yy203 };
+                                                                                                                                                        }
+                                                                                                                                                        break '__join_0;
+                                                                                                                                                    }
+                                                                                                                                                    {
+                                                                                                                                                    }
+                                                                                                                                                    // /* xfullname ::= nm */
+                                                                                                                                                    unsafe {
+                                                                                                                                                        (*__slate_slot_547).yy203 = unsafe { sqlite3SrcListAppend(pParse, std::ptr::null_mut::<SrcList>(), unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0) }, std::ptr::null_mut::<Token>()) };
+                                                                                                                                                    }
+                                                                                                                                                    if (((unsafe { (*pParse).eParseMode }) as u32) as i32) >= (2 as i32) && (unsafe { (*__slate_slot_547).yy203 }) != std::ptr::null_mut::<SrcList>() {
+unsafe { sqlite3RenameTokenMap(pParse, (unsafe { (*unsafe { unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_547).yy203 }).a) as *mut SrcItem }.offset((0 as i32) as isize) }).zName }) as *const (), (unsafe { std::ptr::addr_of_mut!((*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0) }) as *const Token) };
+}
+                                                                                                                                                    unsafe {
+                                                                                                                                                        (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy203 = unsafe { (*__slate_slot_547).yy203 };
+                                                                                                                                                    }
+                                                                                                                                                    break '__join_0;
+                                                                                                                                                }
+                                                                                                                                                {
+                                                                                                                                                }
+                                                                                                                                                // /* indexed_opt ::= */
+                                                                                                                                                unsafe {
+                                                                                                                                                    (*unsafe { (*__slate_slot_545).offset((1 as i32) as isize) }).minor.yy0.z = std::ptr::null::<i8>();
+                                                                                                                                                }
+                                                                                                                                                unsafe {
+                                                                                                                                                    (*unsafe { (*__slate_slot_545).offset((1 as i32) as isize) }).minor.yy0.n = (0 as i32) as u32;
+                                                                                                                                                }
+                                                                                                                                                break '__join_0;
+                                                                                                                                            }
+                                                                                                                                            {
+                                                                                                                                            }
+                                                                                                                                            // /* stl_prefix ::= */
+                                                                                                                                            unsafe {
+                                                                                                                                                (*unsafe { (*__slate_slot_545).offset((1 as i32) as isize) }).minor.yy203 = std::ptr::null_mut::<SrcList>();
+                                                                                                                                            }
+                                                                                                                                            break '__join_0;
+                                                                                                                                        }
+                                                                                                                                        {
+                                                                                                                                        }
+                                                                                                                                        // /* dbnm ::= DOT nm */
+                                                                                                                                        // /* plus_num ::= PLUS INTEGER|FLOAT */
+                                                                                                                                    }
+                                                                                                                                    {
+                                                                                                                                    }
+                                                                                                                                    // /* minus_num ::= MINUS INTEGER|FLOAT */
+                                                                                                                                }
+                                                                                                                                {
+                                                                                                                                }
+                                                                                                                                unsafe {
+                                                                                                                                    (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy0 = unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy0 };
+                                                                                                                                }
+                                                                                                                                break '__join_0;
+                                                                                                                            }
+                                                                                                                            {
+                                                                                                                            }
+                                                                                                                            // /* orderby_opt ::= */
+                                                                                                                            // /* groupby_opt ::= */
+                                                                                                                        }
+                                                                                                                        {
+                                                                                                                        }
+                                                                                                                        // /* exprlist ::= */
+                                                                                                                    }
+                                                                                                                    {
+                                                                                                                    }
+                                                                                                                    // /* paren_exprlist ::= */
+                                                                                                                }
+                                                                                                                {
+                                                                                                                }
+                                                                                                                // /* eidlist_opt ::= */
+                                                                                                            }
+                                                                                                            {
+                                                                                                            }
+                                                                                                            unsafe {
+                                                                                                                (*unsafe { (*__slate_slot_545).offset((1 as i32) as isize) }).minor.yy14 = std::ptr::null_mut::<ExprList>();
+                                                                                                            }
+                                                                                                            break '__join_0;
+                                                                                                        }
+                                                                                                        {
+                                                                                                        }
+                                                                                                        // /* mvalues ::= mvalues COMMA LP nexprlist RP */
+                                                                                                        unsafe {
+                                                                                                            (*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy555 = unsafe { sqlite3MultiValues(pParse, unsafe { (*unsafe { (*__slate_slot_545).offset(-(4 as i32) as isize) }).minor.yy555 }, unsafe { (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy14 }) };
+                                                                                                        }
+                                                                                                        break '__join_0;
+                                                                                                    }
+                                                                                                    {
+                                                                                                    }
+                                                                                                    // /* multiselect_op ::= EXCEPT|INTERSECT */
+                                                                                                    // /*A-overwrites-OP*/
+                                                                                                    unsafe {
+                                                                                                        (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy144 = ((unsafe { (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).major }) as u32) as i32;
+                                                                                                    }
+                                                                                                    break '__join_0;
+                                                                                                }
+                                                                                                {}
+                                                                                                // /* insert_cmd ::= REPLACE */
+                                                                                                unsafe {
+                                                                                                    (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).minor.yy144 = 5 as i32;
+                                                                                                }
+                                                                                                break '__join_0;
+                                                                                            }
+                                                                                            {}
+                                                                                            // /* orconf ::= */
+                                                                                            unsafe {
+                                                                                                (*unsafe { (*__slate_slot_545).offset((1 as i32) as isize) }).minor.yy144 = 11 as i32;
+                                                                                            }
+                                                                                            break '__join_0;
+                                                                                        }
+                                                                                        {}
+                                                                                        // /* ifexists ::= IF EXISTS */
+                                                                                        // /* between_op ::= NOT BETWEEN */
+                                                                                    }
+                                                                                    {}
+                                                                                    // /* in_op ::= NOT IN */
+                                                                                }
+                                                                                {}
+                                                                                // /* collate ::= COLLATE ID|STRING */
+                                                                            }
+                                                                            {}
+                                                                            unsafe {
+                                                                                (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) }).minor.yy144 = 1 as i32;
+                                                                            }
+                                                                            break '__join_0;
+                                                                        }
+                                                                        {}
+                                                                        // /* orconf ::= OR resolvetype */
+                                                                        // /* insert_cmd ::= INSERT orconf */
+                                                                    }
+                                                                    {}
+                                                                    unsafe {
+                                                                        (*unsafe {
+                                                                            (*__slate_slot_545)
+                                                                                .offset(
+                                                                                    -(1 as i32)
+                                                                                        as isize,
+                                                                                )
+                                                                        })
+                                                                        .minor
+                                                                        .yy144 = unsafe {
+                                                                            (*unsafe {
+                                                                                (*__slate_slot_545)
+                                                                                    .offset(
+                                                                                    (0 as i32)
+                                                                                        as isize,
+                                                                                )
+                                                                            })
+                                                                            .minor
+                                                                            .yy144
+                                                                        };
+                                                                    }
+                                                                    break '__join_0;
+                                                                }
+                                                                {}
+                                                                // /* tcons ::= CONSTRAINT nm */
+                                                                0 as i32;
+                                                                unsafe {
+                                                                    (*pParse)
+                                                                        .u1
+                                                                        .cr
+                                                                        .constraintName = unsafe {
+                                                                        (*unsafe {
+                                                                            (*__slate_slot_545)
+                                                                                .offset(
+                                                                                    (0 as i32)
+                                                                                        as isize,
+                                                                                )
+                                                                        })
+                                                                        .minor
+                                                                        .yy0
+                                                                    };
+                                                                }
+                                                                break '__join_0;
+                                                            }
+                                                            {}
+                                                            // /* conslist_opt ::= */
+                                                            // /* as ::= */
+                                                        }
+                                                        {}
+                                                        unsafe {
+                                                            (*unsafe {
+                                                                (*__slate_slot_545)
+                                                                    .offset((1 as i32) as isize)
+                                                            })
+                                                            .minor
+                                                            .yy0
+                                                            .n = (0 as i32) as u32;
+                                                        }
+                                                        unsafe {
+                                                            (*unsafe {
+                                                                (*__slate_slot_545)
+                                                                    .offset((1 as i32) as isize)
+                                                            })
+                                                            .minor
+                                                            .yy0
+                                                            .z = std::ptr::null::<i8>();
+                                                        }
+                                                        break '__join_0;
+                                                    }
+                                                    {}
+                                                    // /* temp ::= */
+                                                    // /* autoinc ::= */
+                                                }
+                                                {}
+                                                // /* init_deferred_pred_opt ::= */
+                                            }
+                                            {}
+                                            // /* defer_subclause_opt ::= */
+                                        }
+                                        {}
+                                        // /* ifexists ::= */
+                                    }
+                                    {}
+                                    // /* distinct ::= */
+                                }
+                                {}
+                                // /* collate ::= */
+                            }
+                            {}
+                            unsafe {
+                                (*unsafe { (*__slate_slot_545).offset((1 as i32) as isize) })
+                                    .minor
+                                    .yy144 = 0 as i32;
+                            }
+                            break '__join_0;
+                        }
+                        {}
+                        // /* cmd ::= ROLLBACK trans_opt */
+                        unsafe {
+                            sqlite3EndTransaction(
+                                pParse,
+                                ((unsafe {
+                                    (*unsafe { (*__slate_slot_545).offset(-(1 as i32) as isize) })
+                                        .major
+                                }) as u32) as i32,
+                            )
+                        };
+                        break '__join_0;
+                    }
+                    {}
+                    // /* transtype ::= IMMEDIATE */
+                    // /* transtype ::= EXCLUSIVE */
+                }
+                {}
+                // /* range_or_rows ::= RANGE|ROWS|GROUPS */
+            }
+            {}
+            // /*A-overwrites-X*/
+            unsafe {
+                (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) })
+                    .minor
+                    .yy144 = ((unsafe {
+                    (*unsafe { (*__slate_slot_545).offset((0 as i32) as isize) }).major
+                }) as u32) as i32;
+            }
+        }
+        {}
+        0 as i32;
+        *__slate_slot_543 = ((unsafe {
+            *unsafe {
+                unsafe { std::ptr::addr_of!(yyRuleInfoLhs.0) as *const u16 }
+                    .offset(yyruleno as isize)
+            }
+        }) as u32) as i32;
+        *__slate_slot_546 = (unsafe {
+            *unsafe {
+                unsafe { std::ptr::addr_of!(yyRuleInfoNRhs.0) as *const i8 }
+                    .offset(yyruleno as isize)
+            }
+        }) as i32;
+        *__slate_slot_544 = yy_find_reduce_action(
+            unsafe { (*unsafe { (*__slate_slot_545).offset(*__slate_slot_546 as isize) }).stateno },
+            (*__slate_slot_543 as i16) as u16,
+        );
+        // /* There are no SHIFTREDUCE actions on nonterminals because the table
+        //   ** generator has simplified them to pure REDUCE actions. */
+        0 as i32;
+        // /* It is not possible for a REDUCE to be followed by an error */
+        0 as i32;
+        std::ptr::write(__slate_slot_1117, *__slate_slot_545);
+        std::ptr::write(__slate_slot_1118, unsafe {
+            (*__slate_slot_1117).offset((*__slate_slot_546 + (1 as i32)) as isize)
+        });
+        *__slate_slot_545 = *__slate_slot_1118;
+        unsafe {
+            (*yypParser).yytos = *__slate_slot_545;
+        }
+        unsafe {
+            (*(*__slate_slot_545)).stateno = *__slate_slot_544;
+        }
+        unsafe {
+            (*(*__slate_slot_545)).major = (*__slate_slot_543 as i16) as u16;
+        }
+        {}
+        return *__slate_slot_544;
+    }
+    // /* Beginning here are the reduction cases.  A typical example
+    //   ** follows:
+    //   **   case 0:
+    //   **  #line <lineno> <grammarfile>
+    //   **     { ... }           // User supplied code
+    //   **  #line <lineno> <thisfile>
+    //   **     break;
+    //   */
+    // /********** Begin reduce actions **********************************************/
+    // /* explain ::= EXPLAIN */
+    // /* explain ::= EXPLAIN QUERY PLAN */
+    // /* cmdx ::= cmd */
+    // /* cmd ::= BEGIN transtype trans_opt */
+    // /* transtype ::= */
+    // /* transtype ::= DEFERRED */
+    // /* cmd ::= COMMIT|END trans_opt */
+    // /* cmd ::= SAVEPOINT nm */
+    // /* cmd ::= RELEASE savepoint_opt nm */
+    // /* cmd ::= ROLLBACK trans_opt TO savepoint_opt nm */
+    // /* create_table ::= createkw temp TABLE ifnotexists nm dbnm */
+    // /* createkw ::= CREATE */
+    // /* ifnotexists ::= */
+    // /* ifnotexists ::= IF NOT EXISTS */
+    // /* temp ::= TEMP */
+    // /* create_table_args ::= LP columnlist conslist_opt RP table_option_set */
+    // /* create_table_args ::= AS select */
+    // /* table_option_set ::= */
+    // /* table_option_set ::= table_option_set COMMA table_option */
+    // /* table_option ::= WITHOUT nm */
+    // /* table_option ::= nm */
+    // /* columnname ::= nm typetoken */
+    // /* typetoken ::= */
+    // /* typetoken ::= typename LP signed RP */
+    // /* typetoken ::= typename LP signed COMMA signed RP */
+    // /* typename ::= typename ID|STRING */
+    // /* scanpt ::= */
+    // /* scantok ::= */
+    // /* ccons ::= CONSTRAINT nm */
+    // /* ccons ::= DEFAULT scantok term */
+    // /* ccons ::= DEFAULT LP expr RP */
+    // /* ccons ::= DEFAULT PLUS scantok term */
+    // /* ccons ::= DEFAULT MINUS scantok term */
+    // /* ccons ::= DEFAULT scantok ID|INDEXED */
+    // /* ccons ::= NOT NULL onconf */
+    // /* ccons ::= PRIMARY KEY sortorder onconf autoinc */
+    // /* ccons ::= UNIQUE onconf */
+    // /* ccons ::= CHECK LP expr RP */
+    // /* ccons ::= REFERENCES nm eidlist_opt refargs */
+    // /* ccons ::= defer_subclause */
+    // /* ccons ::= COLLATE ID|STRING */
+    // /* generated ::= LP expr RP */
+    // /* generated ::= LP expr RP ID */
+    // /* autoinc ::= AUTOINCR */
+    // /* refargs ::= */
+    // /* refargs ::= refargs refarg */
+    // /* refarg ::= MATCH nm */
+    // /* refarg ::= ON INSERT refact */
+    // /* refarg ::= ON DELETE refact */
+    // /* refarg ::= ON UPDATE refact */
+    // /* refact ::= SET NULL */
+    // /* refact ::= SET DEFAULT */
+    // /* refact ::= CASCADE */
+    // /* refact ::= RESTRICT */
+    // /* refact ::= NO ACTION */
+    // /* defer_subclause ::= NOT DEFERRABLE init_deferred_pred_opt */
+    // /* defer_subclause ::= DEFERRABLE init_deferred_pred_opt */
+    // /* init_deferred_pred_opt ::= INITIALLY DEFERRED */
+    // /* init_deferred_pred_opt ::= INITIALLY IMMEDIATE */
+    // /* tconscomma ::= COMMA */
+    // /* tcons ::= PRIMARY KEY LP sortlist autoinc RP onconf */
+    // /* tcons ::= UNIQUE LP sortlist RP onconf */
+    // /* tcons ::= CHECK LP expr RP onconf */
+    // /* tcons ::= FOREIGN KEY LP eidlist RP REFERENCES nm eidlist_opt refargs defer_subclause_opt */
+    // /* onconf ::= */
+    // /* onconf ::= ON CONFLICT resolvetype */
+    // /* resolvetype ::= IGNORE */
+    // /* resolvetype ::= REPLACE */
+    // /* cmd ::= DROP TABLE ifexists fullname */
+    // /* cmd ::= createkw temp VIEW ifnotexists nm dbnm eidlist_opt AS select */
+    // /* cmd ::= DROP VIEW ifexists fullname */
+    // /* cmd ::= select */
+    // /* select ::= WITH wqlist selectnowith */
+    // /* select ::= WITH RECURSIVE wqlist selectnowith */
+    // /* select ::= selectnowith */
+    // /* selectnowith ::= selectnowith multiselect_op oneselect */
+    // /* multiselect_op ::= UNION */
+    // /* multiselect_op ::= UNION ALL */
+    // /* oneselect ::= SELECT distinct selcollist from where_opt groupby_opt having_opt orderby_opt limit_opt */
+    // /* oneselect ::= SELECT distinct selcollist from where_opt groupby_opt having_opt window_clause orderby_opt limit_opt */
+    // /* values ::= VALUES LP nexprlist RP */
+    // /* oneselect ::= mvalues */
+    // /* mvalues ::= values COMMA LP nexprlist RP */
+    // /* distinct ::= DISTINCT */
+    // /* distinct ::= ALL */
+    // /* sclp ::= */
+    // /* selcollist ::= sclp scanpt expr scanpt as */
+    // /* selcollist ::= sclp scanpt STAR */
+    // /* selcollist ::= sclp scanpt nm DOT STAR */
+    // /* as ::= AS nm */
+    // /* from ::= */
+    // /* from ::= FROM seltablist */
+    // /* stl_prefix ::= seltablist joinop */
+    // /* seltablist ::= stl_prefix nm dbnm as on_using */
+    // /* seltablist ::= stl_prefix nm dbnm as indexed_by on_using */
+    // /* seltablist ::= stl_prefix nm dbnm LP exprlist RP as on_using */
+    // /* seltablist ::= stl_prefix LP select RP as on_using */
+    // /* seltablist ::= stl_prefix LP seltablist RP as on_using */
+    // /* dbnm ::= */
+    // /* fullname ::= nm */
+    // /* fullname ::= nm DOT nm */
+    // /* xfullname ::= nm AS nm */
+    // /* xfullname ::= nm DOT nm AS nm */
+    // /* joinop ::= COMMA|JOIN */
+    // /* joinop ::= JOIN_KW JOIN */
+    // /* joinop ::= JOIN_KW nm JOIN */
+    // /* joinop ::= JOIN_KW nm nm JOIN */
+    // /* on_using ::= ON expr */
+    // /* on_using ::= USING LP idlist RP */
+    // /* on_using ::= */
+    // /* indexed_by ::= INDEXED BY nm */
+    // /* indexed_by ::= NOT INDEXED */
+    // /* orderby_opt ::= ORDER BY sortlist */
+    // /* sortlist ::= sortlist COMMA expr sortorder nulls */
+    // /* sortlist ::= expr sortorder nulls */
+    // /* sortorder ::= ASC */
+    // /* sortorder ::= DESC */
+    // /* sortorder ::= */
+    // /* nulls ::= NULLS FIRST */
+    // /* nulls ::= NULLS LAST */
+    // /* having_opt ::= */
+    // /* having_opt ::= HAVING expr */
+    // /* limit_opt ::= LIMIT expr */
+    // /* limit_opt ::= LIMIT expr OFFSET expr */
+    // /* limit_opt ::= LIMIT expr COMMA expr */
+    // /* cmd ::= with DELETE FROM xfullname indexed_opt where_opt_ret */
+    // /* where_opt_ret ::= RETURNING selcollist */
+    // /* where_opt_ret ::= WHERE expr RETURNING selcollist */
+    // /* cmd ::= with UPDATE orconf xfullname indexed_opt SET setlist from where_opt_ret */
+    // /* setlist ::= setlist COMMA nm EQ expr */
+    // /* setlist ::= setlist COMMA LP idlist RP EQ expr */
+    // /* setlist ::= nm EQ expr */
+    // /* setlist ::= LP idlist RP EQ expr */
+    // /* cmd ::= with insert_cmd INTO xfullname idlist_opt select upsert */
+    // /* cmd ::= with insert_cmd INTO xfullname idlist_opt DEFAULT VALUES returning */
+    // /* upsert ::= */
+    // /* upsert ::= RETURNING selcollist */
+    // /* upsert ::= ON CONFLICT LP sortlist RP where_opt DO UPDATE SET setlist where_opt upsert */
+    // /* upsert ::= ON CONFLICT LP sortlist RP where_opt DO NOTHING upsert */
+    // /* upsert ::= ON CONFLICT DO NOTHING returning */
+    // /* upsert ::= ON CONFLICT DO UPDATE SET setlist where_opt returning */
+    // /* returning ::= RETURNING selcollist */
+    // /* idlist_opt ::= */
+    // /* idlist_opt ::= LP idlist RP */
+    // /* idlist ::= idlist COMMA nm */
+    // /* idlist ::= nm */
+    // /* expr ::= LP expr RP */
+    // /* expr ::= ID|INDEXED|JOIN_KW */
+    // /* expr ::= nm DOT nm */
+    // /* expr ::= nm DOT nm DOT nm */
+    // /* term ::= NULL|FLOAT|BLOB */
+    // /* term ::= INTEGER */
+    // /* expr ::= VARIABLE */
+    // /* expr ::= expr COLLATE ID|STRING */
+    // /* expr ::= CAST LP expr AS typetoken RP */
+    // /* expr ::= ID|INDEXED|JOIN_KW LP distinct exprlist RP */
+    // /* expr ::= ID|INDEXED|JOIN_KW LP distinct exprlist ORDER BY sortlist RP */
+    // /* expr ::= ID|INDEXED|JOIN_KW LP STAR RP */
+    // /* expr ::= ID|INDEXED|JOIN_KW LP distinct exprlist RP filter_over */
+    // /* expr ::= ID|INDEXED|JOIN_KW LP distinct exprlist ORDER BY sortlist RP filter_over */
+    // /* expr ::= ID|INDEXED|JOIN_KW LP STAR RP filter_over */
+    // /* term ::= CTIME_KW */
+    // /* expr ::= LP nexprlist COMMA expr RP */
+    // /* expr ::= expr AND expr */
+    // /* expr ::= expr OR expr */
+    // /* likeop ::= NOT LIKE_KW|MATCH */
+    // /* expr ::= expr likeop expr */
+    // /* expr ::= expr likeop expr ESCAPE expr */
+    // /* expr ::= expr ISNULL|NOTNULL */
+    // /* expr ::= expr NOT NULL */
+    // /* expr ::= expr IS expr */
+    // /* expr ::= expr IS NOT expr */
+    // /* expr ::= expr IS NOT DISTINCT FROM expr */
+    // /* expr ::= expr IS DISTINCT FROM expr */
+    // /* expr ::= NOT expr */
+    // /* expr ::= PLUS|MINUS expr */
+    // /* expr ::= expr PTR expr */
+    // /* between_op ::= BETWEEN */
+    // /* expr ::= expr between_op expr AND expr */
+    // /* expr ::= expr in_op LP exprlist RP */
+    // /* expr ::= LP select RP */
+    // /* expr ::= expr in_op LP select RP */
+    // /* expr ::= expr in_op nm dbnm paren_exprlist */
+    // /* expr ::= EXISTS LP select RP */
+    // /* expr ::= CASE case_operand case_exprlist case_else END */
+    // /* case_exprlist ::= case_exprlist WHEN expr THEN expr */
+    // /* case_exprlist ::= WHEN expr THEN expr */
+    // /* nexprlist ::= nexprlist COMMA expr */
+    // /* nexprlist ::= expr */
+    // /* paren_exprlist ::= LP exprlist RP */
+    // /* cmd ::= createkw uniqueflag INDEX ifnotexists nm dbnm ON nm LP sortlist RP where_opt */
+    // /* uniqueflag ::= UNIQUE */
+    // /* uniqueflag ::= */
+    // /* eidlist ::= eidlist COMMA nm collate sortorder */
+    // /* eidlist ::= nm collate sortorder */
+    // /* cmd ::= DROP INDEX ifexists fullname */
+    // /* cmd ::= VACUUM vinto */
+    // /* cmd ::= VACUUM nm vinto */
+    // /* cmd ::= PRAGMA nm dbnm */
+    // /* cmd ::= PRAGMA nm dbnm EQ nmnum */
+    // /* cmd ::= PRAGMA nm dbnm LP nmnum RP */
+    // /* cmd ::= PRAGMA nm dbnm EQ minus_num */
+    // /* cmd ::= PRAGMA nm dbnm LP minus_num RP */
+    // /* cmd ::= createkw trigger_decl BEGIN trigger_cmd_list END */
+    // /* trigger_decl ::= temp TRIGGER ifnotexists nm dbnm trigger_time trigger_event ON fullname foreach_clause when_clause */
+    // /* trigger_time ::= BEFORE|AFTER */
+    // /* trigger_time ::= INSTEAD OF */
+    // /* trigger_time ::= */
+    // /* trigger_event ::= DELETE|INSERT */
+    // /* trigger_event ::= UPDATE OF idlist */
+    // /* when_clause ::= */
+    // /* when_clause ::= WHEN expr */
+    // /* trigger_cmd_list ::= trigger_cmd_list trigger_cmd SEMI */
+    // /* trigger_cmd_list ::= trigger_cmd SEMI */
+    // /* tridxby ::= INDEXED BY nm */
+    // /* tridxby ::= NOT INDEXED */
+    // /* trigger_cmd ::= UPDATE orconf xfullname tridxby SET setlist from where_opt scanpt */
+    // /* trigger_cmd ::= scanpt insert_cmd INTO xfullname idlist_opt select upsert scanpt */
+    // /* trigger_cmd ::= DELETE FROM xfullname tridxby where_opt scanpt */
+    // /* trigger_cmd ::= scanpt select scanpt */
+    // /* expr ::= RAISE LP IGNORE RP */
+    // /* expr ::= RAISE LP raisetype COMMA expr RP */
+    // /* raisetype ::= ROLLBACK */
+    // /* raisetype ::= FAIL */
+    // /* cmd ::= DROP TRIGGER ifexists fullname */
+    // /* cmd ::= ATTACH database_kw_opt expr AS expr key_opt */
+    // /* cmd ::= DETACH database_kw_opt expr */
+    // /* cmd ::= REINDEX */
+    // /* cmd ::= REINDEX nm dbnm */
+    // /* cmd ::= ANALYZE */
+    // /* cmd ::= ANALYZE nm dbnm */
+    // /* cmd ::= ALTER TABLE fullname RENAME TO nm */
+    // /* cmd ::= alter_add carglist */
+    // /* alter_add ::= ALTER TABLE fullname ADD kwcolumn_opt nm typetoken */
+    // /* cmd ::= ALTER TABLE fullname DROP kwcolumn_opt nm */
+    // /* cmd ::= ALTER TABLE fullname RENAME kwcolumn_opt nm TO nm */
+    // /* cmd ::= ALTER TABLE fullname DROP CONSTRAINT nm */
+    // /* cmd ::= ALTER TABLE fullname ALTER kwcolumn_opt nm DROP NOT NULL */
+    // /* cmd ::= ALTER TABLE fullname ALTER kwcolumn_opt nm SET NOT NULL onconf */
+    // /* cmd ::= ALTER TABLE fullname ADD CONSTRAINT nm CHECK LP expr RP onconf */
+    // /* cmd ::= ALTER TABLE fullname ADD CHECK LP expr RP onconf */
+    // /* cmd ::= create_vtab */
+    // /* cmd ::= create_vtab LP vtabarglist RP */
+    // /* create_vtab ::= createkw VIRTUAL TABLE ifnotexists nm dbnm USING nm */
+    // /* vtabarg ::= */
+    // /* vtabargtoken ::= ANY */
+    // /* with ::= WITH wqlist */
+    // /* wqas ::= AS */
+    // /* wqas ::= AS MATERIALIZED */
+    // /* wqas ::= AS NOT MATERIALIZED */
+    // /* wqitem ::= withnm eidlist_opt wqas LP select RP */
+    // /* withnm ::= nm */
+    // /* wqlist ::= wqitem */
+    // /* wqlist ::= wqlist COMMA wqitem */
+    // /* windowdefn_list ::= windowdefn_list COMMA windowdefn */
+    // /* windowdefn ::= nm AS LP window RP */
+    // /* window ::= PARTITION BY nexprlist orderby_opt frame_opt */
+    // /* window ::= nm PARTITION BY nexprlist orderby_opt frame_opt */
+    // /* window ::= ORDER BY sortlist frame_opt */
+    // /* window ::= nm ORDER BY sortlist frame_opt */
+    // /* window ::= nm frame_opt */
+    // /* frame_opt ::= */
+    // /* frame_opt ::= range_or_rows frame_bound_s frame_exclude_opt */
+    // /* frame_opt ::= range_or_rows BETWEEN frame_bound_s AND frame_bound_e frame_exclude_opt */
+    // /* frame_bound_s ::= frame_bound */
+    // /* frame_bound_s ::= UNBOUNDED PRECEDING */
+    // /* frame_bound ::= expr PRECEDING|FOLLOWING */
+    // /* frame_exclude_opt ::= */
+    // /* frame_exclude_opt ::= EXCLUDE frame_exclude */
+    // /* frame_exclude ::= NO OTHERS */
+    // /* frame_exclude ::= GROUP|TIES */
+    // /* window_clause ::= WINDOW windowdefn_list */
+    // /* filter_over ::= filter_clause over_clause */
+    // /* filter_over ::= over_clause */
+    // /* filter_over ::= filter_clause */
+    // /* over_clause ::= OVER LP window RP */
+    // /* over_clause ::= OVER nm */
+    // /* filter_clause ::= FILTER LP WHERE expr RP */
+    // /* term ::= QNUMBER */
+    // /********** End reduce actions ************************************************/
+    return unsafe { std::mem::zeroed() };
+}
+
+// /* The parser */
+// /* Number of the rule by which to reduce */
+// /* Lookahead token, or YYNOCODE if none */
+// /* Value of the lookahead token */
+// /* %extra_context */
+// /*
+// ** The following code executes when the parse fails
+// */
+// /*
+// ** The following code executes when a syntax error first occurs.
+// */
+fn yy_syntax_error(mut yypParser: *mut yyParser, mut yymajor: i32, mut yyminor: Token) {
+    let mut pParse: *mut Parse = unsafe { (*yypParser).pParse };
+    // /************ Begin %syntax_error code ****************************************/
+    // /* Silence some compiler warnings */
+    yymajor;
+    if (unsafe { *unsafe { yyminor.z.offset((0 as i32) as isize) } }) != (0 as i8) {
+        parserSyntaxError(pParse, std::ptr::addr_of_mut!(yyminor));
+    } else {
+        unsafe {
+            sqlite3ErrorMsg(
+                pParse,
+                (b"incomplete input\0".as_ptr() as *mut i8) as *const i8,
+            )
+        };
+    }
+    // /************ End %syntax_error code ******************************************/
+    // /* Suppress warning about unused %extra_argument variable */
+    unsafe {
+        (*yypParser).pParse = pParse;
+    }
+}
