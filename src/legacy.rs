@@ -1,3 +1,17 @@
+//! 2001 September 15
+//!
+//! The author disclaims copyright to this source code.  In place of
+//! a legal notice, here is a blessing:
+//!
+//!    May you do good and not evil.
+//!    May you find forgiveness for yourself and forgive others.
+//!    May you share freely, never taking more than you give.
+//!
+//!
+//! Main file for the SQLite library.  The routines in this file
+//! implement the programmer interface to the library.  Routines in
+//! other files are for internal use by SQLite and should not be
+//! accessed by users of the library.
 unsafe extern "C" {
     static mut sqlite3CtypeMap: [u8; 0];
     fn sqlite3_errmsg(__v319: *mut sqlite3) -> *const i8;
@@ -24,6 +38,368 @@ unsafe extern "C" {
     fn sqlite3Error(__v344: *mut sqlite3, __v345: i32);
     fn sqlite3OomFault(__v346: *mut sqlite3) -> *mut ();
     fn sqlite3ApiExit(db: *mut sqlite3, __v348: i32) -> i32;
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_file {
+    pMethods: *const sqlite3_io_methods,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_io_methods {
+    iVersion: i32,
+    xClose: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file) -> i32>,
+    xRead: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, *mut (), i32, i64) -> i32>,
+    xWrite: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, *const (), i32, i64) -> i32>,
+    xTruncate: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i64) -> i32>,
+    xSync: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32) -> i32>,
+    xFileSize: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, *mut i64) -> i32>,
+    xLock: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32) -> i32>,
+    xUnlock: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32) -> i32>,
+    xCheckReservedLock: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, *mut i32) -> i32>,
+    xFileControl: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32, *mut ()) -> i32>,
+    xSectorSize: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file) -> i32>,
+    xDeviceCharacteristics: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file) -> i32>,
+    xShmMap:
+        Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32, i32, i32, *mut *mut ()) -> i32>,
+    xShmLock: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32, i32, i32) -> i32>,
+    xShmBarrier: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file)>,
+    xShmUnmap: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32) -> i32>,
+    xFetch: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i64, i32, *mut *mut ()) -> i32>,
+    xUnfetch: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i64, *mut ()) -> i32>,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_vfs {
+    iVersion: i32,
+    szOsFile: i32,
+    mxPathname: i32,
+    pNext: *mut sqlite3_vfs,
+    zName: *const i8,
+    pAppData: *mut (),
+    xOpen: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vfs,
+            *const i8,
+            *mut sqlite3_file,
+            i32,
+            *mut i32,
+        ) -> i32,
+    >,
+    xDelete: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8, i32) -> i32>,
+    xAccess: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8, i32, *mut i32) -> i32>,
+    xFullPathname:
+        Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8, i32, *mut i8) -> i32>,
+    xDlOpen: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8) -> *mut ()>,
+    xDlError: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, i32, *mut i8)>,
+    xDlSym: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vfs,
+            *mut (),
+            *const i8,
+        ) -> Option<unsafe extern "C-unwind" fn()>,
+    >,
+    xDlClose: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *mut ())>,
+    xRandomness: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, i32, *mut i8) -> i32>,
+    xSleep: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, i32) -> i32>,
+    xCurrentTime: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *mut f64) -> i32>,
+    xGetLastError: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, i32, *mut i8) -> i32>,
+    xCurrentTimeInt64: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *mut i64) -> i32>,
+    xSetSystemCall: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vfs,
+            *const i8,
+            Option<unsafe extern "C-unwind" fn()>,
+        ) -> i32,
+    >,
+    xGetSystemCall: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vfs,
+            *const i8,
+        ) -> Option<unsafe extern "C-unwind" fn()>,
+    >,
+    xNextSystemCall: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8) -> *const i8>,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_mutex {}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_module {
+    iVersion: i32,
+    xCreate: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3,
+            *mut (),
+            i32,
+            *const *const i8,
+            *mut *mut sqlite3_vtab,
+            *mut *mut i8,
+        ) -> i32,
+    >,
+    xConnect: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3,
+            *mut (),
+            i32,
+            *const *const i8,
+            *mut *mut sqlite3_vtab,
+            *mut *mut i8,
+        ) -> i32,
+    >,
+    xBestIndex:
+        Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, *mut sqlite3_index_info) -> i32>,
+    xDisconnect: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
+    xDestroy: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
+    xOpen: Option<
+        unsafe extern "C-unwind" fn(*mut sqlite3_vtab, *mut *mut sqlite3_vtab_cursor) -> i32,
+    >,
+    xClose: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor) -> i32>,
+    xFilter: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vtab_cursor,
+            i32,
+            *const i8,
+            i32,
+            *mut *mut sqlite3_value,
+        ) -> i32,
+    >,
+    xNext: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor) -> i32>,
+    xEof: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor) -> i32>,
+    xColumn: Option<
+        unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor, *mut sqlite3_context, i32) -> i32,
+    >,
+    xRowid: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor, *mut i64) -> i32>,
+    xUpdate: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vtab,
+            i32,
+            *mut *mut sqlite3_value,
+            *mut i64,
+        ) -> i32,
+    >,
+    xBegin: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
+    xSync: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
+    xCommit: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
+    xRollback: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
+    xFindFunction: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vtab,
+            i32,
+            *const i8,
+            *mut Option<
+                unsafe extern "C-unwind" fn(*mut sqlite3_context, i32, *mut *mut sqlite3_value),
+            >,
+            *mut *mut (),
+        ) -> i32,
+    >,
+    xRename: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, *const i8) -> i32>,
+    xSavepoint: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, i32) -> i32>,
+    xRelease: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, i32) -> i32>,
+    xRollbackTo: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, i32) -> i32>,
+    xShadowName: Option<unsafe extern "C-unwind" fn(*const i8) -> i32>,
+    xIntegrity: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vtab,
+            *const i8,
+            *const i8,
+            i32,
+            *mut *mut i8,
+        ) -> i32,
+    >,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_stmt {}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_value {}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_context {}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_index_info {
+    nConstraint: i32,
+    aConstraint: *mut sqlite3_index_constraint,
+    nOrderBy: i32,
+    aOrderBy: *mut sqlite3_index_orderby,
+    aConstraintUsage: *mut sqlite3_index_constraint_usage,
+    idxNum: i32,
+    idxStr: *mut i8,
+    needToFreeIdxStr: i32,
+    orderByConsumed: i32,
+    estimatedCost: f64,
+    estimatedRows: i64,
+    idxFlags: i32,
+    colUsed: u64,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_vtab {
+    pModule: *const sqlite3_module,
+    nRef: i32,
+    zErrMsg: *mut i8,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_vtab_cursor {
+    pVtab: *mut sqlite3_vtab,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Hash {
+    htsize: u32,
+    count: u32,
+    first: *mut HashElem,
+    ht: *mut _ht,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_index_constraint {
+    iColumn: i32,
+    op: u8,
+    usable: u8,
+    iTermOffset: i32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_index_orderby {
+    iColumn: i32,
+    desc: u8,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_index_constraint_usage {
+    argvIndex: i32,
+    omit: u8,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct HashElem {
+    next: *mut HashElem,
+    prev: *mut HashElem,
+    data: *mut (),
+    pKey: *const i8,
+    h: u32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct BusyHandler {
+    xBusyHandler: Option<unsafe extern "C-unwind" fn(*mut (), i32) -> i32>,
+    pBusyArg: *mut (),
+    nBusy: i32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct _ht {
+    count: u32,
+    chain: *mut HashElem,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct SubrtnSig {
+    selId: i32,
+    bComplete: u8,
+    zAff: *mut i8,
+    iTable: i32,
+    iAddr: i32,
+    regReturn: i32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct VdbeOp {
+    opcode: u8,
+    p4type: i8,
+    p5: u16,
+    p1: i32,
+    p2: i32,
+    p3: i32,
+    p4: p4union,
+    zComment: *mut i8,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct SubProgram {
+    aOp: *mut VdbeOp,
+    nOp: i32,
+    nMem: i32,
+    nCsr: i32,
+    aOnce: *mut u8,
+    token: *mut (),
+    pNext: *mut SubProgram,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Db {
+    zDbSName: *mut i8,
+    pBt: *mut Btree,
+    safety_level: u8,
+    bSyncSet: u8,
+    pSchema: *mut Schema,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Schema {
+    schema_cookie: i32,
+    iGeneration: i32,
+    tblHash: Hash,
+    idxHash: Hash,
+    trigHash: Hash,
+    fkeyHash: Hash,
+    pSeqTab: *mut Table,
+    file_format: u8,
+    enc: u8,
+    schemaFlags: u16,
+    cache_size: i32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Lookaside {
+    bDisable: u32,
+    sz: u16,
+    szTrue: u16,
+    bMalloced: u8,
+    nSlot: u32,
+    anStat: [u32; 3],
+    pInit: *mut LookasideSlot,
+    pFree: *mut LookasideSlot,
+    pSmallInit: *mut LookasideSlot,
+    pSmallFree: *mut LookasideSlot,
+    pMiddle: *mut (),
+    pStart: *mut (),
+    pEnd: *mut (),
+    pTrueEnd: *mut (),
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct LookasideSlot {
+    pNext: *mut LookasideSlot,
 }
 
 #[repr(C)]
@@ -133,277 +509,163 @@ struct sqlite3 {
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct sqlite3_file {
-    pMethods: *const sqlite3_io_methods,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct sqlite3_io_methods {
-    iVersion: i32,
-    xClose: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file) -> i32>,
-    xRead: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, *mut (), i32, i64) -> i32>,
-    xWrite: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, *const (), i32, i64) -> i32>,
-    xTruncate: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i64) -> i32>,
-    xSync: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32) -> i32>,
-    xFileSize: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, *mut i64) -> i32>,
-    xLock: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32) -> i32>,
-    xUnlock: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32) -> i32>,
-    xCheckReservedLock: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, *mut i32) -> i32>,
-    xFileControl: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32, *mut ()) -> i32>,
-    xSectorSize: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file) -> i32>,
-    xDeviceCharacteristics: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file) -> i32>,
-    xShmMap:
-        Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32, i32, i32, *mut *mut ()) -> i32>,
-    xShmLock: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32, i32, i32) -> i32>,
-    xShmBarrier: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file)>,
-    xShmUnmap: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32) -> i32>,
-    xFetch: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i64, i32, *mut *mut ()) -> i32>,
-    xUnfetch: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i64, *mut ()) -> i32>,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct sqlite3_mutex {}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct sqlite3_vfs {
-    iVersion: i32,
-    szOsFile: i32,
-    mxPathname: i32,
-    pNext: *mut sqlite3_vfs,
+struct FuncDef {
+    nArg: i16,
+    funcFlags: u32,
+    pUserData: *mut (),
+    pNext: *mut FuncDef,
+    xSFunc: Option<unsafe extern "C-unwind" fn(*mut sqlite3_context, i32, *mut *mut sqlite3_value)>,
+    xFinalize: Option<unsafe extern "C-unwind" fn(*mut sqlite3_context)>,
+    xValue: Option<unsafe extern "C-unwind" fn(*mut sqlite3_context)>,
+    xInverse:
+        Option<unsafe extern "C-unwind" fn(*mut sqlite3_context, i32, *mut *mut sqlite3_value)>,
     zName: *const i8,
-    pAppData: *mut (),
-    xOpen: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3_vfs,
-            *const i8,
-            *mut sqlite3_file,
-            i32,
-            *mut i32,
-        ) -> i32,
-    >,
-    xDelete: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8, i32) -> i32>,
-    xAccess: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8, i32, *mut i32) -> i32>,
-    xFullPathname:
-        Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8, i32, *mut i8) -> i32>,
-    xDlOpen: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8) -> *mut ()>,
-    xDlError: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, i32, *mut i8)>,
-    xDlSym: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3_vfs,
-            *mut (),
-            *const i8,
-        ) -> Option<unsafe extern "C-unwind" fn()>,
-    >,
-    xDlClose: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *mut ())>,
-    xRandomness: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, i32, *mut i8) -> i32>,
-    xSleep: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, i32) -> i32>,
-    xCurrentTime: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *mut f64) -> i32>,
-    xGetLastError: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, i32, *mut i8) -> i32>,
-    xCurrentTimeInt64: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *mut i64) -> i32>,
-    xSetSystemCall: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3_vfs,
-            *const i8,
-            Option<unsafe extern "C-unwind" fn()>,
-        ) -> i32,
-    >,
-    xGetSystemCall: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3_vfs,
-            *const i8,
-        ) -> Option<unsafe extern "C-unwind" fn()>,
-    >,
-    xNextSystemCall: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8) -> *const i8>,
+    u: __SlateRecord158,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct sqlite3_stmt {}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct sqlite3_value {}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct sqlite3_context {}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct sqlite3_vtab {
-    pModule: *const sqlite3_module,
+struct FuncDestructor {
     nRef: i32,
-    zErrMsg: *mut i8,
+    xDestroy: Option<unsafe extern "C-unwind" fn(*mut ())>,
+    pUserData: *mut (),
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct sqlite3_index_info {
-    nConstraint: i32,
-    aConstraint: *mut sqlite3_index_constraint,
-    nOrderBy: i32,
-    aOrderBy: *mut sqlite3_index_orderby,
-    aConstraintUsage: *mut sqlite3_index_constraint_usage,
-    idxNum: i32,
-    idxStr: *mut i8,
-    needToFreeIdxStr: i32,
-    orderByConsumed: i32,
-    estimatedCost: f64,
-    estimatedRows: i64,
-    idxFlags: i32,
-    colUsed: u64,
+struct Savepoint {
+    zName: *mut i8,
+    nDeferredCons: i64,
+    nDeferredImmCons: i64,
+    pNext: *mut Savepoint,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct sqlite3_vtab_cursor {
+struct Module {
+    pModule: *const sqlite3_module,
+    zName: *const i8,
+    nRefModule: i32,
+    pAux: *mut (),
+    xDestroy: Option<unsafe extern "C-unwind" fn(*mut ())>,
+    pEpoTab: *mut Table,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Column {
+    zCnName: *mut i8,
+    __slate_bits_0: __slate_bits::__SlateBits63U0,
+    affinity: i8,
+    szEst: u8,
+    hName: u8,
+    iDflt: u16,
+    colFlags: u16,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct CollSeq {
+    zName: *mut i8,
+    enc: u8,
+    pUser: *mut (),
+    xCmp: Option<unsafe extern "C-unwind" fn(*mut (), i32, *const (), i32, *const ()) -> i32>,
+    xDel: Option<unsafe extern "C-unwind" fn(*mut ())>,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct VTable {
+    db: *mut sqlite3,
+    pMod: *mut Module,
     pVtab: *mut sqlite3_vtab,
+    nRef: i32,
+    bConstraint: u8,
+    bAllSchemas: u8,
+    eVtabRisk: u8,
+    iSavepoint: i32,
+    pNext: *mut VTable,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct sqlite3_module {
-    iVersion: i32,
-    xCreate: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3,
-            *mut (),
-            i32,
-            *const *const i8,
-            *mut *mut sqlite3_vtab,
-            *mut *mut i8,
-        ) -> i32,
-    >,
-    xConnect: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3,
-            *mut (),
-            i32,
-            *const *const i8,
-            *mut *mut sqlite3_vtab,
-            *mut *mut i8,
-        ) -> i32,
-    >,
-    xBestIndex:
-        Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, *mut sqlite3_index_info) -> i32>,
-    xDisconnect: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
-    xDestroy: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
-    xOpen: Option<
-        unsafe extern "C-unwind" fn(*mut sqlite3_vtab, *mut *mut sqlite3_vtab_cursor) -> i32,
-    >,
-    xClose: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor) -> i32>,
-    xFilter: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3_vtab_cursor,
-            i32,
-            *const i8,
-            i32,
-            *mut *mut sqlite3_value,
-        ) -> i32,
-    >,
-    xNext: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor) -> i32>,
-    xEof: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor) -> i32>,
-    xColumn: Option<
-        unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor, *mut sqlite3_context, i32) -> i32,
-    >,
-    xRowid: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor, *mut i64) -> i32>,
-    xUpdate: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3_vtab,
-            i32,
-            *mut *mut sqlite3_value,
-            *mut i64,
-        ) -> i32,
-    >,
-    xBegin: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
-    xSync: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
-    xCommit: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
-    xRollback: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
-    xFindFunction: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3_vtab,
-            i32,
-            *const i8,
-            *mut Option<
-                unsafe extern "C-unwind" fn(*mut sqlite3_context, i32, *mut *mut sqlite3_value),
-            >,
-            *mut *mut (),
-        ) -> i32,
-    >,
-    xRename: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, *const i8) -> i32>,
-    xSavepoint: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, i32) -> i32>,
-    xRelease: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, i32) -> i32>,
-    xRollbackTo: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, i32) -> i32>,
-    xShadowName: Option<unsafe extern "C-unwind" fn(*const i8) -> i32>,
-    xIntegrity: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3_vtab,
-            *const i8,
-            *const i8,
-            i32,
-            *mut *mut i8,
-        ) -> i32,
-    >,
+struct Table {
+    zName: *mut i8,
+    aCol: *mut Column,
+    pIndex: *mut Index,
+    zColAff: *mut i8,
+    pCheck: *mut ExprList,
+    tnum: u32,
+    nTabRef: u32,
+    tabFlags: u32,
+    iPKey: i16,
+    nCol: i16,
+    nNVCol: i16,
+    nRowLogEst: i16,
+    szTabRow: i16,
+    keyConf: u8,
+    eTabType: u8,
+    u: __SlateRecord159,
+    pTrigger: *mut Trigger,
+    pSchema: *mut Schema,
+    aHx: [u8; 16],
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct sqlite3_index_constraint {
-    iColumn: i32,
-    op: u8,
-    usable: u8,
-    iTermOffset: i32,
+struct FKey {
+    pFrom: *mut Table,
+    pNextFrom: *mut FKey,
+    zTo: *mut i8,
+    pNextTo: *mut FKey,
+    pPrevTo: *mut FKey,
+    nCol: i32,
+    isDeferred: u8,
+    aAction: [u8; 2],
+    apTrigger: [*mut Trigger; 2],
+    aCol: [sColMap; 0],
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct sqlite3_index_orderby {
-    iColumn: i32,
-    desc: u8,
+struct KeyInfo {
+    nRef: u32,
+    enc: u8,
+    nKeyField: u16,
+    nAllField: u16,
+    db: *mut sqlite3,
+    aSortFlags: *mut u8,
+    aColl: [*mut CollSeq; 0],
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct sqlite3_index_constraint_usage {
-    argvIndex: i32,
-    omit: u8,
+struct Index {
+    zName: *mut i8,
+    aiColumn: *mut i16,
+    aiRowLogEst: *mut i16,
+    pTable: *mut Table,
+    zColAff: *mut i8,
+    pNext: *mut Index,
+    pSchema: *mut Schema,
+    aSortOrder: *mut u8,
+    azColl: *mut *const i8,
+    pPartIdxWhere: *mut Expr,
+    aColExpr: *mut ExprList,
+    tnum: u32,
+    szIdxRow: i16,
+    nKeyCol: u16,
+    nColumn: u16,
+    onError: u8,
+    __slate_bits_0: __slate_bits::__SlateBits87U0,
+    colNotIdxed: u64,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct Hash {
-    htsize: u32,
-    count: u32,
-    first: *mut HashElem,
-    ht: *mut _ht,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct HashElem {
-    next: *mut HashElem,
-    prev: *mut HashElem,
-    data: *mut (),
-    pKey: *const i8,
-    h: u32,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct _ht {
-    count: u32,
-    chain: *mut HashElem,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct BusyHandler {
-    xBusyHandler: Option<unsafe extern "C-unwind" fn(*mut (), i32) -> i32>,
-    pBusyArg: *mut (),
-    nBusy: i32,
+struct Token {
+    z: *const i8,
+    n: u32,
 }
 
 #[repr(C)]
@@ -422,94 +684,6 @@ struct AggInfo {
     aFunc: *mut AggInfo_func,
     nFunc: i32,
     selId: u32,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct AutoincInfo {
-    pNext: *mut AutoincInfo,
-    pTab: *mut Table,
-    iDb: i32,
-    regCtr: i32,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct CollSeq {
-    zName: *mut i8,
-    enc: u8,
-    pUser: *mut (),
-    xCmp: Option<unsafe extern "C-unwind" fn(*mut (), i32, *const (), i32, *const ()) -> i32>,
-    xDel: Option<unsafe extern "C-unwind" fn(*mut ())>,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Column {
-    zCnName: *mut i8,
-    __slate_bits_0: __slate_bits::__SlateBits63U0,
-    affinity: i8,
-    szEst: u8,
-    hName: u8,
-    iDflt: u16,
-    colFlags: u16,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Cte {
-    zName: *mut i8,
-    pCols: *mut ExprList,
-    pSelect: *mut Select,
-    zCteErr: *const i8,
-    pUse: *mut CteUse,
-    eM10d: u8,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct CteUse {
-    nUse: i32,
-    addrM9e: i32,
-    regRtn: i32,
-    iCur: i32,
-    nRowEst: i16,
-    eM10d: u8,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Db {
-    zDbSName: *mut i8,
-    pBt: *mut Btree,
-    safety_level: u8,
-    bSyncSet: u8,
-    pSchema: *mut Schema,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct DbClientData {
-    pNext: *mut DbClientData,
-    pData: *mut (),
-    xDestructor: Option<unsafe extern "C-unwind" fn(*mut ())>,
-    zName: [i8; 0],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Schema {
-    schema_cookie: i32,
-    iGeneration: i32,
-    tblHash: Hash,
-    idxHash: Hash,
-    trigHash: Hash,
-    fkeyHash: Hash,
-    pSeqTab: *mut Table,
-    file_format: u8,
-    enc: u8,
-    schemaFlags: u16,
-    cache_size: i32,
 }
 
 #[repr(C)]
@@ -542,45 +716,6 @@ struct ExprList {
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct FKey {
-    pFrom: *mut Table,
-    pNextFrom: *mut FKey,
-    zTo: *mut i8,
-    pNextTo: *mut FKey,
-    pPrevTo: *mut FKey,
-    nCol: i32,
-    isDeferred: u8,
-    aAction: [u8; 2],
-    apTrigger: [*mut Trigger; 2],
-    aCol: [sColMap; 0],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct FuncDestructor {
-    nRef: i32,
-    xDestroy: Option<unsafe extern "C-unwind" fn(*mut ())>,
-    pUserData: *mut (),
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct FuncDef {
-    nArg: i16,
-    funcFlags: u32,
-    pUserData: *mut (),
-    pNext: *mut FuncDef,
-    xSFunc: Option<unsafe extern "C-unwind" fn(*mut sqlite3_context, i32, *mut *mut sqlite3_value)>,
-    xFinalize: Option<unsafe extern "C-unwind" fn(*mut sqlite3_context)>,
-    xValue: Option<unsafe extern "C-unwind" fn(*mut sqlite3_context)>,
-    xInverse:
-        Option<unsafe extern "C-unwind" fn(*mut sqlite3_context, i32, *mut *mut sqlite3_value)>,
-    zName: *const i8,
-    u: __SlateRecord158,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
 struct IdList {
     nId: i32,
     a: [IdList_item; 0],
@@ -588,26 +723,103 @@ struct IdList {
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct Index {
-    zName: *mut i8,
-    aiColumn: *mut i16,
-    aiRowLogEst: *mut i16,
-    pTable: *mut Table,
-    zColAff: *mut i8,
-    pNext: *mut Index,
-    pSchema: *mut Schema,
-    aSortOrder: *mut u8,
-    azColl: *mut *const i8,
-    pPartIdxWhere: *mut Expr,
-    aColExpr: *mut ExprList,
-    tnum: u32,
-    szIdxRow: i16,
-    nKeyCol: u16,
-    nColumn: u16,
-    onError: u8,
-    __slate_bits_0: __slate_bits::__SlateBits87U0,
-    colNotIdxed: u64,
+struct RenameToken {}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Subquery {
+    pSelect: *mut Select,
+    addrFillSub: i32,
+    regReturn: i32,
+    regResult: i32,
 }
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct SrcItem {
+    zName: *mut i8,
+    zAlias: *mut i8,
+    pSTab: *mut Table,
+    fg: __SlateRecord177,
+    iCursor: i32,
+    colUsed: u64,
+    u1: __SlateRecord178,
+    u2: __SlateRecord179,
+    u3: __SlateRecord180,
+    u4: __SlateRecord181,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct SrcList {
+    nSrc: i32,
+    nAlloc: u32,
+    a: [SrcItem; 0],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Upsert {
+    pUpsertTarget: *mut ExprList,
+    pUpsertTargetWhere: *mut Expr,
+    pUpsertSet: *mut ExprList,
+    pUpsertWhere: *mut Expr,
+    pNextUpsert: *mut Upsert,
+    isDoUpdate: u8,
+    isDup: u8,
+    pToFree: *mut (),
+    pUpsertIdx: *mut Index,
+    pUpsertSrc: *mut SrcList,
+    regData: i32,
+    iDataCur: i32,
+    iIdxCur: i32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Select {
+    op: u8,
+    nSelectRow: i16,
+    selFlags: u32,
+    iLimit: i32,
+    iOffset: i32,
+    selId: u32,
+    pEList: *mut ExprList,
+    pSrc: *mut SrcList,
+    pWhere: *mut Expr,
+    pGroupBy: *mut ExprList,
+    pHaving: *mut Expr,
+    pOrderBy: *mut ExprList,
+    pPrior: *mut Select,
+    pNext: *mut Select,
+    pLimit: *mut Expr,
+    pWith: *mut With,
+    pWin: *mut Window,
+    pWinDefn: *mut Window,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct AutoincInfo {
+    pNext: *mut AutoincInfo,
+    pTab: *mut Table,
+    iDb: i32,
+    regCtr: i32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct TriggerPrg {
+    pTrigger: *mut Trigger,
+    pNext: *mut TriggerPrg,
+    pProgram: *mut SubProgram,
+    orconf: i32,
+    aColmask: [u32; 2],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct TableLock {}
 
 #[repr(C)]
 #[derive(Clone, Copy)]
@@ -619,54 +831,15 @@ struct IndexedExpr {
     bMaybeNullRow: u8,
     aff: u8,
     pIENext: *mut IndexedExpr,
+    zIdxName: *const i8,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct KeyInfo {
-    nRef: u32,
-    enc: u8,
-    nKeyField: u16,
-    nAllField: u16,
-    db: *mut sqlite3,
-    aSortFlags: *mut u8,
-    aColl: [*mut CollSeq; 0],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Lookaside {
-    bDisable: u32,
-    sz: u16,
-    szTrue: u16,
-    bMalloced: u8,
-    nSlot: u32,
-    anStat: [u32; 3],
-    pInit: *mut LookasideSlot,
-    pFree: *mut LookasideSlot,
-    pSmallInit: *mut LookasideSlot,
-    pSmallFree: *mut LookasideSlot,
-    pMiddle: *mut (),
-    pStart: *mut (),
-    pEnd: *mut (),
-    pTrueEnd: *mut (),
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct LookasideSlot {
-    pNext: *mut LookasideSlot,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Module {
-    pModule: *const sqlite3_module,
-    zName: *const i8,
-    nRefModule: i32,
-    pAux: *mut (),
-    xDestroy: Option<unsafe extern "C-unwind" fn(*mut ())>,
-    pEpoTab: *mut Table,
+struct ParseCleanup {
+    pNext: *mut ParseCleanup,
+    pPtr: *mut (),
+    xCleanup: Option<unsafe extern "C-unwind" fn(*mut sqlite3, *mut ())>,
 }
 
 #[repr(C)]
@@ -742,130 +915,6 @@ struct Parse {
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct ParseCleanup {
-    pNext: *mut ParseCleanup,
-    pPtr: *mut (),
-    xCleanup: Option<unsafe extern "C-unwind" fn(*mut sqlite3, *mut ())>,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct RenameToken {}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Returning {
-    pParse: *mut Parse,
-    pReturnEL: *mut ExprList,
-    retTrig: Trigger,
-    retTStep: TriggerStep,
-    iRetCur: i32,
-    nRetCol: i32,
-    iRetReg: i32,
-    zName: [i8; 40],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Savepoint {
-    zName: *mut i8,
-    nDeferredCons: i64,
-    nDeferredImmCons: i64,
-    pNext: *mut Savepoint,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Select {
-    op: u8,
-    nSelectRow: i16,
-    selFlags: u32,
-    iLimit: i32,
-    iOffset: i32,
-    selId: u32,
-    pEList: *mut ExprList,
-    pSrc: *mut SrcList,
-    pWhere: *mut Expr,
-    pGroupBy: *mut ExprList,
-    pHaving: *mut Expr,
-    pOrderBy: *mut ExprList,
-    pPrior: *mut Select,
-    pNext: *mut Select,
-    pLimit: *mut Expr,
-    pWith: *mut With,
-    pWin: *mut Window,
-    pWinDefn: *mut Window,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Subquery {
-    pSelect: *mut Select,
-    addrFillSub: i32,
-    regReturn: i32,
-    regResult: i32,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct SrcItem {
-    zName: *mut i8,
-    zAlias: *mut i8,
-    pSTab: *mut Table,
-    fg: __SlateRecord177,
-    iCursor: i32,
-    colUsed: u64,
-    u1: __SlateRecord178,
-    u2: __SlateRecord179,
-    u3: __SlateRecord180,
-    u4: __SlateRecord181,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct SrcList {
-    nSrc: i32,
-    nAlloc: u32,
-    a: [SrcItem; 0],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Table {
-    zName: *mut i8,
-    aCol: *mut Column,
-    pIndex: *mut Index,
-    zColAff: *mut i8,
-    pCheck: *mut ExprList,
-    tnum: u32,
-    nTabRef: u32,
-    tabFlags: u32,
-    iPKey: i16,
-    nCol: i16,
-    nNVCol: i16,
-    nRowLogEst: i16,
-    szTabRow: i16,
-    keyConf: u8,
-    eTabType: u8,
-    u: __SlateRecord159,
-    pTrigger: *mut Trigger,
-    pSchema: *mut Schema,
-    aHx: [u8; 16],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct TableLock {}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Token {
-    z: *const i8,
-    n: u32,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
 struct Trigger {
     zName: *mut i8,
     table: *mut i8,
@@ -878,16 +927,6 @@ struct Trigger {
     pTabSchema: *mut Schema,
     step_list: *mut TriggerStep,
     pNext: *mut Trigger,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct TriggerPrg {
-    pTrigger: *mut Trigger,
-    pNext: *mut TriggerPrg,
-    pProgram: *mut SubProgram,
-    orconf: i32,
-    aColmask: [u32; 2],
 }
 
 #[repr(C)]
@@ -909,39 +948,68 @@ struct TriggerStep {
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct Upsert {
-    pUpsertTarget: *mut ExprList,
-    pUpsertTargetWhere: *mut Expr,
-    pUpsertSet: *mut ExprList,
-    pUpsertWhere: *mut Expr,
-    pNextUpsert: *mut Upsert,
-    isDoUpdate: u8,
-    isDup: u8,
-    pToFree: *mut (),
-    pUpsertIdx: *mut Index,
-    pUpsertSrc: *mut SrcList,
-    regData: i32,
-    iDataCur: i32,
-    iIdxCur: i32,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct VTable {
-    db: *mut sqlite3,
-    pMod: *mut Module,
-    pVtab: *mut sqlite3_vtab,
-    nRef: i32,
-    bConstraint: u8,
-    bAllSchemas: u8,
-    eVtabRisk: u8,
-    iSavepoint: i32,
-    pNext: *mut VTable,
+struct Returning {
+    pParse: *mut Parse,
+    pReturnEL: *mut ExprList,
+    retTrig: Trigger,
+    retTStep: TriggerStep,
+    iRetCur: i32,
+    nRetCol: i32,
+    iRetReg: i32,
+    zName: [i8; 40],
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
 struct VtabCtx {}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Cte {
+    zName: *mut i8,
+    pCols: *mut ExprList,
+    pSelect: *mut Select,
+    zCteErr: *const i8,
+    pUse: *mut CteUse,
+    eM10d: u8,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct With {
+    nCte: i32,
+    bView: i32,
+    pOuter: *mut With,
+    a: [Cte; 0],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Btree {}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Vdbe {}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct CteUse {
+    nUse: i32,
+    addrM9e: i32,
+    regRtn: i32,
+    iCur: i32,
+    nRowEst: i16,
+    eM10d: u8,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct DbClientData {
+    pNext: *mut DbClientData,
+    pData: *mut (),
+    xDestructor: Option<unsafe extern "C-unwind" fn(*mut ())>,
+    zName: [i8; 0],
+}
 
 #[repr(C)]
 #[derive(Clone, Copy)]
@@ -974,58 +1042,6 @@ struct Window {
     regStartRowid: i32,
     regEndRowid: i32,
     bExprArgs: u8,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct With {
-    nCte: i32,
-    bView: i32,
-    pOuter: *mut With,
-    a: [Cte; 0],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Btree {}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Vdbe {}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct SubProgram {
-    aOp: *mut VdbeOp,
-    nOp: i32,
-    nMem: i32,
-    nCsr: i32,
-    aOnce: *mut u8,
-    token: *mut (),
-    pNext: *mut SubProgram,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct SubrtnSig {
-    selId: i32,
-    bComplete: u8,
-    zAff: *mut i8,
-    iTable: i32,
-    iAddr: i32,
-    regReturn: i32,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct VdbeOp {
-    opcode: u8,
-    p4type: i8,
-    p5: u16,
-    p1: i32,
-    p2: i32,
-    p3: i32,
-    p4: p4union,
 }
 
 #[repr(C)]
@@ -1427,32 +1443,22 @@ mod __slate_bits {
     }
 }
 
-// /*
-// ** 2001 September 15
-// **
-// ** The author disclaims copyright to this source code.  In place of
-// ** a legal notice, here is a blessing:
-// **
-// **    May you do good and not evil.
-// **    May you find forgiveness for yourself and forgive others.
-// **    May you share freely, never taking more than you give.
-// **
-// *************************************************************************
-// ** Main file for the SQLite library.  The routines in this file
-// ** implement the programmer interface to the library.  Routines in
-// ** other files are for internal use by SQLite and should not be
-// ** accessed by users of the library.
-// */
-// /*
-// ** Execute SQL code.  Return one of the SQLITE_ success/failure
-// ** codes.  Also write an error message into memory obtained from
-// ** malloc() and make *pzErrMsg point to that message.
-// **
-// ** If the SQL is a query, then for each row in the query result
-// ** the xCallback() function is called.  pArg becomes the first
-// ** argument to xCallback().  If xCallback=NULL then no callback
-// ** is invoked, even for queries.
-// */
+/// Execute SQL code.  Return one of the SQLITE_ success/failure
+/// codes.  Also write an error message into memory obtained from
+/// malloc() and make *pzErrMsg point to that message.
+///
+/// If the SQL is a query, then for each row in the query result
+/// the xCallback() function is called.  pArg becomes the first
+/// argument to xCallback().  If xCallback=NULL then no callback
+/// is invoked, even for queries.
+///
+/// # Arguments
+///
+/// * `db` - The database on which the SQL executes
+/// * `zSql` - The SQL to be executed
+/// * `xCallback` - Invoke this callback routine
+/// * `pArg` - First argument to xCallback()
+/// * `pzErrMsg` - Write error messages here
 #[unsafe(no_mangle)]
 #[unsafe(link_section = ".text.slate_distinct.legacy.sqlite3_exec")]
 extern "C-unwind" fn sqlite3_exec(
@@ -1487,31 +1493,26 @@ extern "C-unwind" fn sqlite3_exec(
     let __slate_slot_312: *mut *mut *mut i8 =
         std::ptr::addr_of_mut!(__slate_storage_312) as *mut *mut *mut i8;
     let mut __slate_storage_311: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_311: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_311) as *mut i32;
+    let __slate_slot_311: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_311) as *mut i32; // True if callback data is initialized
     let mut __slate_storage_310: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_310: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_310) as *mut i32;
+    let __slate_slot_310: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_310) as *mut i32; // Names of result columns
     let mut __slate_storage_309: std::mem::MaybeUninit<*mut *mut i8> =
         std::mem::MaybeUninit::uninit();
     let __slate_slot_309: *mut *mut *mut i8 =
-        std::ptr::addr_of_mut!(__slate_storage_309) as *mut *mut *mut i8;
+        std::ptr::addr_of_mut!(__slate_storage_309) as *mut *mut *mut i8; // The current SQL statement
     let mut __slate_storage_308: std::mem::MaybeUninit<*mut sqlite3_stmt> =
         std::mem::MaybeUninit::uninit();
     let __slate_slot_308: *mut *mut sqlite3_stmt =
-        std::ptr::addr_of_mut!(__slate_storage_308) as *mut *mut sqlite3_stmt;
+        std::ptr::addr_of_mut!(__slate_storage_308) as *mut *mut sqlite3_stmt; // Tail of unprocessed SQL
     let mut __slate_storage_307: std::mem::MaybeUninit<*const i8> = std::mem::MaybeUninit::uninit();
     let __slate_slot_307: *mut *const i8 =
-        std::ptr::addr_of_mut!(__slate_storage_307) as *mut *const i8;
+        std::ptr::addr_of_mut!(__slate_storage_307) as *mut *const i8; // Return code
     let mut __slate_storage_306: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
     let __slate_slot_306: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_306) as *mut i32;
     unsafe {
-        // /* Return code */
         std::ptr::write(__slate_slot_306, 0 as i32);
-        // /* Tail of unprocessed SQL */
-        // /* The current SQL statement */
         std::ptr::write(__slate_slot_308, std::ptr::null_mut::<sqlite3_stmt>());
-        // /* Names of result columns */
         std::ptr::write(__slate_slot_309, std::ptr::null_mut::<*mut i8>());
-        // /* True if callback data is initialized */
         if !((unsafe { sqlite3SafetyCheckOk(db) }) != (0 as i32)) {
             return unsafe { sqlite3MisuseError(43 as i32) };
         } else {
@@ -1542,7 +1543,7 @@ extern "C-unwind" fn sqlite3_exec(
                             0 as i32;
                             if !(*__slate_slot_306 != (0 as i32)) {
                                 if !(*__slate_slot_308 != std::ptr::null_mut::<sqlite3_stmt>()) {
-                                    // /* this happens for a comment or white-space */
+                                    // this happens for a comment or white-space
                                     zSql = *__slate_slot_307;
                                 } else {
                                     *__slate_slot_310 = 0 as i32;
@@ -1551,7 +1552,7 @@ extern "C-unwind" fn sqlite3_exec(
                                             if (1 as i32) != (0 as i32) {
                                                 *__slate_slot_306 =
                                                     unsafe { sqlite3_step(*__slate_slot_308) };
-                                                // /* Invoke the callback function if required */
+                                                // Invoke the callback function if required
                                                 if xCallback != None
                                                     && ((100 as i32) == *__slate_slot_306
                                                         || (101 as i32) == *__slate_slot_306
@@ -1600,8 +1601,8 @@ extern "C-unwind" fn sqlite3_exec(
                                                                         })
                                                                             as *mut i8;
                                                                     }
-                                                                    // /* sqlite3VdbeSetColName() installs column names as UTF8
-                                                                    //             ** strings so there is no way for sqlite3_column_name() to fail. */
+                                                                    // sqlite3VdbeSetColName() installs column names as UTF8
+                                                                    // strings so there is no way for sqlite3_column_name() to fail.
                                                                     0 as i32;
                                                                     std::ptr::write(
                                                                         __slate_slot_355,
@@ -1758,9 +1759,9 @@ extern "C-unwind" fn sqlite3_exec(
                             break '__join_7;
                         }
                     }
-                    // /* EVIDENCE-OF: R-38229-40159 If the callback function to
-                    //           ** sqlite3_exec() returns non-zero, then sqlite3_exec() will
-                    //           ** return SQLITE_ABORT. */
+                    // EVIDENCE-OF: R-38229-40159 If the callback function to
+                    // sqlite3_exec() returns non-zero, then sqlite3_exec() will
+                    // return SQLITE_ABORT.
                     *__slate_slot_306 = 4 as i32;
                     unsafe { sqlite3VdbeFinalize(*__slate_slot_308 as *mut Vdbe) };
                     *__slate_slot_308 = std::ptr::null_mut::<sqlite3_stmt>();
@@ -1800,9 +1801,3 @@ extern "C-unwind" fn sqlite3_exec(
     }
     return unsafe { std::mem::zeroed() };
 }
-
-// /* The database on which the SQL executes */
-// /* The SQL to be executed */
-// /* Invoke this callback routine */
-// /* First argument to xCallback() */
-// /* Write error messages here */

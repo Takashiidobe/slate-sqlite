@@ -1,3 +1,17 @@
+//! 2003 April 6
+//!
+//! The author disclaims copyright to this source code.  In place of
+//! a legal notice, here is a blessing:
+//!
+//!    May you do good and not evil.
+//!    May you find forgiveness for yourself and forgive others.
+//!    May you share freely, never taking more than you give.
+//!
+//!
+//! This file contains code used to implement the VACUUM command.
+//!
+//! Most of the code in this file may be omitted by defining the
+//! SQLITE_OMIT_VACUUM macro.
 unsafe extern "C" {
     fn sqlite3_snprintf(__v408: i32, __v409: *mut i8, __v410: *const i8, ...) -> *mut i8;
     fn sqlite3_randomness(N: i32, P: *mut ());
@@ -62,6 +76,360 @@ unsafe extern "C" {
         __v501: *mut Expr,
         __v502: *mut ExprList,
     ) -> i32;
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_file {
+    pMethods: *const sqlite3_io_methods,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_io_methods {
+    iVersion: i32,
+    xClose: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file) -> i32>,
+    xRead: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, *mut (), i32, i64) -> i32>,
+    xWrite: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, *const (), i32, i64) -> i32>,
+    xTruncate: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i64) -> i32>,
+    xSync: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32) -> i32>,
+    xFileSize: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, *mut i64) -> i32>,
+    xLock: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32) -> i32>,
+    xUnlock: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32) -> i32>,
+    xCheckReservedLock: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, *mut i32) -> i32>,
+    xFileControl: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32, *mut ()) -> i32>,
+    xSectorSize: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file) -> i32>,
+    xDeviceCharacteristics: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file) -> i32>,
+    xShmMap:
+        Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32, i32, i32, *mut *mut ()) -> i32>,
+    xShmLock: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32, i32, i32) -> i32>,
+    xShmBarrier: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file)>,
+    xShmUnmap: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32) -> i32>,
+    xFetch: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i64, i32, *mut *mut ()) -> i32>,
+    xUnfetch: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i64, *mut ()) -> i32>,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_vfs {
+    iVersion: i32,
+    szOsFile: i32,
+    mxPathname: i32,
+    pNext: *mut sqlite3_vfs,
+    zName: *const i8,
+    pAppData: *mut (),
+    xOpen: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vfs,
+            *const i8,
+            *mut sqlite3_file,
+            i32,
+            *mut i32,
+        ) -> i32,
+    >,
+    xDelete: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8, i32) -> i32>,
+    xAccess: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8, i32, *mut i32) -> i32>,
+    xFullPathname:
+        Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8, i32, *mut i8) -> i32>,
+    xDlOpen: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8) -> *mut ()>,
+    xDlError: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, i32, *mut i8)>,
+    xDlSym: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vfs,
+            *mut (),
+            *const i8,
+        ) -> Option<unsafe extern "C-unwind" fn()>,
+    >,
+    xDlClose: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *mut ())>,
+    xRandomness: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, i32, *mut i8) -> i32>,
+    xSleep: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, i32) -> i32>,
+    xCurrentTime: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *mut f64) -> i32>,
+    xGetLastError: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, i32, *mut i8) -> i32>,
+    xCurrentTimeInt64: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *mut i64) -> i32>,
+    xSetSystemCall: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vfs,
+            *const i8,
+            Option<unsafe extern "C-unwind" fn()>,
+        ) -> i32,
+    >,
+    xGetSystemCall: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vfs,
+            *const i8,
+        ) -> Option<unsafe extern "C-unwind" fn()>,
+    >,
+    xNextSystemCall: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8) -> *const i8>,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_mutex {}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_module {
+    iVersion: i32,
+    xCreate: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3,
+            *mut (),
+            i32,
+            *const *const i8,
+            *mut *mut sqlite3_vtab,
+            *mut *mut i8,
+        ) -> i32,
+    >,
+    xConnect: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3,
+            *mut (),
+            i32,
+            *const *const i8,
+            *mut *mut sqlite3_vtab,
+            *mut *mut i8,
+        ) -> i32,
+    >,
+    xBestIndex:
+        Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, *mut sqlite3_index_info) -> i32>,
+    xDisconnect: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
+    xDestroy: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
+    xOpen: Option<
+        unsafe extern "C-unwind" fn(*mut sqlite3_vtab, *mut *mut sqlite3_vtab_cursor) -> i32,
+    >,
+    xClose: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor) -> i32>,
+    xFilter: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vtab_cursor,
+            i32,
+            *const i8,
+            i32,
+            *mut *mut sqlite3_value,
+        ) -> i32,
+    >,
+    xNext: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor) -> i32>,
+    xEof: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor) -> i32>,
+    xColumn: Option<
+        unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor, *mut sqlite3_context, i32) -> i32,
+    >,
+    xRowid: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor, *mut i64) -> i32>,
+    xUpdate: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vtab,
+            i32,
+            *mut *mut sqlite3_value,
+            *mut i64,
+        ) -> i32,
+    >,
+    xBegin: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
+    xSync: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
+    xCommit: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
+    xRollback: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
+    xFindFunction: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vtab,
+            i32,
+            *const i8,
+            *mut Option<
+                unsafe extern "C-unwind" fn(*mut sqlite3_context, i32, *mut *mut sqlite3_value),
+            >,
+            *mut *mut (),
+        ) -> i32,
+    >,
+    xRename: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, *const i8) -> i32>,
+    xSavepoint: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, i32) -> i32>,
+    xRelease: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, i32) -> i32>,
+    xRollbackTo: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, i32) -> i32>,
+    xShadowName: Option<unsafe extern "C-unwind" fn(*const i8) -> i32>,
+    xIntegrity: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vtab,
+            *const i8,
+            *const i8,
+            i32,
+            *mut *mut i8,
+        ) -> i32,
+    >,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_stmt {}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_index_info {
+    nConstraint: i32,
+    aConstraint: *mut sqlite3_index_constraint,
+    nOrderBy: i32,
+    aOrderBy: *mut sqlite3_index_orderby,
+    aConstraintUsage: *mut sqlite3_index_constraint_usage,
+    idxNum: i32,
+    idxStr: *mut i8,
+    needToFreeIdxStr: i32,
+    orderByConsumed: i32,
+    estimatedCost: f64,
+    estimatedRows: i64,
+    idxFlags: i32,
+    colUsed: u64,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_vtab {
+    pModule: *const sqlite3_module,
+    nRef: i32,
+    zErrMsg: *mut i8,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_vtab_cursor {
+    pVtab: *mut sqlite3_vtab,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Hash {
+    htsize: u32,
+    count: u32,
+    first: *mut HashElem,
+    ht: *mut _ht,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct HashElem {
+    next: *mut HashElem,
+    prev: *mut HashElem,
+    data: *mut (),
+    pKey: *const i8,
+    h: u32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct BusyHandler {
+    xBusyHandler: Option<unsafe extern "C-unwind" fn(*mut (), i32) -> i32>,
+    pBusyArg: *mut (),
+    nBusy: i32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_index_constraint {
+    iColumn: i32,
+    op: u8,
+    usable: u8,
+    iTermOffset: i32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_index_orderby {
+    iColumn: i32,
+    desc: u8,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_index_constraint_usage {
+    argvIndex: i32,
+    omit: u8,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct SubrtnSig {
+    selId: i32,
+    bComplete: u8,
+    zAff: *mut i8,
+    iTable: i32,
+    iAddr: i32,
+    regReturn: i32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct VdbeOp {
+    opcode: u8,
+    p4type: i8,
+    p5: u16,
+    p1: i32,
+    p2: i32,
+    p3: i32,
+    p4: p4union,
+    zComment: *mut i8,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct _ht {
+    count: u32,
+    chain: *mut HashElem,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct SubProgram {
+    aOp: *mut VdbeOp,
+    nOp: i32,
+    nMem: i32,
+    nCsr: i32,
+    aOnce: *mut u8,
+    token: *mut (),
+    pNext: *mut SubProgram,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Db {
+    zDbSName: *mut i8,
+    pBt: *mut Btree,
+    safety_level: u8,
+    bSyncSet: u8,
+    pSchema: *mut Schema,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Schema {
+    schema_cookie: i32,
+    iGeneration: i32,
+    tblHash: Hash,
+    idxHash: Hash,
+    trigHash: Hash,
+    fkeyHash: Hash,
+    pSeqTab: *mut Table,
+    file_format: u8,
+    enc: u8,
+    schemaFlags: u16,
+    cache_size: i32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Lookaside {
+    bDisable: u32,
+    sz: u16,
+    szTrue: u16,
+    bMalloced: u8,
+    nSlot: u32,
+    anStat: [u32; 3],
+    pInit: *mut LookasideSlot,
+    pFree: *mut LookasideSlot,
+    pSmallInit: *mut LookasideSlot,
+    pSmallFree: *mut LookasideSlot,
+    pMiddle: *mut (),
+    pStart: *mut (),
+    pEnd: *mut (),
+    pTrueEnd: *mut (),
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct LookasideSlot {
+    pNext: *mut LookasideSlot,
 }
 
 #[repr(C)]
@@ -171,300 +539,163 @@ struct sqlite3 {
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct sqlite3_file {
-    pMethods: *const sqlite3_io_methods,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct sqlite3_io_methods {
-    iVersion: i32,
-    xClose: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file) -> i32>,
-    xRead: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, *mut (), i32, i64) -> i32>,
-    xWrite: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, *const (), i32, i64) -> i32>,
-    xTruncate: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i64) -> i32>,
-    xSync: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32) -> i32>,
-    xFileSize: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, *mut i64) -> i32>,
-    xLock: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32) -> i32>,
-    xUnlock: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32) -> i32>,
-    xCheckReservedLock: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, *mut i32) -> i32>,
-    xFileControl: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32, *mut ()) -> i32>,
-    xSectorSize: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file) -> i32>,
-    xDeviceCharacteristics: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file) -> i32>,
-    xShmMap:
-        Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32, i32, i32, *mut *mut ()) -> i32>,
-    xShmLock: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32, i32, i32) -> i32>,
-    xShmBarrier: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file)>,
-    xShmUnmap: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32) -> i32>,
-    xFetch: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i64, i32, *mut *mut ()) -> i32>,
-    xUnfetch: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i64, *mut ()) -> i32>,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct sqlite3_mutex {}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct sqlite3_vfs {
-    iVersion: i32,
-    szOsFile: i32,
-    mxPathname: i32,
-    pNext: *mut sqlite3_vfs,
+struct FuncDef {
+    nArg: i16,
+    funcFlags: u32,
+    pUserData: *mut (),
+    pNext: *mut FuncDef,
+    xSFunc: Option<unsafe extern "C-unwind" fn(*mut sqlite3_context, i32, *mut *mut sqlite3_value)>,
+    xFinalize: Option<unsafe extern "C-unwind" fn(*mut sqlite3_context)>,
+    xValue: Option<unsafe extern "C-unwind" fn(*mut sqlite3_context)>,
+    xInverse:
+        Option<unsafe extern "C-unwind" fn(*mut sqlite3_context, i32, *mut *mut sqlite3_value)>,
     zName: *const i8,
-    pAppData: *mut (),
-    xOpen: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3_vfs,
-            *const i8,
-            *mut sqlite3_file,
-            i32,
-            *mut i32,
-        ) -> i32,
-    >,
-    xDelete: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8, i32) -> i32>,
-    xAccess: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8, i32, *mut i32) -> i32>,
-    xFullPathname:
-        Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8, i32, *mut i8) -> i32>,
-    xDlOpen: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8) -> *mut ()>,
-    xDlError: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, i32, *mut i8)>,
-    xDlSym: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3_vfs,
-            *mut (),
-            *const i8,
-        ) -> Option<unsafe extern "C-unwind" fn()>,
-    >,
-    xDlClose: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *mut ())>,
-    xRandomness: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, i32, *mut i8) -> i32>,
-    xSleep: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, i32) -> i32>,
-    xCurrentTime: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *mut f64) -> i32>,
-    xGetLastError: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, i32, *mut i8) -> i32>,
-    xCurrentTimeInt64: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *mut i64) -> i32>,
-    xSetSystemCall: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3_vfs,
-            *const i8,
-            Option<unsafe extern "C-unwind" fn()>,
-        ) -> i32,
-    >,
-    xGetSystemCall: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3_vfs,
-            *const i8,
-        ) -> Option<unsafe extern "C-unwind" fn()>,
-    >,
-    xNextSystemCall: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8) -> *const i8>,
+    u: __SlateRecord168,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct sqlite3_stmt {}
+struct FuncDestructor {
+    nRef: i32,
+    xDestroy: Option<unsafe extern "C-unwind" fn(*mut ())>,
+    pUserData: *mut (),
+}
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct sqlite3_value {
-    u: MemValue,
-    z: *mut i8,
-    n: i32,
-    flags: u16,
+struct Savepoint {
+    zName: *mut i8,
+    nDeferredCons: i64,
+    nDeferredImmCons: i64,
+    pNext: *mut Savepoint,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Module {
+    pModule: *const sqlite3_module,
+    zName: *const i8,
+    nRefModule: i32,
+    pAux: *mut (),
+    xDestroy: Option<unsafe extern "C-unwind" fn(*mut ())>,
+    pEpoTab: *mut Table,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Column {
+    zCnName: *mut i8,
+    __slate_bits_0: __slate_bits::__SlateBits69U0,
+    affinity: i8,
+    szEst: u8,
+    hName: u8,
+    iDflt: u16,
+    colFlags: u16,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct CollSeq {
+    zName: *mut i8,
     enc: u8,
-    eSubtype: u8,
-    db: *mut sqlite3,
-    szMalloc: i32,
-    uTemp: u32,
-    zMalloc: *mut i8,
+    pUser: *mut (),
+    xCmp: Option<unsafe extern "C-unwind" fn(*mut (), i32, *const (), i32, *const ()) -> i32>,
     xDel: Option<unsafe extern "C-unwind" fn(*mut ())>,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct sqlite3_context {
-    pOut: *mut sqlite3_value,
-    pFunc: *mut FuncDef,
-    pMem: *mut sqlite3_value,
-    pVdbe: *mut Vdbe,
-    iOp: i32,
-    isError: i32,
-    enc: u8,
-    skipFlag: u8,
-    argc: u16,
-    argv: [*mut sqlite3_value; 0],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct sqlite3_vtab {
-    pModule: *const sqlite3_module,
-    nRef: i32,
-    zErrMsg: *mut i8,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct sqlite3_index_info {
-    nConstraint: i32,
-    aConstraint: *mut sqlite3_index_constraint,
-    nOrderBy: i32,
-    aOrderBy: *mut sqlite3_index_orderby,
-    aConstraintUsage: *mut sqlite3_index_constraint_usage,
-    idxNum: i32,
-    idxStr: *mut i8,
-    needToFreeIdxStr: i32,
-    orderByConsumed: i32,
-    estimatedCost: f64,
-    estimatedRows: i64,
-    idxFlags: i32,
-    colUsed: u64,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct sqlite3_vtab_cursor {
+struct VTable {
+    db: *mut sqlite3,
+    pMod: *mut Module,
     pVtab: *mut sqlite3_vtab,
+    nRef: i32,
+    bConstraint: u8,
+    bAllSchemas: u8,
+    eVtabRisk: u8,
+    iSavepoint: i32,
+    pNext: *mut VTable,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct sqlite3_module {
-    iVersion: i32,
-    xCreate: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3,
-            *mut (),
-            i32,
-            *const *const i8,
-            *mut *mut sqlite3_vtab,
-            *mut *mut i8,
-        ) -> i32,
-    >,
-    xConnect: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3,
-            *mut (),
-            i32,
-            *const *const i8,
-            *mut *mut sqlite3_vtab,
-            *mut *mut i8,
-        ) -> i32,
-    >,
-    xBestIndex:
-        Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, *mut sqlite3_index_info) -> i32>,
-    xDisconnect: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
-    xDestroy: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
-    xOpen: Option<
-        unsafe extern "C-unwind" fn(*mut sqlite3_vtab, *mut *mut sqlite3_vtab_cursor) -> i32,
-    >,
-    xClose: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor) -> i32>,
-    xFilter: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3_vtab_cursor,
-            i32,
-            *const i8,
-            i32,
-            *mut *mut sqlite3_value,
-        ) -> i32,
-    >,
-    xNext: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor) -> i32>,
-    xEof: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor) -> i32>,
-    xColumn: Option<
-        unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor, *mut sqlite3_context, i32) -> i32,
-    >,
-    xRowid: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor, *mut i64) -> i32>,
-    xUpdate: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3_vtab,
-            i32,
-            *mut *mut sqlite3_value,
-            *mut i64,
-        ) -> i32,
-    >,
-    xBegin: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
-    xSync: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
-    xCommit: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
-    xRollback: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
-    xFindFunction: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3_vtab,
-            i32,
-            *const i8,
-            *mut Option<
-                unsafe extern "C-unwind" fn(*mut sqlite3_context, i32, *mut *mut sqlite3_value),
-            >,
-            *mut *mut (),
-        ) -> i32,
-    >,
-    xRename: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, *const i8) -> i32>,
-    xSavepoint: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, i32) -> i32>,
-    xRelease: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, i32) -> i32>,
-    xRollbackTo: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, i32) -> i32>,
-    xShadowName: Option<unsafe extern "C-unwind" fn(*const i8) -> i32>,
-    xIntegrity: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3_vtab,
-            *const i8,
-            *const i8,
-            i32,
-            *mut *mut i8,
-        ) -> i32,
-    >,
+struct Table {
+    zName: *mut i8,
+    aCol: *mut Column,
+    pIndex: *mut Index,
+    zColAff: *mut i8,
+    pCheck: *mut ExprList,
+    tnum: u32,
+    nTabRef: u32,
+    tabFlags: u32,
+    iPKey: i16,
+    nCol: i16,
+    nNVCol: i16,
+    nRowLogEst: i16,
+    szTabRow: i16,
+    keyConf: u8,
+    eTabType: u8,
+    u: __SlateRecord169,
+    pTrigger: *mut Trigger,
+    pSchema: *mut Schema,
+    aHx: [u8; 16],
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct sqlite3_index_constraint {
-    iColumn: i32,
-    op: u8,
-    usable: u8,
-    iTermOffset: i32,
+struct FKey {
+    pFrom: *mut Table,
+    pNextFrom: *mut FKey,
+    zTo: *mut i8,
+    pNextTo: *mut FKey,
+    pPrevTo: *mut FKey,
+    nCol: i32,
+    isDeferred: u8,
+    aAction: [u8; 2],
+    apTrigger: [*mut Trigger; 2],
+    aCol: [sColMap; 0],
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct sqlite3_index_orderby {
-    iColumn: i32,
-    desc: u8,
+struct KeyInfo {
+    nRef: u32,
+    enc: u8,
+    nKeyField: u16,
+    nAllField: u16,
+    db: *mut sqlite3,
+    aSortFlags: *mut u8,
+    aColl: [*mut CollSeq; 0],
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct sqlite3_index_constraint_usage {
-    argvIndex: i32,
-    omit: u8,
+struct Index {
+    zName: *mut i8,
+    aiColumn: *mut i16,
+    aiRowLogEst: *mut i16,
+    pTable: *mut Table,
+    zColAff: *mut i8,
+    pNext: *mut Index,
+    pSchema: *mut Schema,
+    aSortOrder: *mut u8,
+    azColl: *mut *const i8,
+    pPartIdxWhere: *mut Expr,
+    aColExpr: *mut ExprList,
+    tnum: u32,
+    szIdxRow: i16,
+    nKeyCol: u16,
+    nColumn: u16,
+    onError: u8,
+    __slate_bits_0: __slate_bits::__SlateBits93U0,
+    colNotIdxed: u64,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct Hash {
-    htsize: u32,
-    count: u32,
-    first: *mut HashElem,
-    ht: *mut _ht,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct HashElem {
-    next: *mut HashElem,
-    prev: *mut HashElem,
-    data: *mut (),
-    pKey: *const i8,
-    h: u32,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct _ht {
-    count: u32,
-    chain: *mut HashElem,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct BusyHandler {
-    xBusyHandler: Option<unsafe extern "C-unwind" fn(*mut (), i32) -> i32>,
-    pBusyArg: *mut (),
-    nBusy: i32,
+struct Token {
+    z: *const i8,
+    n: u32,
 }
 
 #[repr(C)]
@@ -483,94 +714,6 @@ struct AggInfo {
     aFunc: *mut AggInfo_func,
     nFunc: i32,
     selId: u32,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct AutoincInfo {
-    pNext: *mut AutoincInfo,
-    pTab: *mut Table,
-    iDb: i32,
-    regCtr: i32,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct CollSeq {
-    zName: *mut i8,
-    enc: u8,
-    pUser: *mut (),
-    xCmp: Option<unsafe extern "C-unwind" fn(*mut (), i32, *const (), i32, *const ()) -> i32>,
-    xDel: Option<unsafe extern "C-unwind" fn(*mut ())>,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Column {
-    zCnName: *mut i8,
-    __slate_bits_0: __slate_bits::__SlateBits69U0,
-    affinity: i8,
-    szEst: u8,
-    hName: u8,
-    iDflt: u16,
-    colFlags: u16,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Cte {
-    zName: *mut i8,
-    pCols: *mut ExprList,
-    pSelect: *mut Select,
-    zCteErr: *const i8,
-    pUse: *mut CteUse,
-    eM10d: u8,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct CteUse {
-    nUse: i32,
-    addrM9e: i32,
-    regRtn: i32,
-    iCur: i32,
-    nRowEst: i16,
-    eM10d: u8,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Db {
-    zDbSName: *mut i8,
-    pBt: *mut Btree,
-    safety_level: u8,
-    bSyncSet: u8,
-    pSchema: *mut Schema,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct DbClientData {
-    pNext: *mut DbClientData,
-    pData: *mut (),
-    xDestructor: Option<unsafe extern "C-unwind" fn(*mut ())>,
-    zName: [i8; 0],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Schema {
-    schema_cookie: i32,
-    iGeneration: i32,
-    tblHash: Hash,
-    idxHash: Hash,
-    trigHash: Hash,
-    fkeyHash: Hash,
-    pSeqTab: *mut Table,
-    file_format: u8,
-    enc: u8,
-    schemaFlags: u16,
-    cache_size: i32,
 }
 
 #[repr(C)]
@@ -603,45 +746,6 @@ struct ExprList {
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct FKey {
-    pFrom: *mut Table,
-    pNextFrom: *mut FKey,
-    zTo: *mut i8,
-    pNextTo: *mut FKey,
-    pPrevTo: *mut FKey,
-    nCol: i32,
-    isDeferred: u8,
-    aAction: [u8; 2],
-    apTrigger: [*mut Trigger; 2],
-    aCol: [sColMap; 0],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct FuncDestructor {
-    nRef: i32,
-    xDestroy: Option<unsafe extern "C-unwind" fn(*mut ())>,
-    pUserData: *mut (),
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct FuncDef {
-    nArg: i16,
-    funcFlags: u32,
-    pUserData: *mut (),
-    pNext: *mut FuncDef,
-    xSFunc: Option<unsafe extern "C-unwind" fn(*mut sqlite3_context, i32, *mut *mut sqlite3_value)>,
-    xFinalize: Option<unsafe extern "C-unwind" fn(*mut sqlite3_context)>,
-    xValue: Option<unsafe extern "C-unwind" fn(*mut sqlite3_context)>,
-    xInverse:
-        Option<unsafe extern "C-unwind" fn(*mut sqlite3_context, i32, *mut *mut sqlite3_value)>,
-    zName: *const i8,
-    u: __SlateRecord168,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
 struct IdList {
     nId: i32,
     a: [IdList_item; 0],
@@ -649,25 +753,98 @@ struct IdList {
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct Index {
+struct Subquery {
+    pSelect: *mut Select,
+    addrFillSub: i32,
+    regReturn: i32,
+    regResult: i32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct SrcItem {
     zName: *mut i8,
-    aiColumn: *mut i16,
-    aiRowLogEst: *mut i16,
-    pTable: *mut Table,
-    zColAff: *mut i8,
-    pNext: *mut Index,
-    pSchema: *mut Schema,
-    aSortOrder: *mut u8,
-    azColl: *mut *const i8,
-    pPartIdxWhere: *mut Expr,
-    aColExpr: *mut ExprList,
-    tnum: u32,
-    szIdxRow: i16,
-    nKeyCol: u16,
-    nColumn: u16,
-    onError: u8,
-    __slate_bits_0: __slate_bits::__SlateBits93U0,
-    colNotIdxed: u64,
+    zAlias: *mut i8,
+    pSTab: *mut Table,
+    fg: __SlateRecord187,
+    iCursor: i32,
+    colUsed: u64,
+    u1: __SlateRecord188,
+    u2: __SlateRecord189,
+    u3: __SlateRecord190,
+    u4: __SlateRecord191,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct RenameToken {}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct SrcList {
+    nSrc: i32,
+    nAlloc: u32,
+    a: [SrcItem; 0],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Upsert {
+    pUpsertTarget: *mut ExprList,
+    pUpsertTargetWhere: *mut Expr,
+    pUpsertSet: *mut ExprList,
+    pUpsertWhere: *mut Expr,
+    pNextUpsert: *mut Upsert,
+    isDoUpdate: u8,
+    isDup: u8,
+    pToFree: *mut (),
+    pUpsertIdx: *mut Index,
+    pUpsertSrc: *mut SrcList,
+    regData: i32,
+    iDataCur: i32,
+    iIdxCur: i32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Select {
+    op: u8,
+    nSelectRow: i16,
+    selFlags: u32,
+    iLimit: i32,
+    iOffset: i32,
+    selId: u32,
+    pEList: *mut ExprList,
+    pSrc: *mut SrcList,
+    pWhere: *mut Expr,
+    pGroupBy: *mut ExprList,
+    pHaving: *mut Expr,
+    pOrderBy: *mut ExprList,
+    pPrior: *mut Select,
+    pNext: *mut Select,
+    pLimit: *mut Expr,
+    pWith: *mut With,
+    pWin: *mut Window,
+    pWinDefn: *mut Window,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct AutoincInfo {
+    pNext: *mut AutoincInfo,
+    pTab: *mut Table,
+    iDb: i32,
+    regCtr: i32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct TriggerPrg {
+    pTrigger: *mut Trigger,
+    pNext: *mut TriggerPrg,
+    pProgram: *mut SubProgram,
+    orconf: i32,
+    aColmask: [u32; 2],
 }
 
 #[repr(C)]
@@ -680,55 +857,20 @@ struct IndexedExpr {
     bMaybeNullRow: u8,
     aff: u8,
     pIENext: *mut IndexedExpr,
+    zIdxName: *const i8,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct KeyInfo {
-    nRef: u32,
-    enc: u8,
-    nKeyField: u16,
-    nAllField: u16,
-    db: *mut sqlite3,
-    aSortFlags: *mut u8,
-    aColl: [*mut CollSeq; 0],
+struct ParseCleanup {
+    pNext: *mut ParseCleanup,
+    pPtr: *mut (),
+    xCleanup: Option<unsafe extern "C-unwind" fn(*mut sqlite3, *mut ())>,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct Lookaside {
-    bDisable: u32,
-    sz: u16,
-    szTrue: u16,
-    bMalloced: u8,
-    nSlot: u32,
-    anStat: [u32; 3],
-    pInit: *mut LookasideSlot,
-    pFree: *mut LookasideSlot,
-    pSmallInit: *mut LookasideSlot,
-    pSmallFree: *mut LookasideSlot,
-    pMiddle: *mut (),
-    pStart: *mut (),
-    pEnd: *mut (),
-    pTrueEnd: *mut (),
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct LookasideSlot {
-    pNext: *mut LookasideSlot,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Module {
-    pModule: *const sqlite3_module,
-    zName: *const i8,
-    nRefModule: i32,
-    pAux: *mut (),
-    xDestroy: Option<unsafe extern "C-unwind" fn(*mut ())>,
-    pEpoTab: *mut Table,
-}
+struct TableLock {}
 
 #[repr(C)]
 #[derive(Clone, Copy)]
@@ -803,130 +945,6 @@ struct Parse {
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct ParseCleanup {
-    pNext: *mut ParseCleanup,
-    pPtr: *mut (),
-    xCleanup: Option<unsafe extern "C-unwind" fn(*mut sqlite3, *mut ())>,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct RenameToken {}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Returning {
-    pParse: *mut Parse,
-    pReturnEL: *mut ExprList,
-    retTrig: Trigger,
-    retTStep: TriggerStep,
-    iRetCur: i32,
-    nRetCol: i32,
-    iRetReg: i32,
-    zName: [i8; 40],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Savepoint {
-    zName: *mut i8,
-    nDeferredCons: i64,
-    nDeferredImmCons: i64,
-    pNext: *mut Savepoint,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Select {
-    op: u8,
-    nSelectRow: i16,
-    selFlags: u32,
-    iLimit: i32,
-    iOffset: i32,
-    selId: u32,
-    pEList: *mut ExprList,
-    pSrc: *mut SrcList,
-    pWhere: *mut Expr,
-    pGroupBy: *mut ExprList,
-    pHaving: *mut Expr,
-    pOrderBy: *mut ExprList,
-    pPrior: *mut Select,
-    pNext: *mut Select,
-    pLimit: *mut Expr,
-    pWith: *mut With,
-    pWin: *mut Window,
-    pWinDefn: *mut Window,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Subquery {
-    pSelect: *mut Select,
-    addrFillSub: i32,
-    regReturn: i32,
-    regResult: i32,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct SrcItem {
-    zName: *mut i8,
-    zAlias: *mut i8,
-    pSTab: *mut Table,
-    fg: __SlateRecord187,
-    iCursor: i32,
-    colUsed: u64,
-    u1: __SlateRecord188,
-    u2: __SlateRecord189,
-    u3: __SlateRecord190,
-    u4: __SlateRecord191,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct SrcList {
-    nSrc: i32,
-    nAlloc: u32,
-    a: [SrcItem; 0],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Table {
-    zName: *mut i8,
-    aCol: *mut Column,
-    pIndex: *mut Index,
-    zColAff: *mut i8,
-    pCheck: *mut ExprList,
-    tnum: u32,
-    nTabRef: u32,
-    tabFlags: u32,
-    iPKey: i16,
-    nCol: i16,
-    nNVCol: i16,
-    nRowLogEst: i16,
-    szTabRow: i16,
-    keyConf: u8,
-    eTabType: u8,
-    u: __SlateRecord169,
-    pTrigger: *mut Trigger,
-    pSchema: *mut Schema,
-    aHx: [u8; 16],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct TableLock {}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Token {
-    z: *const i8,
-    n: u32,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
 struct Trigger {
     zName: *mut i8,
     table: *mut i8,
@@ -939,16 +957,6 @@ struct Trigger {
     pTabSchema: *mut Schema,
     step_list: *mut TriggerStep,
     pNext: *mut Trigger,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct TriggerPrg {
-    pTrigger: *mut Trigger,
-    pNext: *mut TriggerPrg,
-    pProgram: *mut SubProgram,
-    orconf: i32,
-    aColmask: [u32; 2],
 }
 
 #[repr(C)]
@@ -970,39 +978,72 @@ struct TriggerStep {
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct Upsert {
-    pUpsertTarget: *mut ExprList,
-    pUpsertTargetWhere: *mut Expr,
-    pUpsertSet: *mut ExprList,
-    pUpsertWhere: *mut Expr,
-    pNextUpsert: *mut Upsert,
-    isDoUpdate: u8,
-    isDup: u8,
-    pToFree: *mut (),
-    pUpsertIdx: *mut Index,
-    pUpsertSrc: *mut SrcList,
-    regData: i32,
-    iDataCur: i32,
-    iIdxCur: i32,
+struct Returning {
+    pParse: *mut Parse,
+    pReturnEL: *mut ExprList,
+    retTrig: Trigger,
+    retTStep: TriggerStep,
+    iRetCur: i32,
+    nRetCol: i32,
+    iRetReg: i32,
+    zName: [i8; 40],
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct VTable {
-    db: *mut sqlite3,
-    pMod: *mut Module,
-    pVtab: *mut sqlite3_vtab,
-    nRef: i32,
-    bConstraint: u8,
-    bAllSchemas: u8,
-    eVtabRisk: u8,
-    iSavepoint: i32,
-    pNext: *mut VTable,
+struct Cte {
+    zName: *mut i8,
+    pCols: *mut ExprList,
+    pSelect: *mut Select,
+    zCteErr: *const i8,
+    pUse: *mut CteUse,
+    eM10d: u8,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct With {
+    nCte: i32,
+    bView: i32,
+    pOuter: *mut With,
+    a: [Cte; 0],
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
 struct VtabCtx {}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct CteUse {
+    nUse: i32,
+    addrM9e: i32,
+    regRtn: i32,
+    iCur: i32,
+    nRowEst: i16,
+    eM10d: u8,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct DbClientData {
+    pNext: *mut DbClientData,
+    pData: *mut (),
+    xDestructor: Option<unsafe extern "C-unwind" fn(*mut ())>,
+    zName: [i8; 0],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Pager {}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Btree {}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct BtCursor {}
 
 #[repr(C)]
 #[derive(Clone, Copy)]
@@ -1039,110 +1080,64 @@ struct Window {
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct With {
-    nCte: i32,
-    bView: i32,
-    pOuter: *mut With,
-    a: [Cte; 0],
+struct VdbeCursor {
+    eCurType: u8,
+    iDb: i8,
+    nullRow: u8,
+    deferredMoveto: u8,
+    isTable: u8,
+    __slate_bits_0: __slate_bits::__SlateBits204U0,
+    seekHit: u16,
+    ub: __SlateRecord206,
+    seqCount: i64,
+    cacheStatus: u32,
+    seekResult: i32,
+    pAltCursor: *mut VdbeCursor,
+    uc: __SlateRecord207,
+    pKeyInfo: *mut KeyInfo,
+    iHdrOffset: u32,
+    pgnoRoot: u32,
+    nField: i16,
+    nHdrParsed: u16,
+    movetoTarget: i64,
+    aOffset: *mut u32,
+    aRow: *const u8,
+    payloadSize: u32,
+    szRow: u32,
+    pCache: *mut VdbeTxtBlbCache,
+    aType: [u32; 0],
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct Pager {}
+struct VdbeTxtBlbCache {
+    pCValue: *mut i8,
+    iOffset: i64,
+    iCol: i32,
+    cacheStatus: u32,
+    colCacheCtr: u32,
+}
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct Btree {}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct BtCursor {}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Vdbe {
-    db: *mut sqlite3,
-    ppVPrev: *mut *mut Vdbe,
-    pVNext: *mut Vdbe,
-    pParse: *mut Parse,
-    nVar: i16,
-    nMem: i32,
-    nCursor: i32,
-    cacheCtr: u32,
-    pc: i32,
-    rc: i32,
-    nChange: i64,
-    iStatement: i32,
-    iCurrentTime: i64,
-    nFkConstraint: i64,
-    nStmtDefCons: i64,
-    nStmtDefImmCons: i64,
+struct VdbeFrame {
+    v: *mut Vdbe,
+    pParent: *mut VdbeFrame,
+    aOp: *mut VdbeOp,
     aMem: *mut sqlite3_value,
-    apArg: *mut *mut sqlite3_value,
     apCsr: *mut *mut VdbeCursor,
-    aVar: *mut sqlite3_value,
-    aOp: *mut VdbeOp,
-    nOp: i32,
-    nOpAlloc: i32,
-    aColName: *mut sqlite3_value,
-    pResultRow: *mut sqlite3_value,
-    zErrMsg: *mut i8,
-    pVList: *mut i32,
-    startTime: i64,
-    nResColumn: u16,
-    nResAlloc: u16,
-    errorAction: u8,
-    minWriteFileFormat: u8,
-    prepFlags: u8,
-    eVdbeState: u8,
-    __slate_bits_0: __slate_bits::__SlateBits154U0,
-    btreeMask: u32,
-    lockMask: u32,
-    aCounter: [u32; 9],
-    zSql: *mut i8,
-    pFree: *mut (),
-    pFrame: *mut VdbeFrame,
-    pDelFrame: *mut VdbeFrame,
-    nFrame: i32,
-    expmask: u32,
-    smimask: u32,
-    pProgram: *mut SubProgram,
-    pAuxData: *mut AuxData,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct SubProgram {
-    aOp: *mut VdbeOp,
-    nOp: i32,
-    nMem: i32,
-    nCsr: i32,
     aOnce: *mut u8,
     token: *mut (),
-    pNext: *mut SubProgram,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct SubrtnSig {
-    selId: i32,
-    bComplete: u8,
-    zAff: *mut i8,
-    iTable: i32,
-    iAddr: i32,
-    regReturn: i32,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct VdbeOp {
-    opcode: u8,
-    p4type: i8,
-    p5: u16,
-    p1: i32,
-    p2: i32,
-    p3: i32,
-    p4: p4union,
+    lastRowid: i64,
+    pAuxData: *mut AuxData,
+    nCursor: i32,
+    pc: i32,
+    nOp: i32,
+    nMem: i32,
+    nChildMem: i32,
+    nChildCsr: i32,
+    nChange: i64,
+    nDbChange: i64,
 }
 
 #[repr(C)]
@@ -1393,6 +1388,22 @@ struct VdbeSorter {}
 
 #[repr(C)]
 #[derive(Clone, Copy)]
+struct sqlite3_value {
+    u: MemValue,
+    z: *mut i8,
+    n: i32,
+    flags: u16,
+    enc: u8,
+    eSubtype: u8,
+    db: *mut sqlite3,
+    szMalloc: i32,
+    uTemp: u32,
+    zMalloc: *mut i8,
+    xDel: Option<unsafe extern "C-unwind" fn(*mut ())>,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
 struct AuxData {
     iAuxOp: i32,
     iAuxArg: i32,
@@ -1403,42 +1414,17 @@ struct AuxData {
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct VdbeTxtBlbCache {
-    pCValue: *mut i8,
-    iOffset: i64,
-    iCol: i32,
-    cacheStatus: u32,
-    colCacheCtr: u32,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct VdbeCursor {
-    eCurType: u8,
-    iDb: i8,
-    nullRow: u8,
-    deferredMoveto: u8,
-    isTable: u8,
-    __slate_bits_0: __slate_bits::__SlateBits204U0,
-    seekHit: u16,
-    ub: __SlateRecord206,
-    seqCount: i64,
-    cacheStatus: u32,
-    seekResult: i32,
-    pAltCursor: *mut VdbeCursor,
-    uc: __SlateRecord207,
-    pKeyInfo: *mut KeyInfo,
-    iHdrOffset: u32,
-    pgnoRoot: u32,
-    nField: i16,
-    nHdrParsed: u16,
-    movetoTarget: i64,
-    aOffset: *mut u32,
-    aRow: *const u8,
-    payloadSize: u32,
-    szRow: u32,
-    pCache: *mut VdbeTxtBlbCache,
-    aType: [u32; 0],
+struct sqlite3_context {
+    pOut: *mut sqlite3_value,
+    pFunc: *mut FuncDef,
+    pMem: *mut sqlite3_value,
+    pVdbe: *mut Vdbe,
+    iOp: i32,
+    isError: i32,
+    enc: u8,
+    skipFlag: u8,
+    argc: u16,
+    argv: [*mut sqlite3_value; 0],
 }
 
 #[repr(C)]
@@ -1458,24 +1444,54 @@ union __SlateRecord207 {
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct VdbeFrame {
-    v: *mut Vdbe,
-    pParent: *mut VdbeFrame,
-    aOp: *mut VdbeOp,
-    aMem: *mut sqlite3_value,
-    apCsr: *mut *mut VdbeCursor,
-    aOnce: *mut u8,
-    token: *mut (),
-    lastRowid: i64,
-    pAuxData: *mut AuxData,
-    nCursor: i32,
-    pc: i32,
-    nOp: i32,
+struct Vdbe {
+    db: *mut sqlite3,
+    ppVPrev: *mut *mut Vdbe,
+    pVNext: *mut Vdbe,
+    pParse: *mut Parse,
+    nVar: i16,
     nMem: i32,
-    nChildMem: i32,
-    nChildCsr: i32,
+    nCursor: i32,
+    cacheCtr: u32,
+    pc: i32,
+    rc: i32,
     nChange: i64,
-    nDbChange: i64,
+    iStatement: i32,
+    iCurrentTime: i64,
+    nFkConstraint: i64,
+    nStmtDefCons: i64,
+    nStmtDefImmCons: i64,
+    aMem: *mut sqlite3_value,
+    apArg: *mut *mut sqlite3_value,
+    apCsr: *mut *mut VdbeCursor,
+    aVar: *mut sqlite3_value,
+    aOp: *mut VdbeOp,
+    nOp: i32,
+    nOpAlloc: i32,
+    aColName: *mut sqlite3_value,
+    pResultRow: *mut sqlite3_value,
+    zErrMsg: *mut i8,
+    pVList: *mut i32,
+    startTime: i64,
+    nResColumn: u16,
+    nResAlloc: u16,
+    errorAction: u8,
+    minWriteFileFormat: u8,
+    prepFlags: u8,
+    eVdbeState: u8,
+    __slate_bits_0: __slate_bits::__SlateBits154U0,
+    btreeMask: u32,
+    lockMask: u32,
+    aCounter: [u32; 9],
+    zSql: *mut i8,
+    pFree: *mut (),
+    pFrame: *mut VdbeFrame,
+    pDelFrame: *mut VdbeFrame,
+    nFrame: i32,
+    expmask: u32,
+    smimask: u32,
+    pProgram: *mut SubProgram,
+    pAuxData: *mut AuxData,
 }
 
 #[repr(C)]
@@ -1702,54 +1718,124 @@ mod __slate_bits {
     }
 }
 
-// /* Write error message here */
-// /* Database connection */
-// /* Which attached DB to vacuum */
-// /* Write results here, if not NULL. VACUUM INTO */
-static mut aCopy: [u8; 10] = [
-    ((1 as i32) as i8) as u8,
-    ((1 as i32) as i8) as u8,
-    ((3 as i32) as i8) as u8,
-    ((0 as i32) as i8) as u8,
-    ((5 as i32) as i8) as u8,
-    ((0 as i32) as i8) as u8,
-    ((6 as i32) as i8) as u8,
-    ((0 as i32) as i8) as u8,
-    ((8 as i32) as i8) as u8,
-    ((0 as i32) as i8) as u8,
-];
+/// Execute zSql on database db.
+///
+/// If zSql returns rows, then each row will have exactly one
+/// column.  (This will only happen if zSql begins with "SELECT".)
+/// Take each row of result and call execSql() again recursively.
+///
+/// The execSqlF() routine does the same thing, except it accepts
+/// a format string as its third argument
+fn execSql(mut db: *mut sqlite3, mut pzErrMsg: *mut *mut i8, mut zSql: *const i8) -> i32 {
+    let mut pStmt: *mut sqlite3_stmt = unsafe { std::mem::zeroed() };
+    let mut rc: i32 = 0 as i32;
+    // printf("SQL: [%s]\n", zSql); fflush(stdout);
+    rc = unsafe {
+        sqlite3_prepare_v2(
+            db,
+            zSql,
+            -(1 as i32),
+            std::ptr::addr_of_mut!(pStmt),
+            std::ptr::null_mut::<*const i8>(),
+        )
+    };
+    if rc != (0 as i32) {
+        return rc;
+    }
+    '__slate_break_503: loop {
+        let __v551: i32 = unsafe { sqlite3_step(pStmt) };
+        rc = __v551;
+        if !((100 as i32) == __v551) {
+            break;
+        }
+        let mut zSubSql: *const i8 = (unsafe { sqlite3_column_text(pStmt, 0 as i32) }) as *const i8;
+        0 as i32;
+        // The secondary SQL must be one of CREATE TABLE, CREATE INDEX,
+        // or INSERT.  Historically there have been attacks that first
+        // corrupt the sqlite_schema.sql field with other kinds of statements
+        // then run VACUUM to get those statements to execute at inappropriate
+        // times.
+        if zSubSql != std::ptr::null::<i8>()
+            && ((unsafe {
+                strncmp(
+                    zSubSql,
+                    (b"CRE\0".as_ptr() as *mut i8) as *const i8,
+                    ((3 as i32) as i64) as u64,
+                )
+            }) == (0 as i32)
+                || (unsafe {
+                    strncmp(
+                        zSubSql,
+                        (b"INS\0".as_ptr() as *mut i8) as *const i8,
+                        ((3 as i32) as i64) as u64,
+                    )
+                }) == (0 as i32))
+        {
+            rc = execSql(db, pzErrMsg, zSubSql);
+            if rc != (0 as i32) {
+                break '__slate_break_503;
+            }
+        }
+    }
+    0 as i32;
+    if rc == (101 as i32) {
+        rc = 0 as i32;
+    }
+    if rc != (0 as i32) {
+        unsafe { sqlite3SetString(pzErrMsg, db, unsafe { sqlite3_errmsg(db) }) };
+    }
+    unsafe { sqlite3_finalize(pStmt) };
+    return rc;
+}
 
-// /*
-// ** The VACUUM command is used to clean up the database,
-// ** collapse free space, etc.  It is modelled after the VACUUM command
-// ** in PostgreSQL.  The VACUUM command works as follows:
-// **
-// **   (1)  Create a new transient database file
-// **   (2)  Copy all content from the database being vacuumed into
-// **        the new transient database file
-// **   (3)  Copy content from the transient database back into the
-// **        original database.
-// **
-// ** The transient database requires temporary disk space approximately
-// ** equal to the size of the original database.  The copy operation of
-// ** step (3) requires additional temporary disk space approximately equal
-// ** to the size of the original database for the rollback journal.
-// ** Hence, temporary disk space that is approximately 2x the size of the
-// ** original database is required.  Every page of the database is written
-// ** approximately 3 times:  Once for step (2) and twice for step (3).
-// ** Two writes per page are required in step (3) because the original
-// ** database content must be written into the rollback journal prior to
-// ** overwriting the database with the vacuumed content.
-// **
-// ** Only 1x temporary space and only 1x writes would be required if
-// ** the copy of step (3) were replaced by deleting the original database
-// ** and renaming the transient database as the original.  But that will
-// ** not work if other processes are attached to the original database.
-// ** And a power loss in between deleting the original and renaming the
-// ** transient would cause the database file to appear to be deleted
-// ** following reboot.
-// */
-// /* SQLITE_OMIT_VACUUM && SQLITE_OMIT_ATTACH */
+unsafe extern "C-unwind" fn execSqlF(
+    mut db: *mut sqlite3,
+    mut pzErrMsg: *mut *mut i8,
+    mut zSql: *const i8,
+    mut __va_args: ...
+) -> i32 {
+    let mut z: *mut i8 = unsafe { std::mem::zeroed() };
+    let mut ap: core::ffi::VaList<'_> = unsafe { std::mem::zeroed() };
+    let mut rc: i32 = 0 as i32;
+    ap = __va_args.clone();
+    z = unsafe { sqlite3VMPrintf(db, zSql, ap.clone()) };
+    {}
+    if z == std::ptr::null_mut::<i8>() {
+        return 7 as i32;
+    }
+    rc = execSql(db, pzErrMsg, z as *const i8);
+    unsafe { sqlite3DbFree(db, z as *mut ()) };
+    return rc;
+}
+
+/// The VACUUM command is used to clean up the database,
+/// collapse free space, etc.  It is modelled after the VACUUM command
+/// in PostgreSQL.  The VACUUM command works as follows:
+///
+///   (1)  Create a new transient database file
+///   (2)  Copy all content from the database being vacuumed into
+///        the new transient database file
+///   (3)  Copy content from the transient database back into the
+///        original database.
+///
+/// The transient database requires temporary disk space approximately
+/// equal to the size of the original database.  The copy operation of
+/// step (3) requires additional temporary disk space approximately equal
+/// to the size of the original database for the rollback journal.
+/// Hence, temporary disk space that is approximately 2x the size of the
+/// original database is required.  Every page of the database is written
+/// approximately 3 times:  Once for step (2) and twice for step (3).
+/// Two writes per page are required in step (3) because the original
+/// database content must be written into the rollback journal prior to
+/// overwriting the database with the vacuumed content.
+///
+/// Only 1x temporary space and only 1x writes would be required if
+/// the copy of step (3) were replaced by deleting the original database
+/// and renaming the transient database as the original.  But that will
+/// not work if other processes are attached to the original database.
+/// And a power loss in between deleting the original and renaming the
+/// transient would cause the database file to appear to be deleted
+/// following reboot.
 #[unsafe(no_mangle)]
 extern "C-unwind" fn sqlite3Vacuum(
     mut pParse: *mut Parse,
@@ -1782,8 +1868,8 @@ extern "C-unwind" fn sqlite3Vacuum(
                 if (unsafe { (*pParse).nErr }) != (0 as i32) {
                 } else {
                     if pNm != std::ptr::null_mut::<Token>() {
-                        // /* Default behavior:  Report an error if the argument to VACUUM is
-                        //     ** not recognized */
+                        // Default behavior:  Report an error if the argument to VACUUM is
+                        // not recognized
                         *__slate_slot_376 = unsafe {
                             sqlite3TwoPartName(pParse, pNm, pNm, std::ptr::addr_of_mut!(pNm))
                         };
@@ -1836,9 +1922,14 @@ extern "C-unwind" fn sqlite3Vacuum(
     }
 }
 
-// /*
-// ** This routine implements the OP_Vacuum opcode of the VDBE.
-// */
+/// This routine implements the OP_Vacuum opcode of the VDBE.
+///
+/// # Arguments
+///
+/// * `pzErrMsg` - Write error message here
+/// * `db` - Database connection
+/// * `iDb` - Which attached DB to vacuum
+/// * `pOut` - Write results here, if not NULL. VACUUM INTO
 #[unsafe(no_mangle)]
 extern "C-unwind" fn sqlite3RunVacuum(
     mut pzErrMsg: *mut *mut i8,
@@ -1852,6 +1943,11 @@ extern "C-unwind" fn sqlite3RunVacuum(
     let __slate_slot_549: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_549) as *mut i32;
     let mut __slate_storage_406: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
     let __slate_slot_406: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_406) as *mut i32;
+    // At this point, there is a write transaction open on both the
+    // vacuum database and the main database. Assuming no error occurs,
+    // both transactions are closed by this block - the main database
+    // transaction by sqlite3BtreeCopyFile() and the other by an explicit
+    // call to sqlite3BtreeCommit().
     let mut __slate_storage_405: std::mem::MaybeUninit<u32> = std::mem::MaybeUninit::uninit();
     let __slate_slot_405: *mut u32 = std::ptr::addr_of_mut!(__slate_storage_405) as *mut u32;
     let mut __slate_storage_548: std::mem::MaybeUninit<u32> = std::mem::MaybeUninit::uninit();
@@ -1928,74 +2024,56 @@ extern "C-unwind" fn sqlite3RunVacuum(
     let mut __slate_storage_524: std::mem::MaybeUninit<*mut sqlite3> =
         std::mem::MaybeUninit::uninit();
     let __slate_slot_524: *mut *mut sqlite3 =
-        std::ptr::addr_of_mut!(__slate_storage_524) as *mut *mut sqlite3;
+        std::ptr::addr_of_mut!(__slate_storage_524) as *mut *mut sqlite3; // Name of the ATTACH-ed database used for vacuum
     let mut __slate_storage_400: std::mem::MaybeUninit<__SlateAlign16<[i8; 42]>> =
         std::mem::MaybeUninit::uninit();
     let __slate_slot_400: *mut [i8; 42] =
-        std::ptr::addr_of_mut!(__slate_storage_400) as *mut [i8; 42];
+        std::ptr::addr_of_mut!(__slate_storage_400) as *mut [i8; 42]; // Random value used for zDbVacuum[]
     let mut __slate_storage_399: std::mem::MaybeUninit<u64> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_399: *mut u64 = std::ptr::addr_of_mut!(__slate_storage_399) as *mut u64;
+    let __slate_slot_399: *mut u64 = std::ptr::addr_of_mut!(__slate_storage_399) as *mut u64; // sync flags for output db
     let mut __slate_storage_398: std::mem::MaybeUninit<u32> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_398: *mut u32 = std::ptr::addr_of_mut!(__slate_storage_398) as *mut u32;
+    let __slate_slot_398: *mut u32 = std::ptr::addr_of_mut!(__slate_storage_398) as *mut u32; // Name of output file
     let mut __slate_storage_397: std::mem::MaybeUninit<*const i8> = std::mem::MaybeUninit::uninit();
     let __slate_slot_397: *mut *const i8 =
-        std::ptr::addr_of_mut!(__slate_storage_397) as *mut *const i8;
+        std::ptr::addr_of_mut!(__slate_storage_397) as *mut *const i8; // Schema name of database to vacuum
     let mut __slate_storage_396: std::mem::MaybeUninit<*const i8> = std::mem::MaybeUninit::uninit();
     let __slate_slot_396: *mut *const i8 =
-        std::ptr::addr_of_mut!(__slate_storage_396) as *mut *const i8;
+        std::ptr::addr_of_mut!(__slate_storage_396) as *mut *const i8; // Number of attached databases
     let mut __slate_storage_395: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_395: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_395) as *mut i32;
+    let __slate_slot_395: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_395) as *mut i32; // Bytes of reserved space at the end of each page
     let mut __slate_storage_394: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_394: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_394) as *mut i32;
+    let __slate_slot_394: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_394) as *mut i32; // True if vacuuming a :memory: database
     let mut __slate_storage_393: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_393: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_393) as *mut i32;
+    let __slate_slot_393: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_393) as *mut i32; // Database to detach at end of vacuum
     let mut __slate_storage_392: std::mem::MaybeUninit<*mut Db> = std::mem::MaybeUninit::uninit();
     let __slate_slot_392: *mut *mut Db =
-        std::ptr::addr_of_mut!(__slate_storage_392) as *mut *mut Db;
+        std::ptr::addr_of_mut!(__slate_storage_392) as *mut *mut Db; // Saved trace settings
     let mut __slate_storage_391: std::mem::MaybeUninit<u8> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_391: *mut u8 = std::ptr::addr_of_mut!(__slate_storage_391) as *mut u8;
+    let __slate_slot_391: *mut u8 = std::ptr::addr_of_mut!(__slate_storage_391) as *mut u8; // Saved value of db->openFlags
     let mut __slate_storage_390: std::mem::MaybeUninit<u32> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_390: *mut u32 = std::ptr::addr_of_mut!(__slate_storage_390) as *mut u32;
+    let __slate_slot_390: *mut u32 = std::ptr::addr_of_mut!(__slate_storage_390) as *mut u32; // Saved value of db->nTotalChange
     let mut __slate_storage_389: std::mem::MaybeUninit<i64> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_389: *mut i64 = std::ptr::addr_of_mut!(__slate_storage_389) as *mut i64;
+    let __slate_slot_389: *mut i64 = std::ptr::addr_of_mut!(__slate_storage_389) as *mut i64; // Saved value of db->nChange
     let mut __slate_storage_388: std::mem::MaybeUninit<i64> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_388: *mut i64 = std::ptr::addr_of_mut!(__slate_storage_388) as *mut i64;
+    let __slate_slot_388: *mut i64 = std::ptr::addr_of_mut!(__slate_storage_388) as *mut i64; // Saved value of db->flags
     let mut __slate_storage_387: std::mem::MaybeUninit<u64> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_387: *mut u64 = std::ptr::addr_of_mut!(__slate_storage_387) as *mut u64;
+    let __slate_slot_387: *mut u64 = std::ptr::addr_of_mut!(__slate_storage_387) as *mut u64; // Saved value of db->mDbFlags
     let mut __slate_storage_386: std::mem::MaybeUninit<u32> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_386: *mut u32 = std::ptr::addr_of_mut!(__slate_storage_386) as *mut u32;
+    let __slate_slot_386: *mut u32 = std::ptr::addr_of_mut!(__slate_storage_386) as *mut u32; // The temporary database we vacuum into
     let mut __slate_storage_385: std::mem::MaybeUninit<*mut Btree> =
         std::mem::MaybeUninit::uninit();
     let __slate_slot_385: *mut *mut Btree =
-        std::ptr::addr_of_mut!(__slate_storage_385) as *mut *mut Btree;
+        std::ptr::addr_of_mut!(__slate_storage_385) as *mut *mut Btree; // The database being vacuumed
     let mut __slate_storage_384: std::mem::MaybeUninit<*mut Btree> =
         std::mem::MaybeUninit::uninit();
     let __slate_slot_384: *mut *mut Btree =
-        std::ptr::addr_of_mut!(__slate_storage_384) as *mut *mut Btree;
+        std::ptr::addr_of_mut!(__slate_storage_384) as *mut *mut Btree; // Return code from service routines
     let mut __slate_storage_383: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
     let __slate_slot_383: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_383) as *mut i32;
     unsafe {
-        // /* Return code from service routines */
         std::ptr::write(__slate_slot_383, 0 as i32);
-        // /* The database being vacuumed */
-        // /* The temporary database we vacuum into */
-        // /* Saved value of db->mDbFlags */
-        // /* Saved value of db->flags */
-        // /* Saved value of db->nChange */
-        // /* Saved value of db->nTotalChange */
-        // /* Saved value of db->openFlags */
-        // /* Saved trace settings */
-        // /* Database to detach at end of vacuum */
         std::ptr::write(__slate_slot_392, std::ptr::null_mut::<Db>());
-        // /* True if vacuuming a :memory: database */
-        // /* Bytes of reserved space at the end of each page */
-        // /* Number of attached databases */
-        // /* Schema name of database to vacuum */
-        // /* Name of output file */
-        // /* sync flags for output db */
         std::ptr::write(__slate_slot_398, (1 as i32) as u32);
-        // /* Random value used for zDbVacuum[] */
-        // /* Name of the ATTACH-ed database used for vacuum */
         if !((unsafe { (*db).autoCommit }) != (0 as u8)) {
             unsafe {
                 sqlite3SetString(
@@ -2004,7 +2082,6 @@ extern "C-unwind" fn sqlite3RunVacuum(
                     (b"cannot VACUUM from within a transaction\0".as_ptr() as *mut i8) as *const i8,
                 )
             };
-            // /* IMP: R-12218-18073 */
             return 1 as i32;
         } else {
             if (unsafe { (*db).nVdbeActive }) > (1 as i32) {
@@ -2016,7 +2093,6 @@ extern "C-unwind" fn sqlite3RunVacuum(
                             as *const i8,
                     )
                 };
-                // /* IMP: R-15610-35227 */
                 return 1 as i32;
             } else {
                 *__slate_slot_390 = unsafe { (*db).openFlags };
@@ -2056,9 +2132,9 @@ extern "C-unwind" fn sqlite3RunVacuum(
                     *__slate_slot_397 = (b"\0".as_ptr() as *mut i8) as *const i8;
                 }
                 '__join_2: {
-                    // /* Save the current value of the database flags so that it can be
-                    //   ** restored before returning. Then set the writable-schema flag, and
-                    //   ** disable CHECK and foreign key constraints.  */
+                    // Save the current value of the database flags so that it can be
+                    // restored before returning. Then set the writable-schema flag, and
+                    // disable CHECK and foreign key constraints.
                     *__slate_slot_387 = unsafe { (*db).flags };
                     *__slate_slot_386 = unsafe { (*db).mDbFlags };
                     *__slate_slot_388 = unsafe { (*db).nChange };
@@ -2109,20 +2185,19 @@ extern "C-unwind" fn sqlite3RunVacuum(
                     *__slate_slot_393 = unsafe {
                         sqlite3PagerIsMemdb(unsafe { sqlite3BtreePager(*__slate_slot_384) })
                     };
-                    // /* Attach the temporary database as 'vacuum_XXXXXX'. The synchronous pragma
-                    //   ** can be set to 'off' for this file, as it is not recovered if a crash
-                    //   ** occurs anyway. The integrity of the database is maintained by a
-                    //   ** (possibly synchronous) transaction opened on the main database before
-                    //   ** sqlite3BtreeCopyFile() is called.
-                    //   **
-                    //   ** An optimization would be to use a non-journaled pager.
-                    //   ** (Later:) I tried setting "PRAGMA vacuum_XXXXXX.journal_mode=OFF" but
-                    //   ** that actually made the VACUUM run slower.  Very little journalling
-                    //   ** actually occurs when doing a vacuum since the vacuum_db is initially
-                    //   ** empty.  Only the journal header is written.  Apparently it takes more
-                    //   ** time to parse and run the PRAGMA to turn journalling off than it does
-                    //   ** to write the journal header file.
-                    //   */
+                    // Attach the temporary database as 'vacuum_XXXXXX'. The synchronous pragma
+                    // can be set to 'off' for this file, as it is not recovered if a crash
+                    // occurs anyway. The integrity of the database is maintained by a
+                    // (possibly synchronous) transaction opened on the main database before
+                    // sqlite3BtreeCopyFile() is called.
+                    //
+                    // An optimization would be to use a non-journaled pager.
+                    // (Later:) I tried setting "PRAGMA vacuum_XXXXXX.journal_mode=OFF" but
+                    // that actually made the VACUUM run slower.  Very little journalling
+                    // actually occurs when doing a vacuum since the vacuum_db is initially
+                    // empty.  Only the journal header is written.  Apparently it takes more
+                    // time to parse and run the PRAGMA to turn journalling off than it does
+                    // to write the journal header file.
                     unsafe {
                         sqlite3_randomness(
                             ((8 as u64) as u32) as i32,
@@ -2200,9 +2275,9 @@ extern "C-unwind" fn sqlite3RunVacuum(
                                 unsafe {
                                     (*(*__slate_slot_540)).mDbFlags = *__slate_slot_542;
                                 }
-                                // /* For a VACUUM INTO, the pager-flags are set to the same values as
-                                //     ** they are for the database being vacuumed, except that PAGER_CACHESPILL
-                                //     ** is always set. */
+                                // For a VACUUM INTO, the pager-flags are set to the same values as
+                                // they are for the database being vacuumed, except that PAGER_CACHESPILL
+                                // is always set.
                                 *__slate_slot_398 =
                                     ((((((unsafe {
                                         (*unsafe { unsafe { (*db).aDb }.offset(iDb as isize) })
@@ -2211,9 +2286,9 @@ extern "C-unwind" fn sqlite3RunVacuum(
                                         as i64) as u64)
                                         | (unsafe { (*db).flags }) & (((56 as i32) as i64) as u64))
                                         as u32;
-                                // /* If the VACUUM INTO target file is a URI filename and if the
-                                //     ** "reserve=N" query parameter is present, reset the reserve to the
-                                //     ** amount specified, if the amount is within range */
+                                // If the VACUUM INTO target file is a URI filename and if the
+                                // "reserve=N" query parameter is present, reset the reserve to the
+                                // amount specified, if the amount is within range
                                 *__slate_slot_403 =
                                     unsafe { sqlite3BtreeGetFilename(*__slate_slot_385) };
                                 if *__slate_slot_403 != std::ptr::null::<i8>() {
@@ -2254,10 +2329,9 @@ extern "C-unwind" fn sqlite3RunVacuum(
                                 *__slate_slot_398 | ((32 as i32) as u32),
                             )
                         };
-                        // /* Begin a transaction and take an exclusive lock on the main database
-                        //   ** file. This is done before the sqlite3BtreeGetPageSize(pMain) call below,
-                        //   ** to ensure that we do not try to change the page-size on a WAL database.
-                        //   */
+                        // Begin a transaction and take an exclusive lock on the main database
+                        // file. This is done before the sqlite3BtreeGetPageSize(pMain) call below,
+                        // to ensure that we do not try to change the page-size on a WAL database.
                         *__slate_slot_383 =
                             execSql(db, pzErrMsg, (b"BEGIN\0".as_ptr() as *mut i8) as *const i8);
                         if *__slate_slot_383 != (0 as i32) {
@@ -2275,7 +2349,7 @@ extern "C-unwind" fn sqlite3RunVacuum(
                             };
                             if *__slate_slot_383 != (0 as i32) {
                             } else {
-                                // /* Do not attempt to change the page size for a WAL database */
+                                // Do not attempt to change the page size for a WAL database
                                 if (unsafe {
                                     sqlite3PagerGetJournalMode(unsafe {
                                         sqlite3BtreePager(*__slate_slot_384)
@@ -2328,13 +2402,12 @@ extern "C-unwind" fn sqlite3RunVacuum(
                                             *__slate_slot_545,
                                         )
                                     };
-                                    // /* Query the schema of the main database. Create a mirror schema
-                                    //   ** in the temporary database.
-                                    //   */
-                                    // /* force new CREATE statements into vacuum_db */
+                                    // Query the schema of the main database. Create a mirror schema
+                                    // in the temporary database.
                                     unsafe {
                                         (*db).init.iDb = (*__slate_slot_395 as i8) as u8;
                                     }
+                                    // force new CREATE statements into vacuum_db
                                     *__slate_slot_383 = unsafe {
                                         execSqlF(db, pzErrMsg, (b"SELECT sql FROM \"%w\".sqlite_schema WHERE type='table'AND name<>'sqlite_sequence' AND coalesce(rootpage,1)>0\0".as_ptr() as *mut i8) as *const i8, *__slate_slot_396)
                                     };
@@ -2348,10 +2421,9 @@ extern "C-unwind" fn sqlite3RunVacuum(
                                             unsafe {
                                                 (*db).init.iDb = ((0 as i32) as i8) as u8;
                                             }
-                                            // /* Loop through the tables in the main database. For each, do
-                                            //   ** an "INSERT INTO vacuum_db.xxx SELECT * FROM main.xxx;" to copy
-                                            //   ** the contents to the temporary database.
-                                            //   */
+                                            // Loop through the tables in the main database. For each, do
+                                            // an "INSERT INTO vacuum_db.xxx SELECT * FROM main.xxx;" to copy
+                                            // the contents to the temporary database.
                                             *__slate_slot_383 = unsafe {
                                                 execSqlF(db, pzErrMsg, (b"SELECT'INSERT INTO %s.'||quote(name)||' SELECT*FROM\"%w\".'||quote(name)FROM %s.sqlite_schema WHERE type='table'AND coalesce(rootpage,1)>0\0".as_ptr() as *mut i8) as *const i8, (*__slate_slot_400).as_mut_ptr() as *mut i8, *__slate_slot_396, (*__slate_slot_400).as_mut_ptr() as *mut i8)
                                             };
@@ -2369,44 +2441,36 @@ extern "C-unwind" fn sqlite3RunVacuum(
                                             }
                                             if *__slate_slot_383 != (0 as i32) {
                                             } else {
-                                                // /* Copy the triggers, views, and virtual tables from the main database
-                                                //   ** over to the temporary database.  None of these objects has any
-                                                //   ** associated storage, so all we have to do is copy their entries
-                                                //   ** from the schema table.
-                                                //   */
+                                                // Copy the triggers, views, and virtual tables from the main database
+                                                // over to the temporary database.  None of these objects has any
+                                                // associated storage, so all we have to do is copy their entries
+                                                // from the schema table.
                                                 *__slate_slot_383 = unsafe {
                                                     execSqlF(db, pzErrMsg, (b"INSERT INTO %s.sqlite_schema SELECT*FROM \"%w\".sqlite_schema WHERE type IN('view','trigger') OR(type='table'AND rootpage=0)\0".as_ptr() as *mut i8) as *const i8, (*__slate_slot_400).as_mut_ptr() as *mut i8, *__slate_slot_396)
                                                 };
                                                 if *__slate_slot_383 != (0 as i32) {
                                                 } else {
-                                                    // /* At this point, there is a write transaction open on both the
-                                                    //   ** vacuum database and the main database. Assuming no error occurs,
-                                                    //   ** both transactions are closed by this block - the main database
-                                                    //   ** transaction by sqlite3BtreeCopyFile() and the other by an explicit
-                                                    //   ** call to sqlite3BtreeCommit().
-                                                    //   */
-                                                    // /* This array determines which meta meta values are preserved in the
-                                                    //     ** vacuum.  Even entries are the meta value number and odd entries
-                                                    //     ** are an increment to apply to the meta value after the vacuum.
-                                                    //     ** The increment is used to increase the schema cookie so that other
-                                                    //     ** connections to the same database will know to reread the schema.
-                                                    //     */
-                                                    // /* Add one to the old schema cookie */
-                                                    // /* Preserve the default page cache size */
-                                                    // /* Preserve the text encoding */
-                                                    // /* Preserve the user version */
-                                                    // /* Preserve the application id */
+                                                    // This array determines which meta meta values are preserved in the
+                                                    // vacuum.  Even entries are the meta value number and odd entries
+                                                    // are an increment to apply to the meta value after the vacuum.
+                                                    // The increment is used to increase the schema cookie so that other
+                                                    // connections to the same database will know to reread the schema.
+                                                    // Add one to the old schema cookie
+                                                    // Preserve the default page cache size
+                                                    // Preserve the text encoding
+                                                    // Preserve the user version
+                                                    // Preserve the application id
                                                     0 as i32;
                                                     0 as i32;
-                                                    // /* Copy Btree meta values */
+                                                    // Copy Btree meta values
                                                     *__slate_slot_406 = 0 as i32;
                                                     loop {
                                                         if *__slate_slot_406
                                                             < ((((10 as u64) / (1 as u64)) as u32)
                                                                 as i32)
                                                         {
-                                                            // /* GetMeta() and UpdateMeta() cannot fail in this context because
-                                                            //       ** we already have page 1 loaded into cache and marked dirty. */
+                                                            // GetMeta() and UpdateMeta() cannot fail in this context because
+                                                            // we already have page 1 loaded into cache and marked dirty.
                                                             unsafe {
                                                                 sqlite3BtreeGetMeta(
                                                                     *__slate_slot_384,
@@ -2522,7 +2586,7 @@ extern "C-unwind" fn sqlite3RunVacuum(
                 unsafe {
                     (*db).init.iDb = ((0 as i32) as i8) as u8;
                 }
-                // /* Restore the original value of db->flags */
+                // Restore the original value of db->flags
                 unsafe {
                     (*db).mDbFlags = *__slate_slot_386;
                 }
@@ -2541,13 +2605,12 @@ extern "C-unwind" fn sqlite3RunVacuum(
                 unsafe {
                     sqlite3BtreeSetPageSize(*__slate_slot_384, -(1 as i32), 0 as i32, 1 as i32)
                 };
-                // /* Currently there is an SQL level transaction open on the vacuum
-                //   ** database. No locks are held on any other files (since the main file
-                //   ** was committed at the btree level). So it safe to end the transaction
-                //   ** by manually setting the autoCommit flag to true and detaching the
-                //   ** vacuum database. The vacuum_db journal file is deleted when the pager
-                //   ** is closed by the DETACH.
-                //   */
+                // Currently there is an SQL level transaction open on the vacuum
+                // database. No locks are held on any other files (since the main file
+                // was committed at the btree level). So it safe to end the transaction
+                // by manually setting the autoCommit flag to true and detaching the
+                // vacuum database. The vacuum_db journal file is deleted when the pager
+                // is closed by the DETACH.
                 unsafe {
                     (*db).autoCommit = ((1 as i32) as i8) as u8;
                 }
@@ -2560,120 +2623,27 @@ extern "C-unwind" fn sqlite3RunVacuum(
                         (*(*__slate_slot_392)).pSchema = std::ptr::null_mut::<Schema>();
                     }
                 }
-                // /* This both clears the schemas and reduces the size of the db->aDb[]
-                //   ** array. */
+                // This both clears the schemas and reduces the size of the db->aDb[]
+                // array.
                 unsafe { sqlite3ResetAllSchemasOfConnection(db) };
                 return *__slate_slot_383;
             }
         }
     }
+    // IMP: R-12218-18073
+    // IMP: R-15610-35227
     return unsafe { std::mem::zeroed() };
 }
 
-// /*
-// ** 2003 April 6
-// **
-// ** The author disclaims copyright to this source code.  In place of
-// ** a legal notice, here is a blessing:
-// **
-// **    May you do good and not evil.
-// **    May you find forgiveness for yourself and forgive others.
-// **    May you share freely, never taking more than you give.
-// **
-// *************************************************************************
-// ** This file contains code used to implement the VACUUM command.
-// **
-// ** Most of the code in this file may be omitted by defining the
-// ** SQLITE_OMIT_VACUUM macro.
-// */
-// /*
-// ** Execute zSql on database db.
-// **
-// ** If zSql returns rows, then each row will have exactly one
-// ** column.  (This will only happen if zSql begins with "SELECT".)
-// ** Take each row of result and call execSql() again recursively.
-// **
-// ** The execSqlF() routine does the same thing, except it accepts
-// ** a format string as its third argument
-// */
-fn execSql(mut db: *mut sqlite3, mut pzErrMsg: *mut *mut i8, mut zSql: *const i8) -> i32 {
-    let mut pStmt: *mut sqlite3_stmt = unsafe { std::mem::zeroed() };
-    let mut rc: i32 = 0 as i32;
-    // /* printf("SQL: [%s]\n", zSql); fflush(stdout); */
-    rc = unsafe {
-        sqlite3_prepare_v2(
-            db,
-            zSql,
-            -(1 as i32),
-            std::ptr::addr_of_mut!(pStmt),
-            std::ptr::null_mut::<*const i8>(),
-        )
-    };
-    if rc != (0 as i32) {
-        return rc;
-    }
-    '__slate_break_503: loop {
-        let __v551: i32 = unsafe { sqlite3_step(pStmt) };
-        rc = __v551;
-        if !((100 as i32) == __v551) {
-            break;
-        }
-        let mut zSubSql: *const i8 = (unsafe { sqlite3_column_text(pStmt, 0 as i32) }) as *const i8;
-        0 as i32;
-        // /* The secondary SQL must be one of CREATE TABLE, CREATE INDEX,
-        //     ** or INSERT.  Historically there have been attacks that first
-        //     ** corrupt the sqlite_schema.sql field with other kinds of statements
-        //     ** then run VACUUM to get those statements to execute at inappropriate
-        //     ** times. */
-        if zSubSql != std::ptr::null::<i8>()
-            && ((unsafe {
-                strncmp(
-                    zSubSql,
-                    (b"CRE\0".as_ptr() as *mut i8) as *const i8,
-                    ((3 as i32) as i64) as u64,
-                )
-            }) == (0 as i32)
-                || (unsafe {
-                    strncmp(
-                        zSubSql,
-                        (b"INS\0".as_ptr() as *mut i8) as *const i8,
-                        ((3 as i32) as i64) as u64,
-                    )
-                }) == (0 as i32))
-        {
-            rc = execSql(db, pzErrMsg, zSubSql);
-            if rc != (0 as i32) {
-                break '__slate_break_503;
-            }
-        }
-    }
-    0 as i32;
-    if rc == (101 as i32) {
-        rc = 0 as i32;
-    }
-    if rc != (0 as i32) {
-        unsafe { sqlite3SetString(pzErrMsg, db, unsafe { sqlite3_errmsg(db) }) };
-    }
-    unsafe { sqlite3_finalize(pStmt) };
-    return rc;
-}
-
-unsafe extern "C-unwind" fn execSqlF(
-    mut db: *mut sqlite3,
-    mut pzErrMsg: *mut *mut i8,
-    mut zSql: *const i8,
-    mut __va_args: ...
-) -> i32 {
-    let mut z: *mut i8 = unsafe { std::mem::zeroed() };
-    let mut ap: core::ffi::VaList<'_> = unsafe { std::mem::zeroed() };
-    let mut rc: i32 = 0 as i32;
-    ap = __va_args.clone();
-    z = unsafe { sqlite3VMPrintf(db, zSql, ap.clone()) };
-    {}
-    if z == std::ptr::null_mut::<i8>() {
-        return 7 as i32;
-    }
-    rc = execSql(db, pzErrMsg, z as *const i8);
-    unsafe { sqlite3DbFree(db, z as *mut ()) };
-    return rc;
-}
+static mut aCopy: [u8; 10] = [
+    ((1 as i32) as i8) as u8,
+    ((1 as i32) as i8) as u8,
+    ((3 as i32) as i8) as u8,
+    ((0 as i32) as i8) as u8,
+    ((5 as i32) as i8) as u8,
+    ((0 as i32) as i8) as u8,
+    ((6 as i32) as i8) as u8,
+    ((0 as i32) as i8) as u8,
+    ((8 as i32) as i8) as u8,
+    ((0 as i32) as i8) as u8,
+];

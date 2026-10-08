@@ -1,3 +1,15 @@
+//! 2001 September 15
+//!
+//! The author disclaims copyright to this source code.  In place of
+//! a legal notice, here is a blessing:
+//!
+//!    May you do good and not evil.
+//!    May you find forgiveness for yourself and forgive others.
+//!    May you share freely, never taking more than you give.
+//!
+//!
+//! This file contains C code routines that are called by the parser
+//! in order to generate code for DELETE FROM statements.
 unsafe extern "C" {
     fn sqlite3_stricmp(__v494: *const i8, __v495: *const i8) -> i32;
     fn memset(__s: *mut (), __c: i32, __n: u64) -> *mut ();
@@ -204,6 +216,364 @@ unsafe extern "C" {
 
 #[repr(C)]
 #[derive(Clone, Copy)]
+struct sqlite3_file {
+    pMethods: *const sqlite3_io_methods,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_io_methods {
+    iVersion: i32,
+    xClose: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file) -> i32>,
+    xRead: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, *mut (), i32, i64) -> i32>,
+    xWrite: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, *const (), i32, i64) -> i32>,
+    xTruncate: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i64) -> i32>,
+    xSync: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32) -> i32>,
+    xFileSize: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, *mut i64) -> i32>,
+    xLock: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32) -> i32>,
+    xUnlock: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32) -> i32>,
+    xCheckReservedLock: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, *mut i32) -> i32>,
+    xFileControl: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32, *mut ()) -> i32>,
+    xSectorSize: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file) -> i32>,
+    xDeviceCharacteristics: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file) -> i32>,
+    xShmMap:
+        Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32, i32, i32, *mut *mut ()) -> i32>,
+    xShmLock: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32, i32, i32) -> i32>,
+    xShmBarrier: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file)>,
+    xShmUnmap: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32) -> i32>,
+    xFetch: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i64, i32, *mut *mut ()) -> i32>,
+    xUnfetch: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i64, *mut ()) -> i32>,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_vfs {
+    iVersion: i32,
+    szOsFile: i32,
+    mxPathname: i32,
+    pNext: *mut sqlite3_vfs,
+    zName: *const i8,
+    pAppData: *mut (),
+    xOpen: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vfs,
+            *const i8,
+            *mut sqlite3_file,
+            i32,
+            *mut i32,
+        ) -> i32,
+    >,
+    xDelete: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8, i32) -> i32>,
+    xAccess: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8, i32, *mut i32) -> i32>,
+    xFullPathname:
+        Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8, i32, *mut i8) -> i32>,
+    xDlOpen: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8) -> *mut ()>,
+    xDlError: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, i32, *mut i8)>,
+    xDlSym: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vfs,
+            *mut (),
+            *const i8,
+        ) -> Option<unsafe extern "C-unwind" fn()>,
+    >,
+    xDlClose: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *mut ())>,
+    xRandomness: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, i32, *mut i8) -> i32>,
+    xSleep: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, i32) -> i32>,
+    xCurrentTime: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *mut f64) -> i32>,
+    xGetLastError: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, i32, *mut i8) -> i32>,
+    xCurrentTimeInt64: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *mut i64) -> i32>,
+    xSetSystemCall: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vfs,
+            *const i8,
+            Option<unsafe extern "C-unwind" fn()>,
+        ) -> i32,
+    >,
+    xGetSystemCall: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vfs,
+            *const i8,
+        ) -> Option<unsafe extern "C-unwind" fn()>,
+    >,
+    xNextSystemCall: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8) -> *const i8>,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_mutex {}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_module {
+    iVersion: i32,
+    xCreate: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3,
+            *mut (),
+            i32,
+            *const *const i8,
+            *mut *mut sqlite3_vtab,
+            *mut *mut i8,
+        ) -> i32,
+    >,
+    xConnect: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3,
+            *mut (),
+            i32,
+            *const *const i8,
+            *mut *mut sqlite3_vtab,
+            *mut *mut i8,
+        ) -> i32,
+    >,
+    xBestIndex:
+        Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, *mut sqlite3_index_info) -> i32>,
+    xDisconnect: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
+    xDestroy: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
+    xOpen: Option<
+        unsafe extern "C-unwind" fn(*mut sqlite3_vtab, *mut *mut sqlite3_vtab_cursor) -> i32,
+    >,
+    xClose: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor) -> i32>,
+    xFilter: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vtab_cursor,
+            i32,
+            *const i8,
+            i32,
+            *mut *mut sqlite3_value,
+        ) -> i32,
+    >,
+    xNext: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor) -> i32>,
+    xEof: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor) -> i32>,
+    xColumn: Option<
+        unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor, *mut sqlite3_context, i32) -> i32,
+    >,
+    xRowid: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor, *mut i64) -> i32>,
+    xUpdate: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vtab,
+            i32,
+            *mut *mut sqlite3_value,
+            *mut i64,
+        ) -> i32,
+    >,
+    xBegin: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
+    xSync: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
+    xCommit: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
+    xRollback: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
+    xFindFunction: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vtab,
+            i32,
+            *const i8,
+            *mut Option<
+                unsafe extern "C-unwind" fn(*mut sqlite3_context, i32, *mut *mut sqlite3_value),
+            >,
+            *mut *mut (),
+        ) -> i32,
+    >,
+    xRename: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, *const i8) -> i32>,
+    xSavepoint: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, i32) -> i32>,
+    xRelease: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, i32) -> i32>,
+    xRollbackTo: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, i32) -> i32>,
+    xShadowName: Option<unsafe extern "C-unwind" fn(*const i8) -> i32>,
+    xIntegrity: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vtab,
+            *const i8,
+            *const i8,
+            i32,
+            *mut *mut i8,
+        ) -> i32,
+    >,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_value {}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_context {}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_index_info {
+    nConstraint: i32,
+    aConstraint: *mut sqlite3_index_constraint,
+    nOrderBy: i32,
+    aOrderBy: *mut sqlite3_index_orderby,
+    aConstraintUsage: *mut sqlite3_index_constraint_usage,
+    idxNum: i32,
+    idxStr: *mut i8,
+    needToFreeIdxStr: i32,
+    orderByConsumed: i32,
+    estimatedCost: f64,
+    estimatedRows: i64,
+    idxFlags: i32,
+    colUsed: u64,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_vtab {
+    pModule: *const sqlite3_module,
+    nRef: i32,
+    zErrMsg: *mut i8,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_vtab_cursor {
+    pVtab: *mut sqlite3_vtab,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Hash {
+    htsize: u32,
+    count: u32,
+    first: *mut HashElem,
+    ht: *mut _ht,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_index_constraint {
+    iColumn: i32,
+    op: u8,
+    usable: u8,
+    iTermOffset: i32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_index_orderby {
+    iColumn: i32,
+    desc: u8,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_index_constraint_usage {
+    argvIndex: i32,
+    omit: u8,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct HashElem {
+    next: *mut HashElem,
+    prev: *mut HashElem,
+    data: *mut (),
+    pKey: *const i8,
+    h: u32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct BusyHandler {
+    xBusyHandler: Option<unsafe extern "C-unwind" fn(*mut (), i32) -> i32>,
+    pBusyArg: *mut (),
+    nBusy: i32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct _ht {
+    count: u32,
+    chain: *mut HashElem,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct SubrtnSig {
+    selId: i32,
+    bComplete: u8,
+    zAff: *mut i8,
+    iTable: i32,
+    iAddr: i32,
+    regReturn: i32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct VdbeOp {
+    opcode: u8,
+    p4type: i8,
+    p5: u16,
+    p1: i32,
+    p2: i32,
+    p3: i32,
+    p4: p4union,
+    zComment: *mut i8,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct SubProgram {
+    aOp: *mut VdbeOp,
+    nOp: i32,
+    nMem: i32,
+    nCsr: i32,
+    aOnce: *mut u8,
+    token: *mut (),
+    pNext: *mut SubProgram,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Db {
+    zDbSName: *mut i8,
+    pBt: *mut Btree,
+    safety_level: u8,
+    bSyncSet: u8,
+    pSchema: *mut Schema,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Schema {
+    schema_cookie: i32,
+    iGeneration: i32,
+    tblHash: Hash,
+    idxHash: Hash,
+    trigHash: Hash,
+    fkeyHash: Hash,
+    pSeqTab: *mut Table,
+    file_format: u8,
+    enc: u8,
+    schemaFlags: u16,
+    cache_size: i32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Lookaside {
+    bDisable: u32,
+    sz: u16,
+    szTrue: u16,
+    bMalloced: u8,
+    nSlot: u32,
+    anStat: [u32; 3],
+    pInit: *mut LookasideSlot,
+    pFree: *mut LookasideSlot,
+    pSmallInit: *mut LookasideSlot,
+    pSmallFree: *mut LookasideSlot,
+    pMiddle: *mut (),
+    pStart: *mut (),
+    pEnd: *mut (),
+    pTrueEnd: *mut (),
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct LookasideSlot {
+    pNext: *mut LookasideSlot,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
 struct sqlite3 {
     pVfs: *mut sqlite3_vfs,
     pVdbe: *mut Vdbe,
@@ -309,273 +679,163 @@ struct sqlite3 {
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct sqlite3_file {
-    pMethods: *const sqlite3_io_methods,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct sqlite3_io_methods {
-    iVersion: i32,
-    xClose: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file) -> i32>,
-    xRead: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, *mut (), i32, i64) -> i32>,
-    xWrite: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, *const (), i32, i64) -> i32>,
-    xTruncate: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i64) -> i32>,
-    xSync: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32) -> i32>,
-    xFileSize: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, *mut i64) -> i32>,
-    xLock: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32) -> i32>,
-    xUnlock: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32) -> i32>,
-    xCheckReservedLock: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, *mut i32) -> i32>,
-    xFileControl: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32, *mut ()) -> i32>,
-    xSectorSize: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file) -> i32>,
-    xDeviceCharacteristics: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file) -> i32>,
-    xShmMap:
-        Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32, i32, i32, *mut *mut ()) -> i32>,
-    xShmLock: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32, i32, i32) -> i32>,
-    xShmBarrier: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file)>,
-    xShmUnmap: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32) -> i32>,
-    xFetch: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i64, i32, *mut *mut ()) -> i32>,
-    xUnfetch: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i64, *mut ()) -> i32>,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct sqlite3_mutex {}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct sqlite3_vfs {
-    iVersion: i32,
-    szOsFile: i32,
-    mxPathname: i32,
-    pNext: *mut sqlite3_vfs,
+struct FuncDef {
+    nArg: i16,
+    funcFlags: u32,
+    pUserData: *mut (),
+    pNext: *mut FuncDef,
+    xSFunc: Option<unsafe extern "C-unwind" fn(*mut sqlite3_context, i32, *mut *mut sqlite3_value)>,
+    xFinalize: Option<unsafe extern "C-unwind" fn(*mut sqlite3_context)>,
+    xValue: Option<unsafe extern "C-unwind" fn(*mut sqlite3_context)>,
+    xInverse:
+        Option<unsafe extern "C-unwind" fn(*mut sqlite3_context, i32, *mut *mut sqlite3_value)>,
     zName: *const i8,
-    pAppData: *mut (),
-    xOpen: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3_vfs,
-            *const i8,
-            *mut sqlite3_file,
-            i32,
-            *mut i32,
-        ) -> i32,
-    >,
-    xDelete: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8, i32) -> i32>,
-    xAccess: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8, i32, *mut i32) -> i32>,
-    xFullPathname:
-        Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8, i32, *mut i8) -> i32>,
-    xDlOpen: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8) -> *mut ()>,
-    xDlError: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, i32, *mut i8)>,
-    xDlSym: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3_vfs,
-            *mut (),
-            *const i8,
-        ) -> Option<unsafe extern "C-unwind" fn()>,
-    >,
-    xDlClose: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *mut ())>,
-    xRandomness: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, i32, *mut i8) -> i32>,
-    xSleep: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, i32) -> i32>,
-    xCurrentTime: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *mut f64) -> i32>,
-    xGetLastError: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, i32, *mut i8) -> i32>,
-    xCurrentTimeInt64: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *mut i64) -> i32>,
-    xSetSystemCall: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3_vfs,
-            *const i8,
-            Option<unsafe extern "C-unwind" fn()>,
-        ) -> i32,
-    >,
-    xGetSystemCall: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3_vfs,
-            *const i8,
-        ) -> Option<unsafe extern "C-unwind" fn()>,
-    >,
-    xNextSystemCall: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8) -> *const i8>,
+    u: __SlateRecord165,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct sqlite3_value {}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct sqlite3_context {}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct sqlite3_vtab {
-    pModule: *const sqlite3_module,
+struct FuncDestructor {
     nRef: i32,
-    zErrMsg: *mut i8,
+    xDestroy: Option<unsafe extern "C-unwind" fn(*mut ())>,
+    pUserData: *mut (),
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct sqlite3_index_info {
-    nConstraint: i32,
-    aConstraint: *mut sqlite3_index_constraint,
-    nOrderBy: i32,
-    aOrderBy: *mut sqlite3_index_orderby,
-    aConstraintUsage: *mut sqlite3_index_constraint_usage,
-    idxNum: i32,
-    idxStr: *mut i8,
-    needToFreeIdxStr: i32,
-    orderByConsumed: i32,
-    estimatedCost: f64,
-    estimatedRows: i64,
-    idxFlags: i32,
-    colUsed: u64,
+struct Savepoint {
+    zName: *mut i8,
+    nDeferredCons: i64,
+    nDeferredImmCons: i64,
+    pNext: *mut Savepoint,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct sqlite3_vtab_cursor {
+struct Module {
+    pModule: *const sqlite3_module,
+    zName: *const i8,
+    nRefModule: i32,
+    pAux: *mut (),
+    xDestroy: Option<unsafe extern "C-unwind" fn(*mut ())>,
+    pEpoTab: *mut Table,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Column {
+    zCnName: *mut i8,
+    __slate_bits_0: __slate_bits::__SlateBits64U0,
+    affinity: i8,
+    szEst: u8,
+    hName: u8,
+    iDflt: u16,
+    colFlags: u16,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct CollSeq {
+    zName: *mut i8,
+    enc: u8,
+    pUser: *mut (),
+    xCmp: Option<unsafe extern "C-unwind" fn(*mut (), i32, *const (), i32, *const ()) -> i32>,
+    xDel: Option<unsafe extern "C-unwind" fn(*mut ())>,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct VTable {
+    db: *mut sqlite3,
+    pMod: *mut Module,
     pVtab: *mut sqlite3_vtab,
+    nRef: i32,
+    bConstraint: u8,
+    bAllSchemas: u8,
+    eVtabRisk: u8,
+    iSavepoint: i32,
+    pNext: *mut VTable,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct sqlite3_module {
-    iVersion: i32,
-    xCreate: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3,
-            *mut (),
-            i32,
-            *const *const i8,
-            *mut *mut sqlite3_vtab,
-            *mut *mut i8,
-        ) -> i32,
-    >,
-    xConnect: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3,
-            *mut (),
-            i32,
-            *const *const i8,
-            *mut *mut sqlite3_vtab,
-            *mut *mut i8,
-        ) -> i32,
-    >,
-    xBestIndex:
-        Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, *mut sqlite3_index_info) -> i32>,
-    xDisconnect: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
-    xDestroy: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
-    xOpen: Option<
-        unsafe extern "C-unwind" fn(*mut sqlite3_vtab, *mut *mut sqlite3_vtab_cursor) -> i32,
-    >,
-    xClose: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor) -> i32>,
-    xFilter: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3_vtab_cursor,
-            i32,
-            *const i8,
-            i32,
-            *mut *mut sqlite3_value,
-        ) -> i32,
-    >,
-    xNext: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor) -> i32>,
-    xEof: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor) -> i32>,
-    xColumn: Option<
-        unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor, *mut sqlite3_context, i32) -> i32,
-    >,
-    xRowid: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor, *mut i64) -> i32>,
-    xUpdate: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3_vtab,
-            i32,
-            *mut *mut sqlite3_value,
-            *mut i64,
-        ) -> i32,
-    >,
-    xBegin: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
-    xSync: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
-    xCommit: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
-    xRollback: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
-    xFindFunction: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3_vtab,
-            i32,
-            *const i8,
-            *mut Option<
-                unsafe extern "C-unwind" fn(*mut sqlite3_context, i32, *mut *mut sqlite3_value),
-            >,
-            *mut *mut (),
-        ) -> i32,
-    >,
-    xRename: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, *const i8) -> i32>,
-    xSavepoint: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, i32) -> i32>,
-    xRelease: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, i32) -> i32>,
-    xRollbackTo: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, i32) -> i32>,
-    xShadowName: Option<unsafe extern "C-unwind" fn(*const i8) -> i32>,
-    xIntegrity: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3_vtab,
-            *const i8,
-            *const i8,
-            i32,
-            *mut *mut i8,
-        ) -> i32,
-    >,
+struct Table {
+    zName: *mut i8,
+    aCol: *mut Column,
+    pIndex: *mut Index,
+    zColAff: *mut i8,
+    pCheck: *mut ExprList,
+    tnum: u32,
+    nTabRef: u32,
+    tabFlags: u32,
+    iPKey: i16,
+    nCol: i16,
+    nNVCol: i16,
+    nRowLogEst: i16,
+    szTabRow: i16,
+    keyConf: u8,
+    eTabType: u8,
+    u: __SlateRecord166,
+    pTrigger: *mut Trigger,
+    pSchema: *mut Schema,
+    aHx: [u8; 16],
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct sqlite3_index_constraint {
-    iColumn: i32,
-    op: u8,
-    usable: u8,
-    iTermOffset: i32,
+struct FKey {
+    pFrom: *mut Table,
+    pNextFrom: *mut FKey,
+    zTo: *mut i8,
+    pNextTo: *mut FKey,
+    pPrevTo: *mut FKey,
+    nCol: i32,
+    isDeferred: u8,
+    aAction: [u8; 2],
+    apTrigger: [*mut Trigger; 2],
+    aCol: [sColMap; 0],
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct sqlite3_index_orderby {
-    iColumn: i32,
-    desc: u8,
+struct KeyInfo {
+    nRef: u32,
+    enc: u8,
+    nKeyField: u16,
+    nAllField: u16,
+    db: *mut sqlite3,
+    aSortFlags: *mut u8,
+    aColl: [*mut CollSeq; 0],
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct sqlite3_index_constraint_usage {
-    argvIndex: i32,
-    omit: u8,
+struct Index {
+    zName: *mut i8,
+    aiColumn: *mut i16,
+    aiRowLogEst: *mut i16,
+    pTable: *mut Table,
+    zColAff: *mut i8,
+    pNext: *mut Index,
+    pSchema: *mut Schema,
+    aSortOrder: *mut u8,
+    azColl: *mut *const i8,
+    pPartIdxWhere: *mut Expr,
+    aColExpr: *mut ExprList,
+    tnum: u32,
+    szIdxRow: i16,
+    nKeyCol: u16,
+    nColumn: u16,
+    onError: u8,
+    __slate_bits_0: __slate_bits::__SlateBits88U0,
+    colNotIdxed: u64,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct Hash {
-    htsize: u32,
-    count: u32,
-    first: *mut HashElem,
-    ht: *mut _ht,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct HashElem {
-    next: *mut HashElem,
-    prev: *mut HashElem,
-    data: *mut (),
-    pKey: *const i8,
-    h: u32,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct _ht {
-    count: u32,
-    chain: *mut HashElem,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct BusyHandler {
-    xBusyHandler: Option<unsafe extern "C-unwind" fn(*mut (), i32) -> i32>,
-    pBusyArg: *mut (),
-    nBusy: i32,
+struct Token {
+    z: *const i8,
+    n: u32,
 }
 
 #[repr(C)]
@@ -594,101 +854,6 @@ struct AggInfo {
     aFunc: *mut AggInfo_func,
     nFunc: i32,
     selId: u32,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct AuthContext {
-    zAuthContext: *const i8,
-    pParse: *mut Parse,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct AutoincInfo {
-    pNext: *mut AutoincInfo,
-    pTab: *mut Table,
-    iDb: i32,
-    regCtr: i32,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct CollSeq {
-    zName: *mut i8,
-    enc: u8,
-    pUser: *mut (),
-    xCmp: Option<unsafe extern "C-unwind" fn(*mut (), i32, *const (), i32, *const ()) -> i32>,
-    xDel: Option<unsafe extern "C-unwind" fn(*mut ())>,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Column {
-    zCnName: *mut i8,
-    __slate_bits_0: __slate_bits::__SlateBits64U0,
-    affinity: i8,
-    szEst: u8,
-    hName: u8,
-    iDflt: u16,
-    colFlags: u16,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Cte {
-    zName: *mut i8,
-    pCols: *mut ExprList,
-    pSelect: *mut Select,
-    zCteErr: *const i8,
-    pUse: *mut CteUse,
-    eM10d: u8,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct CteUse {
-    nUse: i32,
-    addrM9e: i32,
-    regRtn: i32,
-    iCur: i32,
-    nRowEst: i16,
-    eM10d: u8,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Db {
-    zDbSName: *mut i8,
-    pBt: *mut Btree,
-    safety_level: u8,
-    bSyncSet: u8,
-    pSchema: *mut Schema,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct DbClientData {
-    pNext: *mut DbClientData,
-    pData: *mut (),
-    xDestructor: Option<unsafe extern "C-unwind" fn(*mut ())>,
-    zName: [i8; 0],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Schema {
-    schema_cookie: i32,
-    iGeneration: i32,
-    tblHash: Hash,
-    idxHash: Hash,
-    trigHash: Hash,
-    fkeyHash: Hash,
-    pSeqTab: *mut Table,
-    file_format: u8,
-    enc: u8,
-    schemaFlags: u16,
-    cache_size: i32,
 }
 
 #[repr(C)]
@@ -721,45 +886,6 @@ struct ExprList {
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct FKey {
-    pFrom: *mut Table,
-    pNextFrom: *mut FKey,
-    zTo: *mut i8,
-    pNextTo: *mut FKey,
-    pPrevTo: *mut FKey,
-    nCol: i32,
-    isDeferred: u8,
-    aAction: [u8; 2],
-    apTrigger: [*mut Trigger; 2],
-    aCol: [sColMap; 0],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct FuncDestructor {
-    nRef: i32,
-    xDestroy: Option<unsafe extern "C-unwind" fn(*mut ())>,
-    pUserData: *mut (),
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct FuncDef {
-    nArg: i16,
-    funcFlags: u32,
-    pUserData: *mut (),
-    pNext: *mut FuncDef,
-    xSFunc: Option<unsafe extern "C-unwind" fn(*mut sqlite3_context, i32, *mut *mut sqlite3_value)>,
-    xFinalize: Option<unsafe extern "C-unwind" fn(*mut sqlite3_context)>,
-    xValue: Option<unsafe extern "C-unwind" fn(*mut sqlite3_context)>,
-    xInverse:
-        Option<unsafe extern "C-unwind" fn(*mut sqlite3_context, i32, *mut *mut sqlite3_value)>,
-    zName: *const i8,
-    u: __SlateRecord165,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
 struct IdList {
     nId: i32,
     a: [IdList_item; 0],
@@ -767,85 +893,38 @@ struct IdList {
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct Index {
+struct Subquery {
+    pSelect: *mut Select,
+    addrFillSub: i32,
+    regReturn: i32,
+    regResult: i32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct SrcItem {
     zName: *mut i8,
-    aiColumn: *mut i16,
-    aiRowLogEst: *mut i16,
-    pTable: *mut Table,
-    zColAff: *mut i8,
-    pNext: *mut Index,
-    pSchema: *mut Schema,
-    aSortOrder: *mut u8,
-    azColl: *mut *const i8,
-    pPartIdxWhere: *mut Expr,
-    aColExpr: *mut ExprList,
-    tnum: u32,
-    szIdxRow: i16,
-    nKeyCol: u16,
-    nColumn: u16,
-    onError: u8,
-    __slate_bits_0: __slate_bits::__SlateBits88U0,
-    colNotIdxed: u64,
+    zAlias: *mut i8,
+    pSTab: *mut Table,
+    fg: __SlateRecord184,
+    iCursor: i32,
+    colUsed: u64,
+    u1: __SlateRecord185,
+    u2: __SlateRecord186,
+    u3: __SlateRecord187,
+    u4: __SlateRecord188,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct IndexedExpr {
-    pExpr: *mut Expr,
-    iDataCur: i32,
-    iIdxCur: i32,
-    iIdxCol: i32,
-    bMaybeNullRow: u8,
-    aff: u8,
-    pIENext: *mut IndexedExpr,
-}
+struct RenameToken {}
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct KeyInfo {
-    nRef: u32,
-    enc: u8,
-    nKeyField: u16,
-    nAllField: u16,
-    db: *mut sqlite3,
-    aSortFlags: *mut u8,
-    aColl: [*mut CollSeq; 0],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Lookaside {
-    bDisable: u32,
-    sz: u16,
-    szTrue: u16,
-    bMalloced: u8,
-    nSlot: u32,
-    anStat: [u32; 3],
-    pInit: *mut LookasideSlot,
-    pFree: *mut LookasideSlot,
-    pSmallInit: *mut LookasideSlot,
-    pSmallFree: *mut LookasideSlot,
-    pMiddle: *mut (),
-    pStart: *mut (),
-    pEnd: *mut (),
-    pTrueEnd: *mut (),
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct LookasideSlot {
-    pNext: *mut LookasideSlot,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Module {
-    pModule: *const sqlite3_module,
-    zName: *const i8,
-    nRefModule: i32,
-    pAux: *mut (),
-    xDestroy: Option<unsafe extern "C-unwind" fn(*mut ())>,
-    pEpoTab: *mut Table,
+struct SrcList {
+    nSrc: i32,
+    nAlloc: u32,
+    a: [SrcItem; 0],
 }
 
 #[repr(C)]
@@ -860,6 +939,103 @@ struct NameContext {
     ncFlags: i32,
     nNestedSelect: u32,
     pWinSelect: *mut Select,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Upsert {
+    pUpsertTarget: *mut ExprList,
+    pUpsertTargetWhere: *mut Expr,
+    pUpsertSet: *mut ExprList,
+    pUpsertWhere: *mut Expr,
+    pNextUpsert: *mut Upsert,
+    isDoUpdate: u8,
+    isDup: u8,
+    pToFree: *mut (),
+    pUpsertIdx: *mut Index,
+    pUpsertSrc: *mut SrcList,
+    regData: i32,
+    iDataCur: i32,
+    iIdxCur: i32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Select {
+    op: u8,
+    nSelectRow: i16,
+    selFlags: u32,
+    iLimit: i32,
+    iOffset: i32,
+    selId: u32,
+    pEList: *mut ExprList,
+    pSrc: *mut SrcList,
+    pWhere: *mut Expr,
+    pGroupBy: *mut ExprList,
+    pHaving: *mut Expr,
+    pOrderBy: *mut ExprList,
+    pPrior: *mut Select,
+    pNext: *mut Select,
+    pLimit: *mut Expr,
+    pWith: *mut With,
+    pWin: *mut Window,
+    pWinDefn: *mut Window,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct SelectDest {
+    eDest: u8,
+    iSDParm: i32,
+    iSDParm2: i32,
+    iSdst: i32,
+    nSdst: i32,
+    zAffSdst: *mut i8,
+    pOrderBy: *mut ExprList,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct AutoincInfo {
+    pNext: *mut AutoincInfo,
+    pTab: *mut Table,
+    iDb: i32,
+    regCtr: i32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct TriggerPrg {
+    pTrigger: *mut Trigger,
+    pNext: *mut TriggerPrg,
+    pProgram: *mut SubProgram,
+    orconf: i32,
+    aColmask: [u32; 2],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct IndexedExpr {
+    pExpr: *mut Expr,
+    iDataCur: i32,
+    iIdxCur: i32,
+    iIdxCol: i32,
+    bMaybeNullRow: u8,
+    aff: u8,
+    pIENext: *mut IndexedExpr,
+    zIdxName: *const i8,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct TableLock {}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct ParseCleanup {
+    pNext: *mut ParseCleanup,
+    pPtr: *mut (),
+    xCleanup: Option<unsafe extern "C-unwind" fn(*mut sqlite3, *mut ())>,
 }
 
 #[repr(C)]
@@ -935,138 +1111,9 @@ struct Parse {
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct ParseCleanup {
-    pNext: *mut ParseCleanup,
-    pPtr: *mut (),
-    xCleanup: Option<unsafe extern "C-unwind" fn(*mut sqlite3, *mut ())>,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct RenameToken {}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Returning {
+struct AuthContext {
+    zAuthContext: *const i8,
     pParse: *mut Parse,
-    pReturnEL: *mut ExprList,
-    retTrig: Trigger,
-    retTStep: TriggerStep,
-    iRetCur: i32,
-    nRetCol: i32,
-    iRetReg: i32,
-    zName: [i8; 40],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Savepoint {
-    zName: *mut i8,
-    nDeferredCons: i64,
-    nDeferredImmCons: i64,
-    pNext: *mut Savepoint,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Select {
-    op: u8,
-    nSelectRow: i16,
-    selFlags: u32,
-    iLimit: i32,
-    iOffset: i32,
-    selId: u32,
-    pEList: *mut ExprList,
-    pSrc: *mut SrcList,
-    pWhere: *mut Expr,
-    pGroupBy: *mut ExprList,
-    pHaving: *mut Expr,
-    pOrderBy: *mut ExprList,
-    pPrior: *mut Select,
-    pNext: *mut Select,
-    pLimit: *mut Expr,
-    pWith: *mut With,
-    pWin: *mut Window,
-    pWinDefn: *mut Window,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct SelectDest {
-    eDest: u8,
-    iSDParm: i32,
-    iSDParm2: i32,
-    iSdst: i32,
-    nSdst: i32,
-    zAffSdst: *mut i8,
-    pOrderBy: *mut ExprList,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Subquery {
-    pSelect: *mut Select,
-    addrFillSub: i32,
-    regReturn: i32,
-    regResult: i32,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct SrcItem {
-    zName: *mut i8,
-    zAlias: *mut i8,
-    pSTab: *mut Table,
-    fg: __SlateRecord184,
-    iCursor: i32,
-    colUsed: u64,
-    u1: __SlateRecord185,
-    u2: __SlateRecord186,
-    u3: __SlateRecord187,
-    u4: __SlateRecord188,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct SrcList {
-    nSrc: i32,
-    nAlloc: u32,
-    a: [SrcItem; 0],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Table {
-    zName: *mut i8,
-    aCol: *mut Column,
-    pIndex: *mut Index,
-    zColAff: *mut i8,
-    pCheck: *mut ExprList,
-    tnum: u32,
-    nTabRef: u32,
-    tabFlags: u32,
-    iPKey: i16,
-    nCol: i16,
-    nNVCol: i16,
-    nRowLogEst: i16,
-    szTabRow: i16,
-    keyConf: u8,
-    eTabType: u8,
-    u: __SlateRecord166,
-    pTrigger: *mut Trigger,
-    pSchema: *mut Schema,
-    aHx: [u8; 16],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct TableLock {}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Token {
-    z: *const i8,
-    n: u32,
 }
 
 #[repr(C)]
@@ -1083,16 +1130,6 @@ struct Trigger {
     pTabSchema: *mut Schema,
     step_list: *mut TriggerStep,
     pNext: *mut Trigger,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct TriggerPrg {
-    pTrigger: *mut Trigger,
-    pNext: *mut TriggerPrg,
-    pProgram: *mut SubProgram,
-    orconf: i32,
-    aColmask: [u32; 2],
 }
 
 #[repr(C)]
@@ -1114,34 +1151,15 @@ struct TriggerStep {
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct Upsert {
-    pUpsertTarget: *mut ExprList,
-    pUpsertTargetWhere: *mut Expr,
-    pUpsertSet: *mut ExprList,
-    pUpsertWhere: *mut Expr,
-    pNextUpsert: *mut Upsert,
-    isDoUpdate: u8,
-    isDup: u8,
-    pToFree: *mut (),
-    pUpsertIdx: *mut Index,
-    pUpsertSrc: *mut SrcList,
-    regData: i32,
-    iDataCur: i32,
-    iIdxCur: i32,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct VTable {
-    db: *mut sqlite3,
-    pMod: *mut Module,
-    pVtab: *mut sqlite3_vtab,
-    nRef: i32,
-    bConstraint: u8,
-    bAllSchemas: u8,
-    eVtabRisk: u8,
-    iSavepoint: i32,
-    pNext: *mut VTable,
+struct Returning {
+    pParse: *mut Parse,
+    pReturnEL: *mut ExprList,
+    retTrig: Trigger,
+    retTStep: TriggerStep,
+    iRetCur: i32,
+    nRetCol: i32,
+    iRetReg: i32,
+    zName: [i8; 40],
 }
 
 #[repr(C)]
@@ -1151,6 +1169,54 @@ struct VtabCtx {}
 #[repr(C)]
 #[derive(Clone, Copy)]
 struct WhereInfo {}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Cte {
+    zName: *mut i8,
+    pCols: *mut ExprList,
+    pSelect: *mut Select,
+    zCteErr: *const i8,
+    pUse: *mut CteUse,
+    eM10d: u8,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct With {
+    nCte: i32,
+    bView: i32,
+    pOuter: *mut With,
+    a: [Cte; 0],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Btree {}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Vdbe {}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct CteUse {
+    nUse: i32,
+    addrM9e: i32,
+    regRtn: i32,
+    iCur: i32,
+    nRowEst: i16,
+    eM10d: u8,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct DbClientData {
+    pNext: *mut DbClientData,
+    pData: *mut (),
+    xDestructor: Option<unsafe extern "C-unwind" fn(*mut ())>,
+    zName: [i8; 0],
+}
 
 #[repr(C)]
 #[derive(Clone, Copy)]
@@ -1183,58 +1249,6 @@ struct Window {
     regStartRowid: i32,
     regEndRowid: i32,
     bExprArgs: u8,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct With {
-    nCte: i32,
-    bView: i32,
-    pOuter: *mut With,
-    a: [Cte; 0],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Btree {}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Vdbe {}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct SubProgram {
-    aOp: *mut VdbeOp,
-    nOp: i32,
-    nMem: i32,
-    nCsr: i32,
-    aOnce: *mut u8,
-    token: *mut (),
-    pNext: *mut SubProgram,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct SubrtnSig {
-    selId: i32,
-    bComplete: u8,
-    zAff: *mut i8,
-    iTable: i32,
-    iAddr: i32,
-    regReturn: i32,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct VdbeOp {
-    opcode: u8,
-    p4type: i8,
-    p5: u16,
-    p1: i32,
-    p2: i32,
-    p3: i32,
-    p4: p4union,
 }
 
 #[repr(C)]
@@ -1645,34 +1659,17 @@ mod __slate_bits {
     }
 }
 
-// /*
-// ** 2001 September 15
-// **
-// ** The author disclaims copyright to this source code.  In place of
-// ** a legal notice, here is a blessing:
-// **
-// **    May you do good and not evil.
-// **    May you find forgiveness for yourself and forgive others.
-// **    May you share freely, never taking more than you give.
-// **
-// *************************************************************************
-// ** This file contains C code routines that are called by the parser
-// ** in order to generate code for DELETE FROM statements.
-// */
-// /*
-// ** While a SrcList can in general represent multiple tables and subqueries
-// ** (as in the FROM clause of a SELECT statement) in this case it contains
-// ** the name of a single table, as one might find in an INSERT, DELETE,
-// ** or UPDATE statement.  Look up that table in the symbol table and
-// ** return a pointer.  Set an error message and return NULL if the table
-// ** name is not found or if any other error occurs.
-// **
-// ** The following fields are initialized appropriate in pSrc:
-// **
-// **    pSrc->a[0].spTab        Pointer to the Table object
-// **    pSrc->a[0].u2.pIBIndex  Pointer to the INDEXED BY index, if there is one
-// **
-// */
+/// While a SrcList can in general represent multiple tables and subqueries
+/// (as in the FROM clause of a SELECT statement) in this case it contains
+/// the name of a single table, as one might find in an INSERT, DELETE,
+/// or UPDATE statement.  Look up that table in the symbol table and
+/// return a pointer.  Set an error message and return NULL if the table
+/// name is not found or if any other error occurs.
+///
+/// The following fields are initialized appropriate in pSrc:
+///
+///    pSrc->a[0].spTab        Pointer to the Table object
+///    pSrc->a[0].u2.pIBIndex  Pointer to the INDEXED BY index, if there is one
 #[unsafe(no_mangle)]
 extern "C-unwind" fn sqlite3SrcListLookup(
     mut pParse: *mut Parse,
@@ -1711,13 +1708,95 @@ extern "C-unwind" fn sqlite3SrcListLookup(
     return pTab;
 }
 
-// /*
-// ** Check to make sure the given table is writable.
-// **
-// ** If pTab is not writable  ->  generate an error message and return 1.
-// ** If pTab is writable but other errors have occurred -> return 1.
-// ** If pTab is writable and no prior errors -> return 0;
-// */
+/// Generate byte-code that will report the number of rows modified
+/// by a DELETE, INSERT, or UPDATE statement.
+#[unsafe(no_mangle)]
+extern "C-unwind" fn sqlite3CodeChangeCount(
+    mut v: *mut Vdbe,
+    mut regCounter: i32,
+    mut zColName: *const i8,
+) {
+    unsafe { sqlite3VdbeAddOp0(v, 85 as i32) };
+    unsafe { sqlite3VdbeAddOp2(v, 86 as i32, regCounter, 1 as i32) };
+    unsafe { sqlite3VdbeSetNumCols(v, 1 as i32) };
+    unsafe { sqlite3VdbeSetColName(v, 0 as i32, 0 as i32, zColName, None) };
+}
+
+/// Return true if table pTab is read-only.
+///
+/// A table is read-only if any of the following are true:
+///
+///   1) It is a virtual table and no implementation of the xUpdate method
+///      has been provided
+///
+///   2) A trigger is currently being coded and the table is a virtual table
+///      that is SQLITE_VTAB_DIRECTONLY or if PRAGMA trusted_schema=OFF and
+///      the table is not SQLITE_VTAB_INNOCUOUS.
+///
+///   3) It is a system table (i.e. sqlite_schema), this call is not
+///      part of a nested parse and writable_schema pragma has not
+///      been specified
+///
+///   4) The table is a shadow table, the database connection is in
+///      defensive mode, and the current sqlite3_prepare()
+///      is for a top-level SQL statement.
+fn vtabIsReadOnly(mut pParse: *mut Parse, mut pTab: *mut Table) -> i32 {
+    0 as i32;
+    if (unsafe {
+        (*unsafe {
+            (*unsafe { (*unsafe { sqlite3GetVTable(unsafe { (*pParse).db }, pTab) }).pMod }).pModule
+        })
+        .xUpdate
+    }) == None
+    {
+        return 1 as i32;
+    }
+    // Within triggers:
+    // *  Do not allow DELETE, INSERT, or UPDATE of SQLITE_VTAB_DIRECTONLY
+    //    virtual tables
+    // *  Only allow DELETE, INSERT, or UPDATE of non-SQLITE_VTAB_INNOCUOUS
+    //    virtual tables if PRAGMA trusted_schema=ON.
+    if ((unsafe { (*pParse).pToplevel }) != std::ptr::null_mut::<Parse>()
+        || (((unsafe { (*pParse).prepFlags }) as u32) as i32) & (32 as i32) != (0 as i32))
+        && (((unsafe { (*unsafe { (*pTab).u.vtab.p }).eVtabRisk }) as u32) as i32)
+            > (((unsafe { (*unsafe { (*pParse).db }).flags }) & (((128 as i32) as i64) as u64)
+                != (((0 as i32) as i64) as u64)) as i32)
+    {
+        unsafe {
+            sqlite3ErrorMsg(
+                pParse,
+                (b"unsafe use of virtual table \"%s\"\0".as_ptr() as *mut i8) as *const i8,
+                unsafe { (*pTab).zName },
+            )
+        };
+    }
+    return 0 as i32;
+}
+
+fn tabIsReadOnly(mut pParse: *mut Parse, mut pTab: *mut Table) -> i32 {
+    let mut db: *mut sqlite3 = unsafe { std::mem::zeroed() };
+    if (((unsafe { (*pTab).eTabType }) as u32) as i32) == (1 as i32) {
+        return vtabIsReadOnly(pParse, pTab);
+    }
+    if (unsafe { (*pTab).tabFlags }) & (((1 as i32) | (4096 as i32)) as u32) == ((0 as i32) as u32)
+    {
+        return 0 as i32;
+    }
+    db = unsafe { (*pParse).db };
+    if (unsafe { (*pTab).tabFlags }) & ((1 as i32) as u32) != ((0 as i32) as u32) {
+        return ((unsafe { sqlite3WritableSchema(db) }) == (0 as i32)
+            && (((unsafe { (*pParse).nested }) as u32) as i32) == (0 as i32))
+            as i32;
+    }
+    0 as i32;
+    return unsafe { sqlite3ReadOnlyShadowTables(db) };
+}
+
+/// Check to make sure the given table is writable.
+///
+/// If pTab is not writable  ->  generate an error message and return 1.
+/// If pTab is writable but other errors have occurred -> return 1.
+/// If pTab is writable and no prior errors -> return 0;
 #[unsafe(no_mangle)]
 extern "C-unwind" fn sqlite3IsReadOnly(
     mut pParse: *mut Parse,
@@ -1751,36 +1830,100 @@ extern "C-unwind" fn sqlite3IsReadOnly(
     return 0 as i32;
 }
 
-// /* Generate byte-code that will report the number of rows modified
-// ** by a DELETE, INSERT, or UPDATE statement.
-// */
+/// Evaluate a view and store its result in an ephemeral table.  The
+/// pWhere argument is an optional WHERE clause that restricts the
+/// set of rows in the view that are to be added to the ephemeral table.
+///
+/// # Arguments
+///
+/// * `pParse` - Parsing context
+/// * `pView` - View definition
+/// * `pWhere` - Optional WHERE clause to be added
+/// * `pOrderBy` - Optional ORDER BY clause
+/// * `pLimit` - Optional LIMIT clause
+/// * `iCur` - Cursor number for ephemeral table
 #[unsafe(no_mangle)]
-extern "C-unwind" fn sqlite3CodeChangeCount(
-    mut v: *mut Vdbe,
-    mut regCounter: i32,
-    mut zColName: *const i8,
+extern "C-unwind" fn sqlite3MaterializeView(
+    mut pParse: *mut Parse,
+    mut pView: *mut Table,
+    mut pWhere: *mut Expr,
+    mut pOrderBy: *mut ExprList,
+    mut pLimit: *mut Expr,
+    mut iCur: i32,
 ) {
-    unsafe { sqlite3VdbeAddOp0(v, 85 as i32) };
-    unsafe { sqlite3VdbeAddOp2(v, 86 as i32, regCounter, 1 as i32) };
-    unsafe { sqlite3VdbeSetNumCols(v, 1 as i32) };
-    unsafe { sqlite3VdbeSetColName(v, 0 as i32, 0 as i32, zColName, None) };
+    let mut dest: SelectDest = unsafe { std::mem::zeroed() };
+    let mut pSel: *mut Select = unsafe { std::mem::zeroed() };
+    let mut pFrom: *mut SrcList = unsafe { std::mem::zeroed() };
+    let mut db: *mut sqlite3 = unsafe { (*pParse).db };
+    let mut iDb: i32 = unsafe { sqlite3SchemaToIndex(db, unsafe { (*pView).pSchema }) };
+    pWhere = unsafe { sqlite3ExprDup(db, pWhere as *const Expr, 0 as i32) };
+    pFrom = unsafe {
+        sqlite3SrcListAppend(
+            pParse,
+            std::ptr::null_mut::<SrcList>(),
+            std::ptr::null_mut::<Token>(),
+            std::ptr::null_mut::<Token>(),
+        )
+    };
+    if pFrom != std::ptr::null_mut::<SrcList>() {
+        0 as i32;
+        unsafe {
+            (*unsafe {
+                unsafe { std::ptr::addr_of_mut!((*pFrom).a) as *mut SrcItem }
+                    .offset((0 as i32) as isize)
+            })
+            .zName = unsafe { sqlite3DbStrDup(db, (unsafe { (*pView).zName }) as *const i8) };
+        }
+        0 as i32;
+        unsafe {
+            (*unsafe {
+                unsafe { std::ptr::addr_of_mut!((*pFrom).a) as *mut SrcItem }
+                    .offset((0 as i32) as isize)
+            })
+            .u4
+            .zDatabase = unsafe {
+                sqlite3DbStrDup(
+                    db,
+                    (unsafe { (*unsafe { unsafe { (*db).aDb }.offset(iDb as isize) }).zDbSName })
+                        as *const i8,
+                )
+            };
+        }
+        0 as i32;
+        0 as i32;
+    }
+    pSel = unsafe {
+        sqlite3SelectNew(
+            pParse,
+            std::ptr::null_mut::<ExprList>(),
+            pFrom,
+            pWhere,
+            std::ptr::null_mut::<ExprList>(),
+            std::ptr::null_mut::<Expr>(),
+            pOrderBy,
+            (131072 as i32) as u32,
+            pLimit,
+        )
+    };
+    unsafe { sqlite3SelectDestInit(std::ptr::addr_of_mut!(dest), 10 as i32, iCur) };
+    unsafe { sqlite3Select(pParse, pSel, std::ptr::addr_of_mut!(dest)) };
+    unsafe { sqlite3SelectDelete(db, pSel) };
 }
 
-// /* Parsing context */
-// /* View definition */
-// /* Optional WHERE clause to be added */
-// /* Optional ORDER BY clause */
-// /* Optional LIMIT clause */
-// /* Cursor number for ephemeral table */
-// /* !defined(SQLITE_OMIT_VIEW) && !defined(SQLITE_OMIT_TRIGGER) */
-// /*      && !defined(SQLITE_OMIT_SUBQUERY) */
-// /*
-// ** Generate code for a DELETE FROM statement.
-// **
-// **     DELETE FROM table_wxyz WHERE a<5 AND b NOT NULL;
-// **                 \________/       \________________/
-// **                  pTabList              pWhere
-// */
+//      && !defined(SQLITE_OMIT_SUBQUERY)
+/// Generate code for a DELETE FROM statement.
+///
+///     DELETE FROM table_wxyz WHERE a<5 AND b NOT NULL;
+///                 \________/       \________________/
+///                  pTabList              pWhere
+///
+/// # Arguments
+///
+/// * `pParse` - The parser context
+/// * `pTabList` - The table from which we should delete things
+/// * `pWhere` - The WHERE clause.  May be null
+/// * `pOrderBy` - ORDER BY clause. May be null
+/// * `pLimit` - LIMIT clause. May be null
 #[unsafe(no_mangle)]
 extern "C-unwind" fn sqlite3DeleteFrom(
     mut pParse: *mut Parse,
@@ -1791,7 +1934,7 @@ extern "C-unwind" fn sqlite3DeleteFrom(
 ) {
     let mut __slate_storage_444: std::mem::MaybeUninit<*const i8> = std::mem::MaybeUninit::uninit();
     let __slate_slot_444: *mut *const i8 =
-        std::ptr::addr_of_mut!(__slate_storage_444) as *mut *const i8;
+        std::ptr::addr_of_mut!(__slate_storage_444) as *mut *const i8; // True to count changes
     let mut __slate_storage_445: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
     let __slate_slot_445: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_445) as *mut i32;
     let mut __slate_storage_443: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
@@ -1800,6 +1943,7 @@ extern "C-unwind" fn sqlite3DeleteFrom(
     let __slate_slot_812: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_812) as *mut i32;
     let mut __slate_storage_811: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
     let __slate_slot_811: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_811) as *mut i32;
+    // Add the PK key for this row to the temporary table
     let mut __slate_storage_810: std::mem::MaybeUninit<*mut Parse> =
         std::mem::MaybeUninit::uninit();
     let __slate_slot_810: *mut *mut Parse =
@@ -1883,133 +2027,103 @@ extern "C-unwind" fn sqlite3DeleteFrom(
     let __slate_slot_780: *mut *mut Parse =
         std::ptr::addr_of_mut!(__slate_storage_780) as *mut *mut Parse;
     let mut __slate_storage_779: std::mem::MaybeUninit<bool> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_779: *mut bool = std::ptr::addr_of_mut!(__slate_storage_779) as *mut bool;
+    let __slate_slot_779: *mut bool = std::ptr::addr_of_mut!(__slate_storage_779) as *mut bool; // List of table triggers, if required
     let mut __slate_storage_441: std::mem::MaybeUninit<*mut Trigger> =
         std::mem::MaybeUninit::uninit();
     let __slate_slot_441: *mut *mut Trigger =
-        std::ptr::addr_of_mut!(__slate_storage_441) as *mut *mut Trigger;
+        std::ptr::addr_of_mut!(__slate_storage_441) as *mut *mut Trigger; // True if attempting to delete from a view
     let mut __slate_storage_440: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
     let __slate_slot_440: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_440) as *mut i32;
+    // True if there are triggers or FKs or
+    // subqueries in the WHERE clause
     let mut __slate_storage_439: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_439: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_439) as *mut i32;
+    let __slate_slot_439: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_439) as *mut i32; // Instruction to open the Ephemeral table
     let mut __slate_storage_438: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_438: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_438) as *mut i32;
+    let __slate_slot_438: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_438) as *mut i32; // Top of the delete loop
     let mut __slate_storage_437: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_437: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_437) as *mut i32;
+    let __slate_slot_437: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_437) as *mut i32; // Address of jump over the delete logic
     let mut __slate_storage_436: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_436: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_436) as *mut i32;
+    let __slate_slot_436: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_436) as *mut i32; // Register for rowset of rows to delete
     let mut __slate_storage_435: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_435: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_435) as *mut i32;
+    let __slate_slot_435: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_435) as *mut i32; // Ephemeral table holding all primary key values
     let mut __slate_storage_434: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_434: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_434) as *mut i32;
+    let __slate_slot_434: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_434) as *mut i32; // Number of memory cells in the row key
     let mut __slate_storage_433: std::mem::MaybeUninit<i16> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_433: *mut i16 = std::ptr::addr_of_mut!(__slate_storage_433) as *mut i16;
+    let __slate_slot_433: *mut i16 = std::ptr::addr_of_mut!(__slate_storage_433) as *mut i16; // Memory cell holding key of row to be deleted
     let mut __slate_storage_432: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_432: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_432) as *mut i32;
+    let __slate_slot_432: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_432) as *mut i32; // Number of columns in the PRIMARY KEY
     let mut __slate_storage_431: std::mem::MaybeUninit<i16> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_431: *mut i16 = std::ptr::addr_of_mut!(__slate_storage_431) as *mut i16;
+    let __slate_slot_431: *mut i16 = std::ptr::addr_of_mut!(__slate_storage_431) as *mut i16; // First of nPk registers holding PRIMARY KEY value
     let mut __slate_storage_430: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_430: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_430) as *mut i32;
+    let __slate_slot_430: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_430) as *mut i32; // The PRIMARY KEY index on the table
     let mut __slate_storage_429: std::mem::MaybeUninit<*mut Index> =
         std::mem::MaybeUninit::uninit();
     let __slate_slot_429: *mut *mut Index =
-        std::ptr::addr_of_mut!(__slate_storage_429) as *mut *mut Index;
+        std::ptr::addr_of_mut!(__slate_storage_429) as *mut *mut Index; // Open cursor iTabCur+j if aToOpen[j] is true
     let mut __slate_storage_428: std::mem::MaybeUninit<*mut u8> = std::mem::MaybeUninit::uninit();
     let __slate_slot_428: *mut *mut u8 =
-        std::ptr::addr_of_mut!(__slate_storage_428) as *mut *mut u8;
+        std::ptr::addr_of_mut!(__slate_storage_428) as *mut *mut u8; // The write cursors opened by WHERE_ONEPASS
     let mut __slate_storage_427: std::mem::MaybeUninit<[i32; 2]> = std::mem::MaybeUninit::uninit();
     let __slate_slot_427: *mut [i32; 2] =
-        std::ptr::addr_of_mut!(__slate_storage_427) as *mut [i32; 2];
+        std::ptr::addr_of_mut!(__slate_storage_427) as *mut [i32; 2]; // ONEPASS_OFF or _SINGLE or _MULTI
     let mut __slate_storage_426: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_426: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_426) as *mut i32;
+    let __slate_slot_426: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_426) as *mut i32; // Value returned by authorization callback
     let mut __slate_storage_425: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_425: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_425) as *mut i32;
+    let __slate_slot_425: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_425) as *mut i32; // Memory cell used for change counting
     let mut __slate_storage_424: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_424: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_424) as *mut i32;
+    let __slate_slot_424: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_424) as *mut i32; // Database number
     let mut __slate_storage_423: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_423: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_423) as *mut i32;
+    let __slate_slot_423: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_423) as *mut i32; // Name context to resolve expressions in
     let mut __slate_storage_422: std::mem::MaybeUninit<NameContext> =
         std::mem::MaybeUninit::uninit();
     let __slate_slot_422: *mut NameContext =
-        std::ptr::addr_of_mut!(__slate_storage_422) as *mut NameContext;
+        std::ptr::addr_of_mut!(__slate_storage_422) as *mut NameContext; // Authorization context
     let mut __slate_storage_421: std::mem::MaybeUninit<AuthContext> =
         std::mem::MaybeUninit::uninit();
     let __slate_slot_421: *mut AuthContext =
-        std::ptr::addr_of_mut!(__slate_storage_421) as *mut AuthContext;
+        std::ptr::addr_of_mut!(__slate_storage_421) as *mut AuthContext; // Main database structure
     let mut __slate_storage_420: std::mem::MaybeUninit<*mut sqlite3> =
         std::mem::MaybeUninit::uninit();
     let __slate_slot_420: *mut *mut sqlite3 =
-        std::ptr::addr_of_mut!(__slate_storage_420) as *mut *mut sqlite3;
+        std::ptr::addr_of_mut!(__slate_storage_420) as *mut *mut sqlite3; // Number of indices
     let mut __slate_storage_419: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_419: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_419) as *mut i32;
+    let __slate_slot_419: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_419) as *mut i32; // Cursor number of the first index
     let mut __slate_storage_418: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_418: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_418) as *mut i32;
+    let __slate_slot_418: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_418) as *mut i32; // VDBE cursor for the canonical data source
     let mut __slate_storage_417: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_417: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_417) as *mut i32;
+    let __slate_slot_417: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_417) as *mut i32; // Cursor number for the table
     let mut __slate_storage_416: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_416: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_416) as *mut i32;
+    let __slate_slot_416: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_416) as *mut i32; // For looping over indices of the table
     let mut __slate_storage_415: std::mem::MaybeUninit<*mut Index> =
         std::mem::MaybeUninit::uninit();
     let __slate_slot_415: *mut *mut Index =
-        std::ptr::addr_of_mut!(__slate_storage_415) as *mut *mut Index;
+        std::ptr::addr_of_mut!(__slate_storage_415) as *mut *mut Index; // Information about the WHERE clause
     let mut __slate_storage_414: std::mem::MaybeUninit<*mut WhereInfo> =
         std::mem::MaybeUninit::uninit();
     let __slate_slot_414: *mut *mut WhereInfo =
-        std::ptr::addr_of_mut!(__slate_storage_414) as *mut *mut WhereInfo;
+        std::ptr::addr_of_mut!(__slate_storage_414) as *mut *mut WhereInfo; // Loop counter
     let mut __slate_storage_413: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_413: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_413) as *mut i32;
+    let __slate_slot_413: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_413) as *mut i32; // The table from which records will be deleted
     let mut __slate_storage_412: std::mem::MaybeUninit<*mut Table> =
         std::mem::MaybeUninit::uninit();
     let __slate_slot_412: *mut *mut Table =
-        std::ptr::addr_of_mut!(__slate_storage_412) as *mut *mut Table;
+        std::ptr::addr_of_mut!(__slate_storage_412) as *mut *mut Table; // The virtual database engine
     let mut __slate_storage_411: std::mem::MaybeUninit<*mut Vdbe> = std::mem::MaybeUninit::uninit();
     let __slate_slot_411: *mut *mut Vdbe =
         std::ptr::addr_of_mut!(__slate_storage_411) as *mut *mut Vdbe;
     unsafe {
         '__join_2: {
-            // /* The virtual database engine */
-            // /* The table from which records will be deleted */
-            // /* Loop counter */
-            // /* Information about the WHERE clause */
-            // /* For looping over indices of the table */
-            // /* Cursor number for the table */
-            // /* VDBE cursor for the canonical data source */
             std::ptr::write(__slate_slot_417, 0 as i32);
-            // /* Cursor number of the first index */
             std::ptr::write(__slate_slot_418, 0 as i32);
-            // /* Number of indices */
-            // /* Main database structure */
-            // /* Authorization context */
-            // /* Name context to resolve expressions in */
-            // /* Database number */
-            // /* Memory cell used for change counting */
             std::ptr::write(__slate_slot_424, 0 as i32);
-            // /* Value returned by authorization callback */
-            // /* ONEPASS_OFF or _SINGLE or _MULTI */
-            // /* The write cursors opened by WHERE_ONEPASS */
-            // /* Open cursor iTabCur+j if aToOpen[j] is true */
             std::ptr::write(__slate_slot_428, std::ptr::null_mut::<u8>());
-            // /* The PRIMARY KEY index on the table */
-            // /* First of nPk registers holding PRIMARY KEY value */
             std::ptr::write(__slate_slot_430, 0 as i32);
-            // /* Number of columns in the PRIMARY KEY */
             std::ptr::write(__slate_slot_431, (1 as i32) as i16);
-            // /* Memory cell holding key of row to be deleted */
-            // /* Number of memory cells in the row key */
-            // /* Ephemeral table holding all primary key values */
             std::ptr::write(__slate_slot_434, 0 as i32);
-            // /* Register for rowset of rows to delete */
             std::ptr::write(__slate_slot_435, 0 as i32);
-            // /* Address of jump over the delete logic */
             std::ptr::write(__slate_slot_436, 0 as i32);
-            // /* Top of the delete loop */
             std::ptr::write(__slate_slot_437, 0 as i32);
-            // /* Instruction to open the Ephemeral table */
             std::ptr::write(__slate_slot_438, 0 as i32);
-            // /* True if there are triggers or FKs or
-            //                          ** subqueries in the WHERE clause */
-            // /* True if attempting to delete from a view */
-            // /* List of table triggers, if required */
             unsafe {
                 memset(
                     std::ptr::addr_of_mut!(*__slate_slot_421) as *mut (),
@@ -2023,17 +2137,15 @@ extern "C-unwind" fn sqlite3DeleteFrom(
             } else {
                 0 as i32;
                 0 as i32;
-                // /* Locate the table which we want to delete.  This table has to be
-                //   ** put in an SrcList structure because some of the subroutines we
-                //   ** will be calling are designed to work with multiple tables and expect
-                //   ** an SrcList* parameter instead of just a Table* parameter.
-                //   */
+                // Locate the table which we want to delete.  This table has to be
+                // put in an SrcList structure because some of the subroutines we
+                // will be calling are designed to work with multiple tables and expect
+                // an SrcList* parameter instead of just a Table* parameter.
                 *__slate_slot_412 = sqlite3SrcListLookup(pParse, pTabList);
                 if *__slate_slot_412 == std::ptr::null_mut::<Table>() {
                 } else {
-                    // /* Figure out if we have any triggers and if the table being
-                    //   ** deleted from is a view
-                    //   */
+                    // Figure out if we have any triggers and if the table being
+                    // deleted from is a view
                     *__slate_slot_441 = unsafe {
                         sqlite3TriggersExist(
                             pParse,
@@ -2059,8 +2171,7 @@ extern "C-unwind" fn sqlite3DeleteFrom(
                         }) != (0 as i32);
                     }
                     *__slate_slot_439 = *__slate_slot_779 as i32;
-                    // /* If pTab is really a view, make sure it has been initialized.
-                    //   */
+                    // If pTab is really a view, make sure it has been initialized.
                     if (unsafe { sqlite3ViewGetColumnNames(pParse, *__slate_slot_412) })
                         != (0 as i32)
                     {
@@ -2094,8 +2205,7 @@ extern "C-unwind" fn sqlite3DeleteFrom(
                             if *__slate_slot_425 == (1 as i32) {
                             } else {
                                 0 as i32;
-                                // /* Assign cursor numbers to the table and all its indices.
-                                //   */
+                                // Assign cursor numbers to the table and all its indices.
                                 0 as i32;
                                 std::ptr::write(__slate_slot_780, pParse);
                                 std::ptr::write(__slate_slot_781, unsafe {
@@ -2145,8 +2255,7 @@ extern "C-unwind" fn sqlite3DeleteFrom(
                                         break;
                                     }
                                 }
-                                // /* Start the view context
-                                //   */
+                                // Start the view context
                                 if *__slate_slot_440 != (0 as i32) {
                                     unsafe {
                                         sqlite3AuthContextPush(
@@ -2156,8 +2265,7 @@ extern "C-unwind" fn sqlite3DeleteFrom(
                                         )
                                     };
                                 }
-                                // /* Begin generating code.
-                                //   */
+                                // Begin generating code.
                                 *__slate_slot_411 = unsafe { sqlite3GetVdbe(pParse) };
                                 if *__slate_slot_411 == std::ptr::null_mut::<Vdbe>() {
                                 } else {
@@ -2172,9 +2280,8 @@ extern "C-unwind" fn sqlite3DeleteFrom(
                                             *__slate_slot_423,
                                         )
                                     };
-                                    // /* If we are trying to delete from a view, realize that view into
-                                    //   ** an ephemeral table.
-                                    //   */
+                                    // If we are trying to delete from a view, realize that view into
+                                    // an ephemeral table.
                                     if *__slate_slot_440 != (0 as i32) {
                                         sqlite3MaterializeView(
                                             pParse,
@@ -2190,8 +2297,7 @@ extern "C-unwind" fn sqlite3DeleteFrom(
                                         pOrderBy = std::ptr::null_mut::<ExprList>();
                                         pLimit = std::ptr::null_mut::<Expr>();
                                     }
-                                    // /* Resolve the column names in the WHERE clause.
-                                    //   */
+                                    // Resolve the column names in the WHERE clause.
                                     unsafe {
                                         memset(
                                             std::ptr::addr_of_mut!(*__slate_slot_422) as *mut (),
@@ -2209,9 +2315,8 @@ extern "C-unwind" fn sqlite3DeleteFrom(
                                     }) != (0 as i32)
                                     {
                                     } else {
-                                        // /* Initialize the counter of the number of rows deleted, if
-                                        //   ** we are counting rows.
-                                        //   */
+                                        // Initialize the counter of the number of rows deleted, if
+                                        // we are counting rows.
                                         if (unsafe { (*(*__slate_slot_420)).flags })
                                             & (((1 as i32) as i64) as u64) << (32 as i32)
                                             != (((0 as i32) as i64) as u64)
@@ -2246,17 +2351,16 @@ extern "C-unwind" fn sqlite3DeleteFrom(
                                             };
                                         }
                                         '__join_6: {
-                                            // /* Special case: A DELETE without a WHERE clause deletes everything.
-                                            //   ** It is easier just to erase the whole table. Prior to version 3.6.5,
-                                            //   ** this optimization caused the row change count (the value returned by
-                                            //   ** API function sqlite3_count_changes) to be set incorrectly.
-                                            //   **
-                                            //   ** The "rcauth==SQLITE_OK" terms is the
-                                            //   ** IMPLEMENTATION-OF: R-17228-37124 If the action code is SQLITE_DELETE and
-                                            //   ** the callback returns SQLITE_IGNORE then the DELETE operation proceeds but
-                                            //   ** the truncate optimization is disabled and all rows are deleted
-                                            //   ** individually.
-                                            //   */
+                                            // Special case: A DELETE without a WHERE clause deletes everything.
+                                            // It is easier just to erase the whole table. Prior to version 3.6.5,
+                                            // this optimization caused the row change count (the value returned by
+                                            // API function sqlite3_count_changes) to be set incorrectly.
+                                            //
+                                            // The "rcauth==SQLITE_OK" terms is the
+                                            // IMPLEMENTATION-OF: R-17228-37124 If the action code is SQLITE_DELETE and
+                                            // the callback returns SQLITE_IGNORE then the DELETE operation proceeds but
+                                            // the truncate optimization is disabled and all rows are deleted
+                                            // individually.
                                             if *__slate_slot_425 == (0 as i32)
                                                 && pWhere == std::ptr::null_mut::<Expr>()
                                                 && !(*__slate_slot_439 != (0 as i32))
@@ -2386,7 +2490,7 @@ extern "C-unwind" fn sqlite3DeleteFrom(
                                                     & ((128 as i32) as u32)
                                                     == ((0 as i32) as u32)
                                                 {
-                                                    // /* For a rowid table, initialize the RowSet to an empty set */
+                                                    // For a rowid table, initialize the RowSet to an empty set
                                                     *__slate_slot_429 =
                                                         std::ptr::null_mut::<Index>();
                                                     0 as i32;
@@ -2412,8 +2516,8 @@ extern "C-unwind" fn sqlite3DeleteFrom(
                                                         )
                                                     };
                                                 } else {
-                                                    // /* For a WITHOUT ROWID table, create an ephemeral table used to
-                                                    //       ** hold all primary keys for rows to be deleted. */
+                                                    // For a WITHOUT ROWID table, create an ephemeral table used to
+                                                    // hold all primary keys for rows to be deleted.
                                                     *__slate_slot_429 = unsafe {
                                                         sqlite3PrimaryKeyIndex(*__slate_slot_412)
                                                     };
@@ -2464,14 +2568,13 @@ extern "C-unwind" fn sqlite3DeleteFrom(
                                                         )
                                                     };
                                                 }
-                                                // /* Construct a query to find the rowid or primary key for every row
-                                                //     ** to be deleted, based on the WHERE clause. Set variable eOnePass
-                                                //     ** to indicate the strategy used to implement this delete:
-                                                //     **
-                                                //     **  ONEPASS_OFF:    Two-pass approach - use a FIFO for rowids/PK values.
-                                                //     **  ONEPASS_SINGLE: One-pass approach - at most one row deleted.
-                                                //     **  ONEPASS_MULTI:  One-pass approach - any number of rows may be deleted.
-                                                //     */
+                                                // Construct a query to find the rowid or primary key for every row
+                                                // to be deleted, based on the WHERE clause. Set variable eOnePass
+                                                // to indicate the strategy used to implement this delete:
+                                                //
+                                                //  ONEPASS_OFF:    Two-pass approach - use a FIFO for rowids/PK values.
+                                                //  ONEPASS_SINGLE: One-pass approach - at most one row deleted.
+                                                //  ONEPASS_MULTI:  One-pass approach - any number of rows may be deleted.
                                                 *__slate_slot_414 = unsafe {
                                                     sqlite3WhereBegin(
                                                         pParse,
@@ -2515,7 +2618,7 @@ extern "C-unwind" fn sqlite3DeleteFrom(
                                                             )
                                                         };
                                                     }
-                                                    // /* Keep track of the number of rows to be deleted */
+                                                    // Keep track of the number of rows to be deleted
                                                     if *__slate_slot_424 != (0 as i32) {
                                                         unsafe {
                                                             sqlite3VdbeAddOp2(
@@ -2526,7 +2629,7 @@ extern "C-unwind" fn sqlite3DeleteFrom(
                                                             )
                                                         };
                                                     }
-                                                    // /* Extract the rowid or primary key for the current row */
+                                                    // Extract the rowid or primary key for the current row
                                                     if *__slate_slot_429
                                                         != std::ptr::null_mut::<Index>()
                                                     {
@@ -2591,11 +2694,10 @@ extern "C-unwind" fn sqlite3DeleteFrom(
                                                         };
                                                     }
                                                     if *__slate_slot_426 != (0 as i32) {
-                                                        // /* For ONEPASS, no need to store the rowid/primary-key. There is only
-                                                        //       ** one, so just keep it in its register(s) and fall through to the
-                                                        //       ** delete code.  */
-                                                        // /* OP_Found will use an unpacked key */
-                                                        *__slate_slot_433 = *__slate_slot_431;
+                                                        // For ONEPASS, no need to store the rowid/primary-key. There is only
+                                                        // one, so just keep it in its register(s) and fall through to the
+                                                        // delete code.
+                                                        *__slate_slot_433 = *__slate_slot_431; // OP_Found will use an unpacked key
                                                         *__slate_slot_428 = (unsafe {
                                                             sqlite3DbMallocRawNN(
                                                                 *__slate_slot_420,
@@ -2678,7 +2780,6 @@ extern "C-unwind" fn sqlite3DeleteFrom(
                                                         if *__slate_slot_429
                                                             != std::ptr::null_mut::<Index>()
                                                         {
-                                                            // /* Add the PK key for this row to the temporary table */
                                                             std::ptr::write(
                                                                 __slate_slot_810,
                                                                 pParse,
@@ -2698,8 +2799,7 @@ extern "C-unwind" fn sqlite3DeleteFrom(
                                                                     *__slate_slot_812;
                                                             }
                                                             *__slate_slot_432 = *__slate_slot_812;
-                                                            // /* Zero tells OP_Found to use a composite key */
-                                                            *__slate_slot_433 = (0 as i32) as i16;
+                                                            *__slate_slot_433 = (0 as i32) as i16; // Zero tells OP_Found to use a composite key
                                                             unsafe {
                                                                 sqlite3VdbeAddOp4(
                                                                     *__slate_slot_411,
@@ -2727,9 +2827,8 @@ extern "C-unwind" fn sqlite3DeleteFrom(
                                                                 )
                                                             };
                                                         } else {
-                                                            // /* Add the rowid of the row to be deleted to the RowSet */
-                                                            // /* OP_DeferredSeek always uses a single rowid */
-                                                            *__slate_slot_433 = (1 as i32) as i16;
+                                                            // Add the rowid of the row to be deleted to the RowSet
+                                                            *__slate_slot_433 = (1 as i32) as i16; // OP_DeferredSeek always uses a single rowid
                                                             unsafe {
                                                                 sqlite3VdbeAddOp2(
                                                                     *__slate_slot_411,
@@ -2743,11 +2842,10 @@ extern "C-unwind" fn sqlite3DeleteFrom(
                                                             sqlite3WhereEnd(*__slate_slot_414)
                                                         };
                                                     }
-                                                    // /* Unless this is a view, open cursors for the table we are
-                                                    //     ** deleting from and all its indices. If this is a view, then the
-                                                    //     ** only effect this statement has is to fire the INSTEAD OF
-                                                    //     ** triggers.
-                                                    //     */
+                                                    // Unless this is a view, open cursors for the table we are
+                                                    // deleting from and all its indices. If this is a view, then the
+                                                    // only effect this statement has is to fire the INSTEAD OF
+                                                    // triggers.
                                                     if !(*__slate_slot_440 != (0 as i32)) {
                                                         std::ptr::write(__slate_slot_443, 0 as i32);
                                                         if *__slate_slot_426 == (2 as i32) {
@@ -2787,12 +2885,10 @@ extern "C-unwind" fn sqlite3DeleteFrom(
                                                             };
                                                         }
                                                     }
-                                                    // /* Set up a loop over the rowids/primary-keys that were found in the
-                                                    //     ** where-clause loop above.
-                                                    //     */
+                                                    // Set up a loop over the rowids/primary-keys that were found in the
+                                                    // where-clause loop above.
                                                     if *__slate_slot_426 != (0 as i32) {
-                                                        // /* OP_Found will use an unpacked key */
-                                                        0 as i32;
+                                                        0 as i32; // OP_Found will use an unpacked key
                                                         if !((((unsafe {
                                                             (*(*__slate_slot_412)).eTabType
                                                         })
@@ -2860,8 +2956,7 @@ extern "C-unwind" fn sqlite3DeleteFrom(
                                                                     )
                                                                 };
                                                             }
-                                                            // /* OP_Found will use a composite key */
-                                                            0 as i32;
+                                                            0 as i32; // OP_Found will use a composite key
                                                         } else {
                                                             *__slate_slot_437 = unsafe {
                                                                 sqlite3VdbeAddOp3(
@@ -2876,7 +2971,7 @@ extern "C-unwind" fn sqlite3DeleteFrom(
                                                             0 as i32;
                                                         }
                                                     }
-                                                    // /* Delete the row */
+                                                    // Delete the row
                                                     if (((unsafe {
                                                         (*(*__slate_slot_412)).eTabType
                                                     })
@@ -2937,7 +3032,6 @@ extern "C-unwind" fn sqlite3DeleteFrom(
                                                             )
                                                         };
                                                     } else {
-                                                        // /* True to count changes */
                                                         std::ptr::write(
                                                             __slate_slot_445,
                                                             ((((unsafe { (*pParse).nested }) as u32)
@@ -2966,7 +3060,7 @@ extern "C-unwind" fn sqlite3DeleteFrom(
                                                             },
                                                         );
                                                     }
-                                                    // /* End of the loop over all rowids/primary-keys. */
+                                                    // End of the loop over all rowids/primary-keys.
                                                     if *__slate_slot_426 != (0 as i32) {
                                                         unsafe {
                                                             sqlite3VdbeResolveLabel(
@@ -3011,15 +3105,13 @@ extern "C-unwind" fn sqlite3DeleteFrom(
                                                             };
                                                         }
                                                     }
-                                                    // /* End non-truncate path */
                                                 }
                                             }
                                         }
-                                        // /* SQLITE_OMIT_TRUNCATE_OPTIMIZATION */
-                                        // /* Update the sqlite_sequence table by storing the content of the
-                                        //   ** maximum rowid counter values recorded while inserting into
-                                        //   ** autoincrement tables.
-                                        //   */
+                                        // End non-truncate path
+                                        // Update the sqlite_sequence table by storing the content of the
+                                        // maximum rowid counter values recorded while inserting into
+                                        // autoincrement tables.
                                         if (((unsafe { (*pParse).nested }) as u32) as i32)
                                             == (0 as i32)
                                             && (unsafe { (*pParse).pTriggerTab })
@@ -3027,10 +3119,9 @@ extern "C-unwind" fn sqlite3DeleteFrom(
                                         {
                                             unsafe { sqlite3AutoincrementEnd(pParse) };
                                         }
-                                        // /* Return the number of rows that were deleted. If this routine is
-                                        //   ** generating code because of a call to sqlite3NestedParse(), do not
-                                        //   ** invoke the callback function.
-                                        //   */
+                                        // Return the number of rows that were deleted. If this routine is
+                                        // generating code because of a call to sqlite3NestedParse(), do not
+                                        // invoke the callback function.
                                         if *__slate_slot_424 != (0 as i32) {
                                             sqlite3CodeChangeCount(
                                                 *__slate_slot_411,
@@ -3057,55 +3148,62 @@ extern "C-unwind" fn sqlite3DeleteFrom(
     }
 }
 
-// /* The parser context */
-// /* The table from which we should delete things */
-// /* The WHERE clause.  May be null */
-// /* ORDER BY clause. May be null */
-// /* LIMIT clause. May be null */
-// /* Make sure "isView" and other macros defined above are undefined. Otherwise
-// ** they may interfere with compilation of other functions in this file
-// ** (or in another file, if this file becomes part of the amalgamation).  */
-// /*
-// ** This routine generates VDBE code that causes a single row of a
-// ** single table to be deleted.  Both the original table entry and
-// ** all indices are removed.
-// **
-// ** Preconditions:
-// **
-// **   1.  iDataCur is an open cursor on the btree that is the canonical data
-// **       store for the table.  (This will be either the table itself,
-// **       in the case of a rowid table, or the PRIMARY KEY index in the case
-// **       of a WITHOUT ROWID table.)
-// **
-// **   2.  Read/write cursors for all indices of pTab must be open as
-// **       cursor number iIdxCur+i for the i-th index.
-// **
-// **   3.  The primary key for the row to be deleted must be stored in a
-// **       sequence of nPk memory cells starting at iPk.  If nPk==0 that means
-// **       that a search record formed from OP_MakeRecord is contained in the
-// **       single memory location iPk.
-// **
-// ** eMode:
-// **   Parameter eMode may be passed either ONEPASS_OFF (0), ONEPASS_SINGLE, or
-// **   ONEPASS_MULTI.  If eMode is not ONEPASS_OFF, then the cursor
-// **   iDataCur already points to the row to delete. If eMode is ONEPASS_OFF
-// **   then this function must seek iDataCur to the entry identified by iPk
-// **   and nPk before reading from it.
-// **
-// **   If eMode is ONEPASS_MULTI, then this call is being made as part
-// **   of a ONEPASS delete that affects multiple rows. In this case, if
-// **   iIdxNoSeek is a valid cursor number (>=0) and is not the same as
-// **   iDataCur, then its position should be preserved following the delete
-// **   operation. Or, if iIdxNoSeek is not a valid cursor number, the
-// **   position of iDataCur should be preserved instead.
-// **
-// ** iIdxNoSeek:
-// **   If iIdxNoSeek is a valid cursor number (>=0) not equal to iDataCur,
-// **   then it identifies an index cursor (from within array of cursors
-// **   starting at iIdxCur) that already points to the index entry to be deleted.
-// **   Except, this optimization is disabled if there are BEFORE triggers since
-// **   the trigger body might have moved the cursor.
-// */
+// Make sure "isView" and other macros defined above are undefined. Otherwise
+// they may interfere with compilation of other functions in this file
+// (or in another file, if this file becomes part of the amalgamation).
+/// This routine generates VDBE code that causes a single row of a
+/// single table to be deleted.  Both the original table entry and
+/// all indices are removed.
+///
+/// Preconditions:
+///
+///   1.  iDataCur is an open cursor on the btree that is the canonical data
+///       store for the table.  (This will be either the table itself,
+///       in the case of a rowid table, or the PRIMARY KEY index in the case
+///       of a WITHOUT ROWID table.)
+///
+///   2.  Read/write cursors for all indices of pTab must be open as
+///       cursor number iIdxCur+i for the i-th index.
+///
+///   3.  The primary key for the row to be deleted must be stored in a
+///       sequence of nPk memory cells starting at iPk.  If nPk==0 that means
+///       that a search record formed from OP_MakeRecord is contained in the
+///       single memory location iPk.
+///
+/// eMode:
+///   Parameter eMode may be passed either ONEPASS_OFF (0), ONEPASS_SINGLE, or
+///   ONEPASS_MULTI.  If eMode is not ONEPASS_OFF, then the cursor
+///   iDataCur already points to the row to delete. If eMode is ONEPASS_OFF
+///   then this function must seek iDataCur to the entry identified by iPk
+///   and nPk before reading from it.
+///
+///   If eMode is ONEPASS_MULTI, then this call is being made as part
+///   of a ONEPASS delete that affects multiple rows. In this case, if
+///   iIdxNoSeek is a valid cursor number (>=0) and is not the same as
+///   iDataCur, then its position should be preserved following the delete
+///   operation. Or, if iIdxNoSeek is not a valid cursor number, the
+///   position of iDataCur should be preserved instead.
+///
+/// iIdxNoSeek:
+///   If iIdxNoSeek is a valid cursor number (>=0) not equal to iDataCur,
+///   then it identifies an index cursor (from within array of cursors
+///   starting at iIdxCur) that already points to the index entry to be deleted.
+///   Except, this optimization is disabled if there are BEFORE triggers since
+///   the trigger body might have moved the cursor.
+///
+/// # Arguments
+///
+/// * `pParse` - Parsing context
+/// * `pTab` - Table containing the row to be deleted
+/// * `pTrigger` - List of triggers to (potentially) fire
+/// * `iDataCur` - Cursor from which column data is extracted
+/// * `iIdxCur` - First index cursor
+/// * `iPk` - First memory cell containing the PRIMARY KEY
+/// * `nPk` - Number of PRIMARY KEY memory cells
+/// * `count` - If non-zero, increment the row change counter
+/// * `onconf` - Default ON CONFLICT policy for triggers
+/// * `eMode` - ONEPASS_OFF, _SINGLE, or _MULTI.  See above
+/// * `iIdxNoSeek` - Cursor number of cursor that does not need seeking
 #[unsafe(no_mangle)]
 extern "C-unwind" fn sqlite3GenerateRowDelete(
     mut pParse: *mut Parse,
@@ -3120,20 +3218,16 @@ extern "C-unwind" fn sqlite3GenerateRowDelete(
     mut eMode: u8,
     mut iIdxNoSeek: i32,
 ) {
-    // /* Vdbe */
-    let mut v: *mut Vdbe = unsafe { (*pParse).pVdbe };
-    // /* First register in OLD.* array */
-    let mut iOld: i32 = 0 as i32;
-    // /* Label resolved to end of generated code */
-    let mut iLabel: i32 = 0 as i32;
-    // /* Seek opcode */
-    let mut opSeek: u8 = 0 as u8;
-    // /* Vdbe is guaranteed to have been allocated by this stage. */
+    let mut v: *mut Vdbe = unsafe { (*pParse).pVdbe }; // Vdbe
+    let mut iOld: i32 = 0 as i32; // First register in OLD.* array
+    let mut iLabel: i32 = 0 as i32; // Label resolved to end of generated code
+    let mut opSeek: u8 = 0 as u8; // Seek opcode
+    // Vdbe is guaranteed to have been allocated by this stage.
     0 as i32;
     {}
-    // /* Seek cursor iCur to the row to delete. If this row no longer exists
-    //   ** (this can happen if a trigger program has already deleted it), do
-    //   ** not attempt to delete it or fire any DELETE triggers.  */
+    // Seek cursor iCur to the row to delete. If this row no longer exists
+    // (this can happen if a trigger program has already deleted it), do
+    // not attempt to delete it or fire any DELETE triggers.
     iLabel = unsafe { sqlite3VdbeMakeLabel(pParse) };
     opSeek = ((if (unsafe { (*pTab).tabFlags }) & ((128 as i32) as u32) == ((0 as i32) as u32) {
         31 as i32
@@ -3147,20 +3241,17 @@ extern "C-unwind" fn sqlite3GenerateRowDelete(
         {}
         {}
     }
-    // /* If there are any triggers to fire, allocate a range of registers to
-    //   ** use for the old.* references in the triggers.  */
+    // If there are any triggers to fire, allocate a range of registers to
+    // use for the old.* references in the triggers.
     if (unsafe { sqlite3FkRequired(pParse, pTab, std::ptr::null_mut::<i32>(), 0 as i32) })
         != (0 as i32)
         || pTrigger != std::ptr::null_mut::<Trigger>()
     {
-        // /* Mask of OLD.* columns in use */
-        let mut mask: u32 = 0 as u32;
-        // /* Iterator used while populating OLD.* */
-        let mut iCol: i32 = 0 as i32;
-        // /* Start of BEFORE trigger programs */
-        let mut addrStart: i32 = 0 as i32;
-        // /* TODO: Could use temporary registers here. Also could attempt to
-        //     ** avoid copying the contents of the rowid register.  */
+        let mut mask: u32 = 0 as u32; // Mask of OLD.* columns in use
+        let mut iCol: i32 = 0 as i32; // Iterator used while populating OLD.*
+        let mut addrStart: i32 = 0 as i32; // Start of BEFORE trigger programs
+        // TODO: Could use temporary registers here. Also could attempt to
+        // avoid copying the contents of the rowid register.
         mask = unsafe {
             sqlite3TriggerColmask(
                 pParse,
@@ -3182,8 +3273,8 @@ extern "C-unwind" fn sqlite3GenerateRowDelete(
         unsafe {
             (*__v815).nMem = __v817;
         }
-        // /* Populate the OLD.* pseudo-table register array. These values will be
-        //     ** used by any BEFORE and AFTER triggers that exist.  */
+        // Populate the OLD.* pseudo-table register array. These values will be
+        // used by any BEFORE and AFTER triggers that exist.
         unsafe { sqlite3VdbeAddOp2(v, 82 as i32, iPk, iOld) };
         iCol = 0 as i32;
         '__slate_break_771: loop {
@@ -3205,7 +3296,7 @@ extern "C-unwind" fn sqlite3GenerateRowDelete(
             let __v819: i32 = __v818 + (1 as i32);
             iCol = __v819;
         }
-        // /* Invoke BEFORE DELETE trigger programs. */
+        // Invoke BEFORE DELETE trigger programs.
         addrStart = unsafe { sqlite3VdbeCurrentAddr(v) };
         unsafe {
             sqlite3CodeRowTrigger(
@@ -3220,14 +3311,13 @@ extern "C-unwind" fn sqlite3GenerateRowDelete(
                 iLabel,
             )
         };
-        // /* If any BEFORE triggers were coded, then seek the cursor to the
-        //     ** row to be deleted again. It may be that the BEFORE triggers moved
-        //     ** the cursor or already deleted the row that the cursor was
-        //     ** pointing to.
-        //     **
-        //     ** Also disable the iIdxNoSeek optimization since the BEFORE trigger
-        //     ** may have moved that cursor.
-        //     */
+        // If any BEFORE triggers were coded, then seek the cursor to the
+        // row to be deleted again. It may be that the BEFORE triggers moved
+        // the cursor or already deleted the row that the cursor was
+        // pointing to.
+        //
+        // Also disable the iIdxNoSeek optimization since the BEFORE trigger
+        // may have moved that cursor.
         if addrStart < unsafe { sqlite3VdbeCurrentAddr(v) } {
             unsafe {
                 sqlite3VdbeAddOp4Int(v, (opSeek as u32) as i32, iDataCur, iLabel, iPk, nPk as i32)
@@ -3237,9 +3327,9 @@ extern "C-unwind" fn sqlite3GenerateRowDelete(
             {}
             iIdxNoSeek = -(1 as i32);
         }
-        // /* Do FK processing. This call checks that any FK constraints that
-        //     ** refer to this table (i.e. constraints attached to other tables)
-        //     ** are not violated by deleting this row.  */
+        // Do FK processing. This call checks that any FK constraints that
+        // refer to this table (i.e. constraints attached to other tables)
+        // are not violated by deleting this row.
         unsafe {
             sqlite3FkCheck(
                 pParse,
@@ -3251,16 +3341,15 @@ extern "C-unwind" fn sqlite3GenerateRowDelete(
             )
         };
     }
-    // /* Delete the index and table entries. Skip this step if pTab is really
-    //   ** a view (in which case the only effect of the DELETE statement is to
-    //   ** fire the INSTEAD OF triggers).
-    //   **
-    //   ** If variable 'count' is non-zero, then this OP_Delete instruction should
-    //   ** invoke the update-hook. The pre-update-hook, on the other hand should
-    //   ** be invoked unless table pTab is a system table. The difference is that
-    //   ** the update-hook is not invoked for rows removed by REPLACE, but the
-    //   ** pre-update-hook is.
-    //   */
+    // Delete the index and table entries. Skip this step if pTab is really
+    // a view (in which case the only effect of the DELETE statement is to
+    // fire the INSTEAD OF triggers).
+    //
+    // If variable 'count' is non-zero, then this OP_Delete instruction should
+    // invoke the update-hook. The pre-update-hook, on the other hand should
+    // be invoked unless table pTab is a system table. The difference is that
+    // the update-hook is not invoked for rows removed by REPLACE, but the
+    // pre-update-hook is.
     if !((((unsafe { (*pTab).eTabType }) as u32) as i32) == (2 as i32)) {
         let mut p5: u8 = ((0 as i32) as i8) as u8;
         sqlite3GenerateRowIndexDelete(
@@ -3311,9 +3400,9 @@ extern "C-unwind" fn sqlite3GenerateRowDelete(
         }
         unsafe { sqlite3VdbeChangeP5(v, p5 as u16) };
     }
-    // /* Do any ON CASCADE, SET NULL or SET DEFAULT operations required to
-    //   ** handle rows (possibly in other tables) that refer via a foreign key
-    //   ** to the row just deleted. */
+    // Do any ON CASCADE, SET NULL or SET DEFAULT operations required to
+    // handle rows (possibly in other tables) that refer via a foreign key
+    // to the row just deleted.
     unsafe {
         sqlite3FkActions(
             pParse,
@@ -3324,7 +3413,7 @@ extern "C-unwind" fn sqlite3GenerateRowDelete(
             0 as i32,
         )
     };
-    // /* Invoke AFTER DELETE trigger programs. */
+    // Invoke AFTER DELETE trigger programs.
     if pTrigger != std::ptr::null_mut::<Trigger>() {
         unsafe {
             sqlite3CodeRowTrigger(
@@ -3340,42 +3429,38 @@ extern "C-unwind" fn sqlite3GenerateRowDelete(
             )
         };
     }
-    // /* Jump here if the row had already been deleted before any BEFORE
-    //   ** trigger programs were invoked. Or if a trigger program throws a
-    //   ** RAISE(IGNORE) exception.  */
+    // Jump here if the row had already been deleted before any BEFORE
+    // trigger programs were invoked. Or if a trigger program throws a
+    // RAISE(IGNORE) exception.
     unsafe { sqlite3VdbeResolveLabel(v, iLabel) };
     {}
 }
 
-// /* Parsing context */
-// /* Table containing the row to be deleted */
-// /* List of triggers to (potentially) fire */
-// /* Cursor from which column data is extracted */
-// /* First index cursor */
-// /* First memory cell containing the PRIMARY KEY */
-// /* Number of PRIMARY KEY memory cells */
-// /* If non-zero, increment the row change counter */
-// /* Default ON CONFLICT policy for triggers */
-// /* ONEPASS_OFF, _SINGLE, or _MULTI.  See above */
-// /* Cursor number of cursor that does not need seeking */
-// /*
-// ** This routine generates VDBE code that causes the deletion of all
-// ** index entries associated with a single row of a single table, pTab
-// **
-// ** Preconditions:
-// **
-// **   1.  A read/write cursor "iDataCur" must be open on the canonical storage
-// **       btree for the table pTab.  (This will be either the table itself
-// **       for rowid tables or to the primary key index for WITHOUT ROWID
-// **       tables.)
-// **
-// **   2.  Read/write cursors for all indices of pTab must be open as
-// **       cursor number iIdxCur+i for the i-th index.  (The pTab->pIndex
-// **       index is the 0-th index.)
-// **
-// **   3.  The "iDataCur" cursor must be already be positioned on the row
-// **       that is to be deleted.
-// */
+/// This routine generates VDBE code that causes the deletion of all
+/// index entries associated with a single row of a single table, pTab
+///
+/// Preconditions:
+///
+///   1.  A read/write cursor "iDataCur" must be open on the canonical storage
+///       btree for the table pTab.  (This will be either the table itself
+///       for rowid tables or to the primary key index for WITHOUT ROWID
+///       tables.)
+///
+///   2.  Read/write cursors for all indices of pTab must be open as
+///       cursor number iIdxCur+i for the i-th index.  (The pTab->pIndex
+///       index is the 0-th index.)
+///
+///   3.  The "iDataCur" cursor must be already be positioned on the row
+///       that is to be deleted.
+///
+/// # Arguments
+///
+/// * `pParse` - Parsing and code generating context
+/// * `pTab` - Table containing the row to be deleted
+/// * `iDataCur` - Cursor of table holding data.
+/// * `iIdxCur` - First index cursor
+/// * `aRegIdx` - Only delete if aRegIdx!=0 && aRegIdx[i]>0
+/// * `iIdxNoSeek` - Do not delete from this cursor
 #[unsafe(no_mangle)]
 extern "C-unwind" fn sqlite3GenerateRowIndexDelete(
     mut pParse: *mut Parse,
@@ -3385,20 +3470,13 @@ extern "C-unwind" fn sqlite3GenerateRowIndexDelete(
     mut aRegIdx: *mut i32,
     mut iIdxNoSeek: i32,
 ) {
-    // /* Index loop counter */
-    let mut i: i32 = 0 as i32;
-    // /* Register holding an index key */
-    let mut r1: i32 = -(1 as i32);
-    // /* Jump destination for skipping partial index entries */
-    let mut iPartIdxLabel: i32 = 0 as i32;
-    // /* Current index */
-    let mut pIdx: *mut Index = unsafe { std::mem::zeroed() };
-    // /* Prior index */
-    let mut pPrior: *mut Index = std::ptr::null_mut::<Index>();
-    // /* The prepared statement under construction */
-    let mut v: *mut Vdbe = unsafe { std::mem::zeroed() };
-    // /* PRIMARY KEY index, or NULL for rowid tables */
-    let mut pPk: *mut Index = unsafe { std::mem::zeroed() };
+    let mut i: i32 = 0 as i32; // Index loop counter
+    let mut r1: i32 = -(1 as i32); // Register holding an index key
+    let mut iPartIdxLabel: i32 = 0 as i32; // Jump destination for skipping partial index entries
+    let mut pIdx: *mut Index = unsafe { std::mem::zeroed() }; // Current index
+    let mut pPrior: *mut Index = std::ptr::null_mut::<Index>(); // Prior index
+    let mut v: *mut Vdbe = unsafe { std::mem::zeroed() }; // The prepared statement under construction
+    let mut pPk: *mut Index = unsafe { std::mem::zeroed() }; // PRIMARY KEY index, or NULL for rowid tables
     v = unsafe { (*pParse).pVdbe };
     let __v823: *mut Index;
     if (unsafe { (*pTab).tabFlags }) & ((128 as i32) as u32) == ((0 as i32) as u32) {
@@ -3467,43 +3545,46 @@ extern "C-unwind" fn sqlite3GenerateRowIndexDelete(
     }
 }
 
-// /* Parsing and code generating context */
-// /* Table containing the row to be deleted */
-// /* Cursor of table holding data. */
-// /* First index cursor */
-// /* Only delete if aRegIdx!=0 && aRegIdx[i]>0 */
-// /* Do not delete from this cursor */
-// /*
-// ** Generate code that will assemble an index key and stores it in register
-// ** regOut.  The key with be for index pIdx which is an index on pTab.
-// ** iCur is the index of a cursor open on the pTab table and pointing to
-// ** the entry that needs indexing.  If pTab is a WITHOUT ROWID table, then
-// ** iCur must be the cursor of the PRIMARY KEY index.
-// **
-// ** Return a register number which is the first in a block of
-// ** registers that holds the elements of the index key.  The
-// ** block of registers has already been deallocated by the time
-// ** this routine returns.
-// **
-// ** If *piPartIdxLabel is not NULL, fill it in with a label and jump
-// ** to that label if pIdx is a partial index that should be skipped.
-// ** The label should be resolved using sqlite3ResolvePartIdxLabel().
-// ** A partial index should be skipped if its WHERE clause evaluates
-// ** to false or null.  If pIdx is not a partial index, *piPartIdxLabel
-// ** will be set to zero which is an empty label that is ignored by
-// ** sqlite3ResolvePartIdxLabel().
-// **
-// ** The pPrior and regPrior parameters are used to implement a cache to
-// ** avoid unnecessary register loads.  If pPrior is not NULL, then it is
-// ** a pointer to a different index for which an index key has just been
-// ** computed into register regPrior.  If the current pIdx index is generating
-// ** its key into the same sequence of registers and if pPrior and pIdx share
-// ** a column in common, then the register corresponding to that column already
-// ** holds the correct value and the loading of that register is skipped.
-// ** This optimization is helpful when doing a DELETE or an INTEGRITY_CHECK
-// ** on a table with multiple indices, and especially with the ROWID or
-// ** PRIMARY KEY columns of the index.
-// */
+/// Generate code that will assemble an index key and stores it in register
+/// regOut.  The key with be for index pIdx which is an index on pTab.
+/// iCur is the index of a cursor open on the pTab table and pointing to
+/// the entry that needs indexing.  If pTab is a WITHOUT ROWID table, then
+/// iCur must be the cursor of the PRIMARY KEY index.
+///
+/// Return a register number which is the first in a block of
+/// registers that holds the elements of the index key.  The
+/// block of registers has already been deallocated by the time
+/// this routine returns.
+///
+/// If *piPartIdxLabel is not NULL, fill it in with a label and jump
+/// to that label if pIdx is a partial index that should be skipped.
+/// The label should be resolved using sqlite3ResolvePartIdxLabel().
+/// A partial index should be skipped if its WHERE clause evaluates
+/// to false or null.  If pIdx is not a partial index, *piPartIdxLabel
+/// will be set to zero which is an empty label that is ignored by
+/// sqlite3ResolvePartIdxLabel().
+///
+/// The pPrior and regPrior parameters are used to implement a cache to
+/// avoid unnecessary register loads.  If pPrior is not NULL, then it is
+/// a pointer to a different index for which an index key has just been
+/// computed into register regPrior.  If the current pIdx index is generating
+/// its key into the same sequence of registers and if pPrior and pIdx share
+/// a column in common, then the register corresponding to that column already
+/// holds the correct value and the loading of that register is skipped.
+/// This optimization is helpful when doing a DELETE or an INTEGRITY_CHECK
+/// on a table with multiple indices, and especially with the ROWID or
+/// PRIMARY KEY columns of the index.
+///
+/// # Arguments
+///
+/// * `pParse` - Parsing context
+/// * `pIdx` - The index for which to generate a key
+/// * `iDataCur` - Cursor number from which to take column data
+/// * `regOut` - Put the new key into this register if not 0
+/// * `prefixOnly` - Compute only a unique prefix of the key
+/// * `piPartIdxLabel` - OUT: Jump to this label to skip partial index
+/// * `pPrior` - Previously generated index key
+/// * `regPrior` - Register holding previous generated key
 #[unsafe(no_mangle)]
 extern "C-unwind" fn sqlite3GenerateIndexKey(
     mut pParse: *mut Parse,
@@ -3538,9 +3619,9 @@ extern "C-unwind" fn sqlite3GenerateIndexKey(
             unsafe {
                 (*pParse).iSelfTab = 0 as i32;
             }
-            // /* Ticket a9efb42811fa41ee 2019-11-02;
-            //                   ** pPartIdxWhere may have corrupted regPrior registers */
             pPrior = std::ptr::null_mut::<Index>();
+        // Ticket a9efb42811fa41ee 2019-11-02;
+        // pPartIdxWhere may have corrupted regPrior registers
         } else {
             unsafe {
                 *piPartIdxLabel = 0 as i32;
@@ -3572,18 +3653,18 @@ extern "C-unwind" fn sqlite3GenerateIndexKey(
             && ((unsafe { *unsafe { unsafe { (*pPrior).aiColumn }.offset(j as isize) } }) as i32)
                 != -(2 as i32)
         {
-            // /* This column was already computed by the previous index */
+            // This column was already computed by the previous index
         } else {
             unsafe { sqlite3ExprCodeLoadIndexColumn(pParse, pIdx, iDataCur, j, regBase + j) };
             if ((unsafe { *unsafe { unsafe { (*pIdx).aiColumn }.offset(j as isize) } }) as i32)
                 >= (0 as i32)
             {
-                // /* If the column affinity is REAL but the number is an integer, then it
-                //       ** might be stored in the table as an integer (using a compact
-                //       ** representation) then converted to REAL by an OP_RealAffinity opcode.
-                //       ** But we are getting ready to store this value back into an index, where
-                //       ** it should be converted by to INTEGER again.  So omit the
-                //       ** OP_RealAffinity opcode if it is present */
+                // If the column affinity is REAL but the number is an integer, then it
+                // might be stored in the table as an integer (using a compact
+                // representation) then converted to REAL by an OP_RealAffinity opcode.
+                // But we are getting ready to store this value back into an index, where
+                // it should be converted by to INTEGER again.  So omit the
+                // OP_RealAffinity opcode if it is present
                 unsafe { sqlite3VdbeDeletePriorOpcode(v, ((89 as i32) as i8) as u8) };
             }
         }
@@ -3598,167 +3679,12 @@ extern "C-unwind" fn sqlite3GenerateIndexKey(
     return regBase;
 }
 
-// /* Parsing context */
-// /* The index for which to generate a key */
-// /* Cursor number from which to take column data */
-// /* Put the new key into this register if not 0 */
-// /* Compute only a unique prefix of the key */
-// /* OUT: Jump to this label to skip partial index */
-// /* Previously generated index key */
-// /* Register holding previous generated key */
-// /*
-// ** If a prior call to sqlite3GenerateIndexKey() generated a jump-over label
-// ** because it was a partial index, then this routine should be called to
-// ** resolve that label.
-// */
+/// If a prior call to sqlite3GenerateIndexKey() generated a jump-over label
+/// because it was a partial index, then this routine should be called to
+/// resolve that label.
 #[unsafe(no_mangle)]
 extern "C-unwind" fn sqlite3ResolvePartIdxLabel(mut pParse: *mut Parse, mut iLabel: i32) {
     if iLabel != (0 as i32) {
         unsafe { sqlite3VdbeResolveLabel(unsafe { (*pParse).pVdbe }, iLabel) };
     }
-}
-
-// /*
-// ** Evaluate a view and store its result in an ephemeral table.  The
-// ** pWhere argument is an optional WHERE clause that restricts the
-// ** set of rows in the view that are to be added to the ephemeral table.
-// */
-#[unsafe(no_mangle)]
-extern "C-unwind" fn sqlite3MaterializeView(
-    mut pParse: *mut Parse,
-    mut pView: *mut Table,
-    mut pWhere: *mut Expr,
-    mut pOrderBy: *mut ExprList,
-    mut pLimit: *mut Expr,
-    mut iCur: i32,
-) {
-    let mut dest: SelectDest = unsafe { std::mem::zeroed() };
-    let mut pSel: *mut Select = unsafe { std::mem::zeroed() };
-    let mut pFrom: *mut SrcList = unsafe { std::mem::zeroed() };
-    let mut db: *mut sqlite3 = unsafe { (*pParse).db };
-    let mut iDb: i32 = unsafe { sqlite3SchemaToIndex(db, unsafe { (*pView).pSchema }) };
-    pWhere = unsafe { sqlite3ExprDup(db, pWhere as *const Expr, 0 as i32) };
-    pFrom = unsafe {
-        sqlite3SrcListAppend(
-            pParse,
-            std::ptr::null_mut::<SrcList>(),
-            std::ptr::null_mut::<Token>(),
-            std::ptr::null_mut::<Token>(),
-        )
-    };
-    if pFrom != std::ptr::null_mut::<SrcList>() {
-        0 as i32;
-        unsafe {
-            (*unsafe {
-                unsafe { std::ptr::addr_of_mut!((*pFrom).a) as *mut SrcItem }
-                    .offset((0 as i32) as isize)
-            })
-            .zName = unsafe { sqlite3DbStrDup(db, (unsafe { (*pView).zName }) as *const i8) };
-        }
-        0 as i32;
-        unsafe {
-            (*unsafe {
-                unsafe { std::ptr::addr_of_mut!((*pFrom).a) as *mut SrcItem }
-                    .offset((0 as i32) as isize)
-            })
-            .u4
-            .zDatabase = unsafe {
-                sqlite3DbStrDup(
-                    db,
-                    (unsafe { (*unsafe { unsafe { (*db).aDb }.offset(iDb as isize) }).zDbSName })
-                        as *const i8,
-                )
-            };
-        }
-        0 as i32;
-        0 as i32;
-    }
-    pSel = unsafe {
-        sqlite3SelectNew(
-            pParse,
-            std::ptr::null_mut::<ExprList>(),
-            pFrom,
-            pWhere,
-            std::ptr::null_mut::<ExprList>(),
-            std::ptr::null_mut::<Expr>(),
-            pOrderBy,
-            (131072 as i32) as u32,
-            pLimit,
-        )
-    };
-    unsafe { sqlite3SelectDestInit(std::ptr::addr_of_mut!(dest), 10 as i32, iCur) };
-    unsafe { sqlite3Select(pParse, pSel, std::ptr::addr_of_mut!(dest)) };
-    unsafe { sqlite3SelectDelete(db, pSel) };
-}
-
-// /* Return true if table pTab is read-only.
-// **
-// ** A table is read-only if any of the following are true:
-// **
-// **   1) It is a virtual table and no implementation of the xUpdate method
-// **      has been provided
-// **
-// **   2) A trigger is currently being coded and the table is a virtual table
-// **      that is SQLITE_VTAB_DIRECTONLY or if PRAGMA trusted_schema=OFF and
-// **      the table is not SQLITE_VTAB_INNOCUOUS.
-// **
-// **   3) It is a system table (i.e. sqlite_schema), this call is not
-// **      part of a nested parse and writable_schema pragma has not
-// **      been specified
-// **
-// **   4) The table is a shadow table, the database connection is in
-// **      defensive mode, and the current sqlite3_prepare()
-// **      is for a top-level SQL statement.
-// */
-fn vtabIsReadOnly(mut pParse: *mut Parse, mut pTab: *mut Table) -> i32 {
-    0 as i32;
-    if (unsafe {
-        (*unsafe {
-            (*unsafe { (*unsafe { sqlite3GetVTable(unsafe { (*pParse).db }, pTab) }).pMod }).pModule
-        })
-        .xUpdate
-    }) == None
-    {
-        return 1 as i32;
-    }
-    // /* Within triggers:
-    //   **   *  Do not allow DELETE, INSERT, or UPDATE of SQLITE_VTAB_DIRECTONLY
-    //   **      virtual tables
-    //   **   *  Only allow DELETE, INSERT, or UPDATE of non-SQLITE_VTAB_INNOCUOUS
-    //   **      virtual tables if PRAGMA trusted_schema=ON.
-    //   */
-    if ((unsafe { (*pParse).pToplevel }) != std::ptr::null_mut::<Parse>()
-        || (((unsafe { (*pParse).prepFlags }) as u32) as i32) & (32 as i32) != (0 as i32))
-        && (((unsafe { (*unsafe { (*pTab).u.vtab.p }).eVtabRisk }) as u32) as i32)
-            > (((unsafe { (*unsafe { (*pParse).db }).flags }) & (((128 as i32) as i64) as u64)
-                != (((0 as i32) as i64) as u64)) as i32)
-    {
-        unsafe {
-            sqlite3ErrorMsg(
-                pParse,
-                (b"unsafe use of virtual table \"%s\"\0".as_ptr() as *mut i8) as *const i8,
-                unsafe { (*pTab).zName },
-            )
-        };
-    }
-    return 0 as i32;
-}
-
-fn tabIsReadOnly(mut pParse: *mut Parse, mut pTab: *mut Table) -> i32 {
-    let mut db: *mut sqlite3 = unsafe { std::mem::zeroed() };
-    if (((unsafe { (*pTab).eTabType }) as u32) as i32) == (1 as i32) {
-        return vtabIsReadOnly(pParse, pTab);
-    }
-    if (unsafe { (*pTab).tabFlags }) & (((1 as i32) | (4096 as i32)) as u32) == ((0 as i32) as u32)
-    {
-        return 0 as i32;
-    }
-    db = unsafe { (*pParse).db };
-    if (unsafe { (*pTab).tabFlags }) & ((1 as i32) as u32) != ((0 as i32) as u32) {
-        return ((unsafe { sqlite3WritableSchema(db) }) == (0 as i32)
-            && (((unsafe { (*pParse).nested }) as u32) as i32) == (0 as i32))
-            as i32;
-    }
-    0 as i32;
-    return unsafe { sqlite3ReadOnlyShadowTables(db) };
 }

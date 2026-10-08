@@ -1,3 +1,15 @@
+//! 2006 June 7
+//!
+//! The author disclaims copyright to this source code.  In place of
+//! a legal notice, here is a blessing:
+//!
+//!    May you do good and not evil.
+//!    May you find forgiveness for yourself and forgive others.
+//!    May you share freely, never taking more than you give.
+//!
+//!
+//! This file contains code used to dynamically load extensions into
+//! the SQLite library.
 unsafe extern "C" {
     static mut sqlite3UpperToLower: [u8; 0];
     static mut sqlite3CtypeMap: [u8; 0];
@@ -668,111 +680,6 @@ unsafe extern "C" {
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct sqlite3 {
-    pVfs: *mut sqlite3_vfs,
-    pVdbe: *mut Vdbe,
-    pDfltColl: *mut CollSeq,
-    mutex: *mut sqlite3_mutex,
-    aDb: *mut Db,
-    nDb: i32,
-    mDbFlags: u32,
-    flags: u64,
-    lastRowid: i64,
-    szMmap: i64,
-    nSchemaLock: u32,
-    openFlags: u32,
-    errCode: i32,
-    errByteOffset: i32,
-    errMask: i32,
-    iSysErrno: i32,
-    dbOptFlags: u32,
-    enc: u8,
-    autoCommit: u8,
-    temp_store: u8,
-    mallocFailed: u8,
-    bBenignMalloc: u8,
-    dfltLockMode: u8,
-    nextAutovac: i8,
-    suppressErr: u8,
-    vtabOnConflict: u8,
-    isTransactionSavepoint: u8,
-    mTrace: u8,
-    noSharedCache: u8,
-    nSqlExec: u8,
-    eOpenState: u8,
-    nFpDigit: u8,
-    nextPagesize: i32,
-    nChange: i64,
-    nTotalChange: i64,
-    aLimit: [i32; 15],
-    nMaxSorterMmap: i32,
-    init: sqlite3InitInfo,
-    nVdbeActive: i32,
-    nVdbeRead: i32,
-    nVdbeWrite: i32,
-    nVdbeExec: i32,
-    nVDestroy: i32,
-    nExtension: i32,
-    aExtension: *mut *mut (),
-    trace: __SlateRecord169,
-    pTraceArg: *mut (),
-    xProfile: Option<unsafe extern "C-unwind" fn(*mut (), *const i8, u64)>,
-    pProfileArg: *mut (),
-    pCommitArg: *mut (),
-    xCommitCallback: Option<unsafe extern "C-unwind" fn(*mut ()) -> i32>,
-    pRollbackArg: *mut (),
-    xRollbackCallback: Option<unsafe extern "C-unwind" fn(*mut ())>,
-    pUpdateArg: *mut (),
-    xUpdateCallback: Option<unsafe extern "C-unwind" fn(*mut (), i32, *const i8, *const i8, i64)>,
-    pAutovacPagesArg: *mut (),
-    xAutovacDestr: Option<unsafe extern "C-unwind" fn(*mut ())>,
-    xAutovacPages: Option<unsafe extern "C-unwind" fn(*mut (), *const i8, u32, u32, u32) -> u32>,
-    pParse: *mut Parse,
-    xWalCallback: Option<unsafe extern "C-unwind" fn(*mut (), *mut sqlite3, *const i8, i32) -> i32>,
-    pWalArg: *mut (),
-    xCollNeeded: Option<unsafe extern "C-unwind" fn(*mut (), *mut sqlite3, i32, *const i8)>,
-    xCollNeeded16: Option<unsafe extern "C-unwind" fn(*mut (), *mut sqlite3, i32, *const ())>,
-    pCollNeededArg: *mut (),
-    pErr: *mut sqlite3_value,
-    u1: __SlateRecord170,
-    lookaside: Lookaside,
-    xAuth: Option<
-        unsafe extern "C-unwind" fn(
-            *mut (),
-            i32,
-            *const i8,
-            *const i8,
-            *const i8,
-            *const i8,
-        ) -> i32,
-    >,
-    pAuthArg: *mut (),
-    xProgress: Option<unsafe extern "C-unwind" fn(*mut ()) -> i32>,
-    pProgressArg: *mut (),
-    nProgressOps: u32,
-    nVTrans: i32,
-    aModule: Hash,
-    pVtabCtx: *mut VtabCtx,
-    aVTrans: *mut *mut VTable,
-    pDisconnect: *mut VTable,
-    aFunc: Hash,
-    aCollSeq: Hash,
-    busyHandler: BusyHandler,
-    aDbStatic: [Db; 2],
-    pSavepoint: *mut Savepoint,
-    nAnalysisLimit: i32,
-    busyTimeout: i32,
-    nSavepoint: i32,
-    nStatement: i32,
-    nDeferredCons: i64,
-    nDeferredImmCons: i64,
-    pnBytesFreed: *mut i32,
-    pDbData: *mut DbClientData,
-    nSpill: u64,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
 struct sqlite3_file {
     pMethods: *const sqlite3_io_methods,
 }
@@ -804,7 +711,190 @@ struct sqlite3_io_methods {
 
 #[repr(C)]
 #[derive(Clone, Copy)]
+struct sqlite3_vfs {
+    iVersion: i32,
+    szOsFile: i32,
+    mxPathname: i32,
+    pNext: *mut sqlite3_vfs,
+    zName: *const i8,
+    pAppData: *mut (),
+    xOpen: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vfs,
+            *const i8,
+            *mut sqlite3_file,
+            i32,
+            *mut i32,
+        ) -> i32,
+    >,
+    xDelete: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8, i32) -> i32>,
+    xAccess: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8, i32, *mut i32) -> i32>,
+    xFullPathname:
+        Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8, i32, *mut i8) -> i32>,
+    xDlOpen: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8) -> *mut ()>,
+    xDlError: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, i32, *mut i8)>,
+    xDlSym: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vfs,
+            *mut (),
+            *const i8,
+        ) -> Option<unsafe extern "C-unwind" fn()>,
+    >,
+    xDlClose: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *mut ())>,
+    xRandomness: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, i32, *mut i8) -> i32>,
+    xSleep: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, i32) -> i32>,
+    xCurrentTime: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *mut f64) -> i32>,
+    xGetLastError: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, i32, *mut i8) -> i32>,
+    xCurrentTimeInt64: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *mut i64) -> i32>,
+    xSetSystemCall: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vfs,
+            *const i8,
+            Option<unsafe extern "C-unwind" fn()>,
+        ) -> i32,
+    >,
+    xGetSystemCall: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vfs,
+            *const i8,
+        ) -> Option<unsafe extern "C-unwind" fn()>,
+    >,
+    xNextSystemCall: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8) -> *const i8>,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
 struct sqlite3_mutex {}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_module {
+    iVersion: i32,
+    xCreate: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3,
+            *mut (),
+            i32,
+            *const *const i8,
+            *mut *mut sqlite3_vtab,
+            *mut *mut i8,
+        ) -> i32,
+    >,
+    xConnect: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3,
+            *mut (),
+            i32,
+            *const *const i8,
+            *mut *mut sqlite3_vtab,
+            *mut *mut i8,
+        ) -> i32,
+    >,
+    xBestIndex:
+        Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, *mut sqlite3_index_info) -> i32>,
+    xDisconnect: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
+    xDestroy: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
+    xOpen: Option<
+        unsafe extern "C-unwind" fn(*mut sqlite3_vtab, *mut *mut sqlite3_vtab_cursor) -> i32,
+    >,
+    xClose: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor) -> i32>,
+    xFilter: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vtab_cursor,
+            i32,
+            *const i8,
+            i32,
+            *mut *mut sqlite3_value,
+        ) -> i32,
+    >,
+    xNext: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor) -> i32>,
+    xEof: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor) -> i32>,
+    xColumn: Option<
+        unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor, *mut sqlite3_context, i32) -> i32,
+    >,
+    xRowid: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor, *mut i64) -> i32>,
+    xUpdate: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vtab,
+            i32,
+            *mut *mut sqlite3_value,
+            *mut i64,
+        ) -> i32,
+    >,
+    xBegin: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
+    xSync: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
+    xCommit: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
+    xRollback: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
+    xFindFunction: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vtab,
+            i32,
+            *const i8,
+            *mut Option<
+                unsafe extern "C-unwind" fn(*mut sqlite3_context, i32, *mut *mut sqlite3_value),
+            >,
+            *mut *mut (),
+        ) -> i32,
+    >,
+    xRename: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, *const i8) -> i32>,
+    xSavepoint: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, i32) -> i32>,
+    xRelease: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, i32) -> i32>,
+    xRollbackTo: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, i32) -> i32>,
+    xShadowName: Option<unsafe extern "C-unwind" fn(*const i8) -> i32>,
+    xIntegrity: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vtab,
+            *const i8,
+            *const i8,
+            i32,
+            *mut *mut i8,
+        ) -> i32,
+    >,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_index_info {
+    nConstraint: i32,
+    aConstraint: *mut sqlite3_index_constraint,
+    nOrderBy: i32,
+    aOrderBy: *mut sqlite3_index_orderby,
+    aConstraintUsage: *mut sqlite3_index_constraint_usage,
+    idxNum: i32,
+    idxStr: *mut i8,
+    needToFreeIdxStr: i32,
+    orderByConsumed: i32,
+    estimatedCost: f64,
+    estimatedRows: i64,
+    idxFlags: i32,
+    colUsed: u64,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_stmt {}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_value {}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_context {}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_vtab {
+    pModule: *const sqlite3_module,
+    nRef: i32,
+    zErrMsg: *mut i8,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_vtab_cursor {
+    pVtab: *mut sqlite3_vtab,
+}
 
 #[repr(C)]
 #[derive(Clone, Copy)]
@@ -1535,185 +1625,11 @@ struct sqlite3_api_routines {
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct sqlite3_vfs {
-    iVersion: i32,
-    szOsFile: i32,
-    mxPathname: i32,
-    pNext: *mut sqlite3_vfs,
-    zName: *const i8,
-    pAppData: *mut (),
-    xOpen: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3_vfs,
-            *const i8,
-            *mut sqlite3_file,
-            i32,
-            *mut i32,
-        ) -> i32,
-    >,
-    xDelete: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8, i32) -> i32>,
-    xAccess: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8, i32, *mut i32) -> i32>,
-    xFullPathname:
-        Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8, i32, *mut i8) -> i32>,
-    xDlOpen: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8) -> *mut ()>,
-    xDlError: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, i32, *mut i8)>,
-    xDlSym: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3_vfs,
-            *mut (),
-            *const i8,
-        ) -> Option<unsafe extern "C-unwind" fn()>,
-    >,
-    xDlClose: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *mut ())>,
-    xRandomness: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, i32, *mut i8) -> i32>,
-    xSleep: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, i32) -> i32>,
-    xCurrentTime: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *mut f64) -> i32>,
-    xGetLastError: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, i32, *mut i8) -> i32>,
-    xCurrentTimeInt64: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *mut i64) -> i32>,
-    xSetSystemCall: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3_vfs,
-            *const i8,
-            Option<unsafe extern "C-unwind" fn()>,
-        ) -> i32,
-    >,
-    xGetSystemCall: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3_vfs,
-            *const i8,
-        ) -> Option<unsafe extern "C-unwind" fn()>,
-    >,
-    xNextSystemCall: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8) -> *const i8>,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct sqlite3_stmt {}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct sqlite3_value {}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct sqlite3_context {}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct sqlite3_vtab {
-    pModule: *const sqlite3_module,
-    nRef: i32,
-    zErrMsg: *mut i8,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct sqlite3_index_info {
-    nConstraint: i32,
-    aConstraint: *mut sqlite3_index_constraint,
-    nOrderBy: i32,
-    aOrderBy: *mut sqlite3_index_orderby,
-    aConstraintUsage: *mut sqlite3_index_constraint_usage,
-    idxNum: i32,
-    idxStr: *mut i8,
-    needToFreeIdxStr: i32,
-    orderByConsumed: i32,
-    estimatedCost: f64,
-    estimatedRows: i64,
-    idxFlags: i32,
-    colUsed: u64,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct sqlite3_vtab_cursor {
-    pVtab: *mut sqlite3_vtab,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct sqlite3_module {
-    iVersion: i32,
-    xCreate: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3,
-            *mut (),
-            i32,
-            *const *const i8,
-            *mut *mut sqlite3_vtab,
-            *mut *mut i8,
-        ) -> i32,
-    >,
-    xConnect: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3,
-            *mut (),
-            i32,
-            *const *const i8,
-            *mut *mut sqlite3_vtab,
-            *mut *mut i8,
-        ) -> i32,
-    >,
-    xBestIndex:
-        Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, *mut sqlite3_index_info) -> i32>,
-    xDisconnect: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
-    xDestroy: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
-    xOpen: Option<
-        unsafe extern "C-unwind" fn(*mut sqlite3_vtab, *mut *mut sqlite3_vtab_cursor) -> i32,
-    >,
-    xClose: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor) -> i32>,
-    xFilter: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3_vtab_cursor,
-            i32,
-            *const i8,
-            i32,
-            *mut *mut sqlite3_value,
-        ) -> i32,
-    >,
-    xNext: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor) -> i32>,
-    xEof: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor) -> i32>,
-    xColumn: Option<
-        unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor, *mut sqlite3_context, i32) -> i32,
-    >,
-    xRowid: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor, *mut i64) -> i32>,
-    xUpdate: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3_vtab,
-            i32,
-            *mut *mut sqlite3_value,
-            *mut i64,
-        ) -> i32,
-    >,
-    xBegin: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
-    xSync: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
-    xCommit: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
-    xRollback: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
-    xFindFunction: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3_vtab,
-            i32,
-            *const i8,
-            *mut Option<
-                unsafe extern "C-unwind" fn(*mut sqlite3_context, i32, *mut *mut sqlite3_value),
-            >,
-            *mut *mut (),
-        ) -> i32,
-    >,
-    xRename: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, *const i8) -> i32>,
-    xSavepoint: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, i32) -> i32>,
-    xRelease: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, i32) -> i32>,
-    xRollbackTo: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, i32) -> i32>,
-    xShadowName: Option<unsafe extern "C-unwind" fn(*const i8) -> i32>,
-    xIntegrity: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3_vtab,
-            *const i8,
-            *const i8,
-            i32,
-            *mut *mut i8,
-        ) -> i32,
-    >,
+struct Hash {
+    htsize: u32,
+    count: u32,
+    first: *mut HashElem,
+    ht: *mut _ht,
 }
 
 #[repr(C)]
@@ -1745,14 +1661,12 @@ struct sqlite3_blob {}
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct sqlite3_str {
-    db: *mut sqlite3,
-    zText: *mut i8,
-    nAlloc: u32,
-    mxAlloc: u32,
-    nChar: u32,
-    accError: u8,
-    printfFlags: u8,
+struct HashElem {
+    next: *mut HashElem,
+    prev: *mut HashElem,
+    data: *mut (),
+    pKey: *const i8,
+    h: u32,
 }
 
 #[repr(C)]
@@ -1761,21 +1675,21 @@ struct sqlite3_backup {}
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct Hash {
-    htsize: u32,
-    count: u32,
-    first: *mut HashElem,
-    ht: *mut _ht,
+struct BusyHandler {
+    xBusyHandler: Option<unsafe extern "C-unwind" fn(*mut (), i32) -> i32>,
+    pBusyArg: *mut (),
+    nBusy: i32,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct HashElem {
-    next: *mut HashElem,
-    prev: *mut HashElem,
-    data: *mut (),
-    pKey: *const i8,
-    h: u32,
+struct SubrtnSig {
+    selId: i32,
+    bComplete: u8,
+    zAff: *mut i8,
+    iTable: i32,
+    iAddr: i32,
+    regReturn: i32,
 }
 
 #[repr(C)]
@@ -1787,10 +1701,344 @@ struct _ht {
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct BusyHandler {
-    xBusyHandler: Option<unsafe extern "C-unwind" fn(*mut (), i32) -> i32>,
-    pBusyArg: *mut (),
-    nBusy: i32,
+struct VdbeOp {
+    opcode: u8,
+    p4type: i8,
+    p5: u16,
+    p1: i32,
+    p2: i32,
+    p3: i32,
+    p4: p4union,
+    zComment: *mut i8,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct SubProgram {
+    aOp: *mut VdbeOp,
+    nOp: i32,
+    nMem: i32,
+    nCsr: i32,
+    aOnce: *mut u8,
+    token: *mut (),
+    pNext: *mut SubProgram,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Db {
+    zDbSName: *mut i8,
+    pBt: *mut Btree,
+    safety_level: u8,
+    bSyncSet: u8,
+    pSchema: *mut Schema,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Schema {
+    schema_cookie: i32,
+    iGeneration: i32,
+    tblHash: Hash,
+    idxHash: Hash,
+    trigHash: Hash,
+    fkeyHash: Hash,
+    pSeqTab: *mut Table,
+    file_format: u8,
+    enc: u8,
+    schemaFlags: u16,
+    cache_size: i32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Lookaside {
+    bDisable: u32,
+    sz: u16,
+    szTrue: u16,
+    bMalloced: u8,
+    nSlot: u32,
+    anStat: [u32; 3],
+    pInit: *mut LookasideSlot,
+    pFree: *mut LookasideSlot,
+    pSmallInit: *mut LookasideSlot,
+    pSmallFree: *mut LookasideSlot,
+    pMiddle: *mut (),
+    pStart: *mut (),
+    pEnd: *mut (),
+    pTrueEnd: *mut (),
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct LookasideSlot {
+    pNext: *mut LookasideSlot,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3 {
+    pVfs: *mut sqlite3_vfs,
+    pVdbe: *mut Vdbe,
+    pDfltColl: *mut CollSeq,
+    mutex: *mut sqlite3_mutex,
+    aDb: *mut Db,
+    nDb: i32,
+    mDbFlags: u32,
+    flags: u64,
+    lastRowid: i64,
+    szMmap: i64,
+    nSchemaLock: u32,
+    openFlags: u32,
+    errCode: i32,
+    errByteOffset: i32,
+    errMask: i32,
+    iSysErrno: i32,
+    dbOptFlags: u32,
+    enc: u8,
+    autoCommit: u8,
+    temp_store: u8,
+    mallocFailed: u8,
+    bBenignMalloc: u8,
+    dfltLockMode: u8,
+    nextAutovac: i8,
+    suppressErr: u8,
+    vtabOnConflict: u8,
+    isTransactionSavepoint: u8,
+    mTrace: u8,
+    noSharedCache: u8,
+    nSqlExec: u8,
+    eOpenState: u8,
+    nFpDigit: u8,
+    nextPagesize: i32,
+    nChange: i64,
+    nTotalChange: i64,
+    aLimit: [i32; 15],
+    nMaxSorterMmap: i32,
+    init: sqlite3InitInfo,
+    nVdbeActive: i32,
+    nVdbeRead: i32,
+    nVdbeWrite: i32,
+    nVdbeExec: i32,
+    nVDestroy: i32,
+    nExtension: i32,
+    aExtension: *mut *mut (),
+    trace: __SlateRecord169,
+    pTraceArg: *mut (),
+    xProfile: Option<unsafe extern "C-unwind" fn(*mut (), *const i8, u64)>,
+    pProfileArg: *mut (),
+    pCommitArg: *mut (),
+    xCommitCallback: Option<unsafe extern "C-unwind" fn(*mut ()) -> i32>,
+    pRollbackArg: *mut (),
+    xRollbackCallback: Option<unsafe extern "C-unwind" fn(*mut ())>,
+    pUpdateArg: *mut (),
+    xUpdateCallback: Option<unsafe extern "C-unwind" fn(*mut (), i32, *const i8, *const i8, i64)>,
+    pAutovacPagesArg: *mut (),
+    xAutovacDestr: Option<unsafe extern "C-unwind" fn(*mut ())>,
+    xAutovacPages: Option<unsafe extern "C-unwind" fn(*mut (), *const i8, u32, u32, u32) -> u32>,
+    pParse: *mut Parse,
+    xWalCallback: Option<unsafe extern "C-unwind" fn(*mut (), *mut sqlite3, *const i8, i32) -> i32>,
+    pWalArg: *mut (),
+    xCollNeeded: Option<unsafe extern "C-unwind" fn(*mut (), *mut sqlite3, i32, *const i8)>,
+    xCollNeeded16: Option<unsafe extern "C-unwind" fn(*mut (), *mut sqlite3, i32, *const ())>,
+    pCollNeededArg: *mut (),
+    pErr: *mut sqlite3_value,
+    u1: __SlateRecord170,
+    lookaside: Lookaside,
+    xAuth: Option<
+        unsafe extern "C-unwind" fn(
+            *mut (),
+            i32,
+            *const i8,
+            *const i8,
+            *const i8,
+            *const i8,
+        ) -> i32,
+    >,
+    pAuthArg: *mut (),
+    xProgress: Option<unsafe extern "C-unwind" fn(*mut ()) -> i32>,
+    pProgressArg: *mut (),
+    nProgressOps: u32,
+    nVTrans: i32,
+    aModule: Hash,
+    pVtabCtx: *mut VtabCtx,
+    aVTrans: *mut *mut VTable,
+    pDisconnect: *mut VTable,
+    aFunc: Hash,
+    aCollSeq: Hash,
+    busyHandler: BusyHandler,
+    aDbStatic: [Db; 2],
+    pSavepoint: *mut Savepoint,
+    nAnalysisLimit: i32,
+    busyTimeout: i32,
+    nSavepoint: i32,
+    nStatement: i32,
+    nDeferredCons: i64,
+    nDeferredImmCons: i64,
+    pnBytesFreed: *mut i32,
+    pDbData: *mut DbClientData,
+    nSpill: u64,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct FuncDef {
+    nArg: i16,
+    funcFlags: u32,
+    pUserData: *mut (),
+    pNext: *mut FuncDef,
+    xSFunc: Option<unsafe extern "C-unwind" fn(*mut sqlite3_context, i32, *mut *mut sqlite3_value)>,
+    xFinalize: Option<unsafe extern "C-unwind" fn(*mut sqlite3_context)>,
+    xValue: Option<unsafe extern "C-unwind" fn(*mut sqlite3_context)>,
+    xInverse:
+        Option<unsafe extern "C-unwind" fn(*mut sqlite3_context, i32, *mut *mut sqlite3_value)>,
+    zName: *const i8,
+    u: __SlateRecord171,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct FuncDestructor {
+    nRef: i32,
+    xDestroy: Option<unsafe extern "C-unwind" fn(*mut ())>,
+    pUserData: *mut (),
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Savepoint {
+    zName: *mut i8,
+    nDeferredCons: i64,
+    nDeferredImmCons: i64,
+    pNext: *mut Savepoint,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Module {
+    pModule: *const sqlite3_module,
+    zName: *const i8,
+    nRefModule: i32,
+    pAux: *mut (),
+    xDestroy: Option<unsafe extern "C-unwind" fn(*mut ())>,
+    pEpoTab: *mut Table,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Column {
+    zCnName: *mut i8,
+    __slate_bits_0: __slate_bits::__SlateBits76U0,
+    affinity: i8,
+    szEst: u8,
+    hName: u8,
+    iDflt: u16,
+    colFlags: u16,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct CollSeq {
+    zName: *mut i8,
+    enc: u8,
+    pUser: *mut (),
+    xCmp: Option<unsafe extern "C-unwind" fn(*mut (), i32, *const (), i32, *const ()) -> i32>,
+    xDel: Option<unsafe extern "C-unwind" fn(*mut ())>,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct VTable {
+    db: *mut sqlite3,
+    pMod: *mut Module,
+    pVtab: *mut sqlite3_vtab,
+    nRef: i32,
+    bConstraint: u8,
+    bAllSchemas: u8,
+    eVtabRisk: u8,
+    iSavepoint: i32,
+    pNext: *mut VTable,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Table {
+    zName: *mut i8,
+    aCol: *mut Column,
+    pIndex: *mut Index,
+    zColAff: *mut i8,
+    pCheck: *mut ExprList,
+    tnum: u32,
+    nTabRef: u32,
+    tabFlags: u32,
+    iPKey: i16,
+    nCol: i16,
+    nNVCol: i16,
+    nRowLogEst: i16,
+    szTabRow: i16,
+    keyConf: u8,
+    eTabType: u8,
+    u: __SlateRecord172,
+    pTrigger: *mut Trigger,
+    pSchema: *mut Schema,
+    aHx: [u8; 16],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct FKey {
+    pFrom: *mut Table,
+    pNextFrom: *mut FKey,
+    zTo: *mut i8,
+    pNextTo: *mut FKey,
+    pPrevTo: *mut FKey,
+    nCol: i32,
+    isDeferred: u8,
+    aAction: [u8; 2],
+    apTrigger: [*mut Trigger; 2],
+    aCol: [sColMap; 0],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct KeyInfo {
+    nRef: u32,
+    enc: u8,
+    nKeyField: u16,
+    nAllField: u16,
+    db: *mut sqlite3,
+    aSortFlags: *mut u8,
+    aColl: [*mut CollSeq; 0],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Index {
+    zName: *mut i8,
+    aiColumn: *mut i16,
+    aiRowLogEst: *mut i16,
+    pTable: *mut Table,
+    zColAff: *mut i8,
+    pNext: *mut Index,
+    pSchema: *mut Schema,
+    aSortOrder: *mut u8,
+    azColl: *mut *const i8,
+    pPartIdxWhere: *mut Expr,
+    aColExpr: *mut ExprList,
+    tnum: u32,
+    szIdxRow: i16,
+    nKeyCol: u16,
+    nColumn: u16,
+    onError: u8,
+    __slate_bits_0: __slate_bits::__SlateBits100U0,
+    colNotIdxed: u64,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Token {
+    z: *const i8,
+    n: u32,
 }
 
 #[repr(C)]
@@ -1809,94 +2057,6 @@ struct AggInfo {
     aFunc: *mut AggInfo_func,
     nFunc: i32,
     selId: u32,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct AutoincInfo {
-    pNext: *mut AutoincInfo,
-    pTab: *mut Table,
-    iDb: i32,
-    regCtr: i32,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct CollSeq {
-    zName: *mut i8,
-    enc: u8,
-    pUser: *mut (),
-    xCmp: Option<unsafe extern "C-unwind" fn(*mut (), i32, *const (), i32, *const ()) -> i32>,
-    xDel: Option<unsafe extern "C-unwind" fn(*mut ())>,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Column {
-    zCnName: *mut i8,
-    __slate_bits_0: __slate_bits::__SlateBits76U0,
-    affinity: i8,
-    szEst: u8,
-    hName: u8,
-    iDflt: u16,
-    colFlags: u16,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Cte {
-    zName: *mut i8,
-    pCols: *mut ExprList,
-    pSelect: *mut Select,
-    zCteErr: *const i8,
-    pUse: *mut CteUse,
-    eM10d: u8,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct CteUse {
-    nUse: i32,
-    addrM9e: i32,
-    regRtn: i32,
-    iCur: i32,
-    nRowEst: i16,
-    eM10d: u8,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Db {
-    zDbSName: *mut i8,
-    pBt: *mut Btree,
-    safety_level: u8,
-    bSyncSet: u8,
-    pSchema: *mut Schema,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct DbClientData {
-    pNext: *mut DbClientData,
-    pData: *mut (),
-    xDestructor: Option<unsafe extern "C-unwind" fn(*mut ())>,
-    zName: [i8; 0],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Schema {
-    schema_cookie: i32,
-    iGeneration: i32,
-    tblHash: Hash,
-    idxHash: Hash,
-    trigHash: Hash,
-    fkeyHash: Hash,
-    pSeqTab: *mut Table,
-    file_format: u8,
-    enc: u8,
-    schemaFlags: u16,
-    cache_size: i32,
 }
 
 #[repr(C)]
@@ -1929,45 +2089,6 @@ struct ExprList {
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct FKey {
-    pFrom: *mut Table,
-    pNextFrom: *mut FKey,
-    zTo: *mut i8,
-    pNextTo: *mut FKey,
-    pPrevTo: *mut FKey,
-    nCol: i32,
-    isDeferred: u8,
-    aAction: [u8; 2],
-    apTrigger: [*mut Trigger; 2],
-    aCol: [sColMap; 0],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct FuncDestructor {
-    nRef: i32,
-    xDestroy: Option<unsafe extern "C-unwind" fn(*mut ())>,
-    pUserData: *mut (),
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct FuncDef {
-    nArg: i16,
-    funcFlags: u32,
-    pUserData: *mut (),
-    pNext: *mut FuncDef,
-    xSFunc: Option<unsafe extern "C-unwind" fn(*mut sqlite3_context, i32, *mut *mut sqlite3_value)>,
-    xFinalize: Option<unsafe extern "C-unwind" fn(*mut sqlite3_context)>,
-    xValue: Option<unsafe extern "C-unwind" fn(*mut sqlite3_context)>,
-    xInverse:
-        Option<unsafe extern "C-unwind" fn(*mut sqlite3_context, i32, *mut *mut sqlite3_value)>,
-    zName: *const i8,
-    u: __SlateRecord171,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
 struct IdList {
     nId: i32,
     a: [IdList_item; 0],
@@ -1975,25 +2096,98 @@ struct IdList {
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct Index {
+struct Subquery {
+    pSelect: *mut Select,
+    addrFillSub: i32,
+    regReturn: i32,
+    regResult: i32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct RenameToken {}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct SrcItem {
     zName: *mut i8,
-    aiColumn: *mut i16,
-    aiRowLogEst: *mut i16,
-    pTable: *mut Table,
-    zColAff: *mut i8,
-    pNext: *mut Index,
-    pSchema: *mut Schema,
-    aSortOrder: *mut u8,
-    azColl: *mut *const i8,
-    pPartIdxWhere: *mut Expr,
-    aColExpr: *mut ExprList,
-    tnum: u32,
-    szIdxRow: i16,
-    nKeyCol: u16,
-    nColumn: u16,
-    onError: u8,
-    __slate_bits_0: __slate_bits::__SlateBits100U0,
-    colNotIdxed: u64,
+    zAlias: *mut i8,
+    pSTab: *mut Table,
+    fg: __SlateRecord190,
+    iCursor: i32,
+    colUsed: u64,
+    u1: __SlateRecord191,
+    u2: __SlateRecord192,
+    u3: __SlateRecord193,
+    u4: __SlateRecord194,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct SrcList {
+    nSrc: i32,
+    nAlloc: u32,
+    a: [SrcItem; 0],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Upsert {
+    pUpsertTarget: *mut ExprList,
+    pUpsertTargetWhere: *mut Expr,
+    pUpsertSet: *mut ExprList,
+    pUpsertWhere: *mut Expr,
+    pNextUpsert: *mut Upsert,
+    isDoUpdate: u8,
+    isDup: u8,
+    pToFree: *mut (),
+    pUpsertIdx: *mut Index,
+    pUpsertSrc: *mut SrcList,
+    regData: i32,
+    iDataCur: i32,
+    iIdxCur: i32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Select {
+    op: u8,
+    nSelectRow: i16,
+    selFlags: u32,
+    iLimit: i32,
+    iOffset: i32,
+    selId: u32,
+    pEList: *mut ExprList,
+    pSrc: *mut SrcList,
+    pWhere: *mut Expr,
+    pGroupBy: *mut ExprList,
+    pHaving: *mut Expr,
+    pOrderBy: *mut ExprList,
+    pPrior: *mut Select,
+    pNext: *mut Select,
+    pLimit: *mut Expr,
+    pWith: *mut With,
+    pWin: *mut Window,
+    pWinDefn: *mut Window,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct AutoincInfo {
+    pNext: *mut AutoincInfo,
+    pTab: *mut Table,
+    iDb: i32,
+    regCtr: i32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct TriggerPrg {
+    pTrigger: *mut Trigger,
+    pNext: *mut TriggerPrg,
+    pProgram: *mut SubProgram,
+    orconf: i32,
+    aColmask: [u32; 2],
 }
 
 #[repr(C)]
@@ -2006,54 +2200,19 @@ struct IndexedExpr {
     bMaybeNullRow: u8,
     aff: u8,
     pIENext: *mut IndexedExpr,
+    zIdxName: *const i8,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct KeyInfo {
-    nRef: u32,
-    enc: u8,
-    nKeyField: u16,
-    nAllField: u16,
-    db: *mut sqlite3,
-    aSortFlags: *mut u8,
-    aColl: [*mut CollSeq; 0],
-}
+struct TableLock {}
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct Lookaside {
-    bDisable: u32,
-    sz: u16,
-    szTrue: u16,
-    bMalloced: u8,
-    nSlot: u32,
-    anStat: [u32; 3],
-    pInit: *mut LookasideSlot,
-    pFree: *mut LookasideSlot,
-    pSmallInit: *mut LookasideSlot,
-    pSmallFree: *mut LookasideSlot,
-    pMiddle: *mut (),
-    pStart: *mut (),
-    pEnd: *mut (),
-    pTrueEnd: *mut (),
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct LookasideSlot {
-    pNext: *mut LookasideSlot,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Module {
-    pModule: *const sqlite3_module,
-    zName: *const i8,
-    nRefModule: i32,
-    pAux: *mut (),
-    xDestroy: Option<unsafe extern "C-unwind" fn(*mut ())>,
-    pEpoTab: *mut Table,
+struct ParseCleanup {
+    pNext: *mut ParseCleanup,
+    pPtr: *mut (),
+    xCleanup: Option<unsafe extern "C-unwind" fn(*mut sqlite3, *mut ())>,
 }
 
 #[repr(C)]
@@ -2129,130 +2288,6 @@ struct Parse {
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct ParseCleanup {
-    pNext: *mut ParseCleanup,
-    pPtr: *mut (),
-    xCleanup: Option<unsafe extern "C-unwind" fn(*mut sqlite3, *mut ())>,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct RenameToken {}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Returning {
-    pParse: *mut Parse,
-    pReturnEL: *mut ExprList,
-    retTrig: Trigger,
-    retTStep: TriggerStep,
-    iRetCur: i32,
-    nRetCol: i32,
-    iRetReg: i32,
-    zName: [i8; 40],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Savepoint {
-    zName: *mut i8,
-    nDeferredCons: i64,
-    nDeferredImmCons: i64,
-    pNext: *mut Savepoint,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Select {
-    op: u8,
-    nSelectRow: i16,
-    selFlags: u32,
-    iLimit: i32,
-    iOffset: i32,
-    selId: u32,
-    pEList: *mut ExprList,
-    pSrc: *mut SrcList,
-    pWhere: *mut Expr,
-    pGroupBy: *mut ExprList,
-    pHaving: *mut Expr,
-    pOrderBy: *mut ExprList,
-    pPrior: *mut Select,
-    pNext: *mut Select,
-    pLimit: *mut Expr,
-    pWith: *mut With,
-    pWin: *mut Window,
-    pWinDefn: *mut Window,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Subquery {
-    pSelect: *mut Select,
-    addrFillSub: i32,
-    regReturn: i32,
-    regResult: i32,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct SrcItem {
-    zName: *mut i8,
-    zAlias: *mut i8,
-    pSTab: *mut Table,
-    fg: __SlateRecord190,
-    iCursor: i32,
-    colUsed: u64,
-    u1: __SlateRecord191,
-    u2: __SlateRecord192,
-    u3: __SlateRecord193,
-    u4: __SlateRecord194,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct SrcList {
-    nSrc: i32,
-    nAlloc: u32,
-    a: [SrcItem; 0],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Table {
-    zName: *mut i8,
-    aCol: *mut Column,
-    pIndex: *mut Index,
-    zColAff: *mut i8,
-    pCheck: *mut ExprList,
-    tnum: u32,
-    nTabRef: u32,
-    tabFlags: u32,
-    iPKey: i16,
-    nCol: i16,
-    nNVCol: i16,
-    nRowLogEst: i16,
-    szTabRow: i16,
-    keyConf: u8,
-    eTabType: u8,
-    u: __SlateRecord172,
-    pTrigger: *mut Trigger,
-    pSchema: *mut Schema,
-    aHx: [u8; 16],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct TableLock {}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Token {
-    z: *const i8,
-    n: u32,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
 struct Trigger {
     zName: *mut i8,
     table: *mut i8,
@@ -2265,16 +2300,6 @@ struct Trigger {
     pTabSchema: *mut Schema,
     step_list: *mut TriggerStep,
     pNext: *mut Trigger,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct TriggerPrg {
-    pTrigger: *mut Trigger,
-    pNext: *mut TriggerPrg,
-    pProgram: *mut SubProgram,
-    orconf: i32,
-    aColmask: [u32; 2],
 }
 
 #[repr(C)]
@@ -2296,39 +2321,80 @@ struct TriggerStep {
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct Upsert {
-    pUpsertTarget: *mut ExprList,
-    pUpsertTargetWhere: *mut Expr,
-    pUpsertSet: *mut ExprList,
-    pUpsertWhere: *mut Expr,
-    pNextUpsert: *mut Upsert,
-    isDoUpdate: u8,
-    isDup: u8,
-    pToFree: *mut (),
-    pUpsertIdx: *mut Index,
-    pUpsertSrc: *mut SrcList,
-    regData: i32,
-    iDataCur: i32,
-    iIdxCur: i32,
+struct Returning {
+    pParse: *mut Parse,
+    pReturnEL: *mut ExprList,
+    retTrig: Trigger,
+    retTStep: TriggerStep,
+    iRetCur: i32,
+    nRetCol: i32,
+    iRetReg: i32,
+    zName: [i8; 40],
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct VTable {
+struct sqlite3_str {
     db: *mut sqlite3,
-    pMod: *mut Module,
-    pVtab: *mut sqlite3_vtab,
-    nRef: i32,
-    bConstraint: u8,
-    bAllSchemas: u8,
-    eVtabRisk: u8,
-    iSavepoint: i32,
-    pNext: *mut VTable,
+    zText: *mut i8,
+    nAlloc: u32,
+    mxAlloc: u32,
+    nChar: u32,
+    accError: u8,
+    printfFlags: u8,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
 struct VtabCtx {}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Cte {
+    zName: *mut i8,
+    pCols: *mut ExprList,
+    pSelect: *mut Select,
+    zCteErr: *const i8,
+    pUse: *mut CteUse,
+    eM10d: u8,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct With {
+    nCte: i32,
+    bView: i32,
+    pOuter: *mut With,
+    a: [Cte; 0],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Btree {}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Vdbe {}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct CteUse {
+    nUse: i32,
+    addrM9e: i32,
+    regRtn: i32,
+    iCur: i32,
+    nRowEst: i16,
+    eM10d: u8,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct DbClientData {
+    pNext: *mut DbClientData,
+    pData: *mut (),
+    xDestructor: Option<unsafe extern "C-unwind" fn(*mut ())>,
+    zName: [i8; 0],
+}
 
 #[repr(C)]
 #[derive(Clone, Copy)]
@@ -2361,58 +2427,6 @@ struct Window {
     regStartRowid: i32,
     regEndRowid: i32,
     bExprArgs: u8,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct With {
-    nCte: i32,
-    bView: i32,
-    pOuter: *mut With,
-    a: [Cte; 0],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Btree {}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Vdbe {}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct SubProgram {
-    aOp: *mut VdbeOp,
-    nOp: i32,
-    nMem: i32,
-    nCsr: i32,
-    aOnce: *mut u8,
-    token: *mut (),
-    pNext: *mut SubProgram,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct SubrtnSig {
-    selId: i32,
-    bComplete: u8,
-    zAff: *mut i8,
-    iTable: i32,
-    iAddr: i32,
-    regReturn: i32,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct VdbeOp {
-    opcode: u8,
-    p4type: i8,
-    p5: u16,
-    p1: i32,
-    p2: i32,
-    p3: i32,
-    p4: p4union,
 }
 
 #[repr(C)]
@@ -2657,214 +2671,64 @@ struct __SlateRecord198 {
     pReturning: *mut Returning,
 }
 
-// /* !defined(SQLITE_OMIT_LOAD_EXTENSION) */
-// /*
-// ** The following object holds the list of automatically loaded
-// ** extensions.
-// **
-// ** This list is shared across threads.  The SQLITE_MUTEX_STATIC_MAIN
-// ** mutex must be held while accessing this list.
-// */
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct sqlite3AutoExtList {
-    nExt: u32,
-    // /* Number of entries in aExt[] */
-    aExt: *mut Option<unsafe extern "C-unwind" fn()>,
-}
-
-mod __slate_bits {
-    #[bitfields::bitfield(
-        u8,
-        c_names = true,
-        new = false,
-        from_into_bits = false,
-        from_traits = false,
-        default = false,
-        debug = false,
-        builder = false,
-        bit_ops = false
-    )]
-    pub struct __SlateBits76U0 {
-        #[bits(4)]
-        pub notNull: u32,
-        #[bits(4)]
-        pub eCType: u32,
-    }
-    #[bitfields::bitfield([u8; 2], c_names = true, new = false, from_into_bits = false, from_traits = false, default = false, debug = false, builder = false, bit_ops = false)]
-    pub struct __SlateBits186U0 {
-        #[bits(2)]
-        pub eEName: u32,
-        #[bits(1)]
-        pub done: u32,
-        #[bits(1)]
-        pub reusable: u32,
-        #[bits(1)]
-        pub bSorterRef: u32,
-        #[bits(1)]
-        pub bNulls: u32,
-        #[bits(1)]
-        pub bUsed: u32,
-        #[bits(1)]
-        pub bUsingTerm: u32,
-        #[bits(1)]
-        pub bNoExpand: u32,
-        #[bits(7, access = na)]
-        pub __slate_pad_8: u8,
-    }
-    #[bitfields::bitfield([u8; 3], c_names = true, new = false, from_into_bits = false, from_traits = false, default = false, debug = false, builder = false, bit_ops = false)]
-    pub struct __SlateBits190U0 {
-        #[bits(1)]
-        pub notIndexed: u32,
-        #[bits(1)]
-        pub isIndexedBy: u32,
-        #[bits(1)]
-        pub isSubquery: u32,
-        #[bits(1)]
-        pub isTabFunc: u32,
-        #[bits(1)]
-        pub isCorrelated: u32,
-        #[bits(1)]
-        pub isMaterialized: u32,
-        #[bits(1)]
-        pub viaCoroutine: u32,
-        #[bits(1)]
-        pub isRecursive: u32,
-        #[bits(1)]
-        pub fromDDL: u32,
-        #[bits(1)]
-        pub isCte: u32,
-        #[bits(1)]
-        pub notCte: u32,
-        #[bits(1)]
-        pub isUsing: u32,
-        #[bits(1)]
-        pub isOn: u32,
-        #[bits(1)]
-        pub isSynthUsing: u32,
-        #[bits(1)]
-        pub isNestedFrom: u32,
-        #[bits(1)]
-        pub rowidUsed: u32,
-        #[bits(1)]
-        pub fixedSchema: u32,
-        #[bits(1)]
-        pub hadSchema: u32,
-        #[bits(1)]
-        pub fromExists: u32,
-        #[bits(5, access = na)]
-        pub __slate_pad_19: u8,
-    }
-    #[bitfields::bitfield([u8; 2], c_names = true, new = false, from_into_bits = false, from_traits = false, default = false, debug = false, builder = false, bit_ops = false)]
-    pub struct __SlateBits100U0 {
-        #[bits(2)]
-        pub idxType: u32,
-        #[bits(1)]
-        pub bUnordered: u32,
-        #[bits(1)]
-        pub uniqNotNull: u32,
-        #[bits(1)]
-        pub isResized: u32,
-        #[bits(1)]
-        pub isCovering: u32,
-        #[bits(1)]
-        pub noSkipScan: u32,
-        #[bits(1)]
-        pub hasStat1: u32,
-        #[bits(1)]
-        pub bNoQuery: u32,
-        #[bits(1)]
-        pub bAscKeyBug: u32,
-        #[bits(1)]
-        pub bHasVCol: u32,
-        #[bits(1)]
-        pub bHasExpr: u32,
-        #[bits(4, access = na)]
-        pub __slate_pad_11: u8,
-    }
-    #[bitfields::bitfield(
-        u8,
-        c_names = true,
-        new = false,
-        from_into_bits = false,
-        from_traits = false,
-        default = false,
-        debug = false,
-        builder = false,
-        bit_ops = false
-    )]
-    pub struct __SlateBits168U0 {
-        #[bits(1)]
-        pub orphanTrigger: u32,
-        #[bits(2)]
-        pub imposterTable: u32,
-        #[bits(1)]
-        pub reopenMemdb: u32,
-        #[bits(4, access = na)]
-        pub __slate_pad_3: u8,
-    }
-    #[bitfields::bitfield([u8; 2], c_names = true, new = false, from_into_bits = false, from_traits = false, default = false, debug = false, builder = false, bit_ops = false)]
-    pub struct __SlateBits112U0 {
-        #[bits(1)]
-        pub disableTriggers: u32,
-        #[bits(1)]
-        pub mayAbort: u32,
-        #[bits(1)]
-        pub hasCompound: u32,
-        #[bits(1)]
-        pub bReturning: u32,
-        #[bits(1)]
-        pub bHasExists: u32,
-        #[bits(1)]
-        pub colNamesSet: u32,
-        #[bits(1)]
-        pub bHasWith: u32,
-        #[bits(1)]
-        pub okConstFactor: u32,
-        #[bits(1)]
-        pub checkSchema: u32,
-        #[bits(1)]
-        pub usesAinc: u32,
-        #[bits(6, access = na)]
-        pub __slate_pad_10: u8,
-    }
-}
-
-// /*
-// ** 2006 June 7
-// **
-// ** The author disclaims copyright to this source code.  In place of
-// ** a legal notice, here is a blessing:
-// **
-// **    May you do good and not evil.
-// **    May you find forgiveness for yourself and forgive others.
-// **    May you share freely, never taking more than you give.
-// **
-// *************************************************************************
-// ** This file contains code used to dynamically load extensions into
-// ** the SQLite library.
-// */
-// /* Disable the API redefinition in sqlite3ext.h */
-// /*
-// ** Some API routines are omitted when various features are
-// ** excluded from a build of SQLite.  Substitute a NULL pointer
-// ** for any missing APIs.
-// */
-// /*
-// ** The following structure contains pointers to all SQLite API routines.
-// ** A pointer to this structure is passed into extensions when they are
-// ** loaded so that the extension can make calls back into the SQLite
-// ** library.
-// **
-// ** When adding new APIs, add them to the bottom of this structure
-// ** in order to preserve backwards compatibility.
-// **
-// ** Extensions that use newer APIs should first call the
-// ** sqlite3_libversion_number() to make sure that the API they
-// ** intend to use is supported by the library.  Extensions should
-// ** also check to make sure that the pointer to the function is
-// ** not NULL before calling it.
-// */
+// Disable the API redefinition in sqlite3ext.h
+// Some API routines are omitted when various features are
+// excluded from a build of SQLite.  Substitute a NULL pointer
+// for any missing APIs.
+/// The following structure contains pointers to all SQLite API routines.
+/// A pointer to this structure is passed into extensions when they are
+/// loaded so that the extension can make calls back into the SQLite
+/// library.
+///
+/// When adding new APIs, add them to the bottom of this structure
+/// in order to preserve backwards compatibility.
+///
+/// Extensions that use newer APIs should first call the
+/// sqlite3_libversion_number() to make sure that the API they
+/// intend to use is supported by the library.  Extensions should
+/// also check to make sure that the pointer to the function is
+/// not NULL before calling it.
+/// Was sqlite3_global_recover(), but that function is deprecated
+/// The original API set ends here.  All extensions can call any
+/// of the APIs above provided that the pointer is not NULL.  But
+/// before calling APIs that follow, extension should check the
+/// sqlite3_libversion_number() to make sure they are dealing with
+/// a library that is new enough to support that API.
+/// Added after 3.3.13
+/// Added for 3.4.1
+/// Added for 3.5.0
+/// Added for 3.5.8
+/// Added for 3.6.0
+/// Added for 3.7.4
+/// Version 3.8.7 and later
+/// Version 3.8.11 and later
+/// Version 3.9.0 and later
+/// Version 3.10.0 and later
+/// Version 3.12.0 and later
+/// Version 3.14.0 and later
+/// Version 3.18.0 and later
+/// Version 3.20.0 and later
+/// Version 3.22.0 and later
+/// Version 3.24.0 and later
+/// Version 3.25.0 and later
+/// Version 3.26.0 and later
+/// Version 3.28.0 and later
+/// Version 3.30.0 and later
+/// Version 3.31.0 and later
+/// Version 3.32.0 and later
+/// Version 3.34.0 and later
+/// Version 3.36.1 and later
+/// Version 3.37.0 and later
+/// Version 3.38.0 and later
+/// Version 3.39.0 and later
+/// Version 3.40.0 and later
+/// Version 3.41.0 and later
+/// Version 3.43.0 and later
+/// Version 3.44.0 and later
+/// Version 3.50.0 and later
+/// Version 3.51.0 and later
+/// Version 3.52.0 and later
+/// Version 3.54.0 and later
 static mut sqlite3Apis: sqlite3_api_routines = sqlite3_api_routines {
     aggregate_context: unsafe {
         std::mem::transmute::<
@@ -4894,371 +4758,181 @@ static mut sqlite3Apis: sqlite3_api_routines = sqlite3_api_routines {
     },
 };
 
-// /* Load the extension into this database connection */
-// /* Name of the shared library containing extension */
-// /* Entry point.  Use "sqlite3_extension_init" if 0 */
-// /* Put error message here if not 0 */
-static mut azEndings: [*const i8; 1] = [(b"so\0".as_ptr() as *mut i8) as *const i8];
-
-// /* Pointers to the extension init functions */
-static mut sqlite3Autoext: sqlite3AutoExtList = sqlite3AutoExtList {
-    nExt: (0 as i32) as u32,
-    aExt: std::ptr::null_mut::<Option<unsafe extern "C-unwind" fn()>>(),
-};
-
-#[unsafe(no_mangle)]
-#[unsafe(link_section = ".text.slate_distinct.loadext.sqlite3_load_extension")]
-extern "C-unwind" fn sqlite3_load_extension(
-    mut db: *mut sqlite3,
-    mut zFile: *const i8,
-    mut zProc: *const i8,
-    mut pzErrMsg: *mut *mut i8,
-) -> i32 {
-    let mut rc: i32 = 0 as i32;
-    unsafe { sqlite3_mutex_enter(unsafe { (*db).mutex }) };
-    rc = sqlite3LoadExtension(db, zFile, zProc, pzErrMsg);
-    rc = unsafe { sqlite3ApiExit(db, rc) };
-    unsafe { sqlite3_mutex_leave(unsafe { (*db).mutex }) };
-    return rc;
-}
-
-// /*
-// ** Enable or disable extension loading.  Extension loading is disabled by
-// ** default so as not to open security holes in older applications.
-// */
-#[unsafe(no_mangle)]
-extern "C-unwind" fn sqlite3_enable_load_extension(mut db: *mut sqlite3, mut onoff: i32) -> i32 {
-    unsafe { sqlite3_mutex_enter(unsafe { (*db).mutex }) };
-    if onoff != (0 as i32) {
-        let __v1641: *mut sqlite3 = db;
-        let __v1642: u64 = unsafe { (*__v1641).flags };
-        let __v1643: u64 = __v1642 | ((((65536 as i32) | (131072 as i32)) as i64) as u64);
-        unsafe {
-            (*__v1641).flags = __v1643;
-        }
-    } else {
-        let __v1644: *mut sqlite3 = db;
-        let __v1645: u64 = unsafe { (*__v1644).flags };
-        let __v1646: u64 = __v1645 & !((((65536 as i32) | (131072 as i32)) as i64) as u64);
-        unsafe {
-            (*__v1644).flags = __v1646;
-        }
+mod __slate_bits {
+    #[bitfields::bitfield(
+        u8,
+        c_names = true,
+        new = false,
+        from_into_bits = false,
+        from_traits = false,
+        default = false,
+        debug = false,
+        builder = false,
+        bit_ops = false
+    )]
+    pub struct __SlateBits76U0 {
+        #[bits(4)]
+        pub notNull: u32,
+        #[bits(4)]
+        pub eCType: u32,
     }
-    unsafe { sqlite3_mutex_leave(unsafe { (*db).mutex }) };
-    return 0 as i32;
-}
-
-// /* The "wsdAutoext" macro will resolve to the autoextension
-// ** state vector.  If writable static data is unsupported on the target,
-// ** we have to locate the state vector at run-time.  In the more common
-// ** case where writable static data is supported, wsdStat can refer directly
-// ** to the "sqlite3Autoext" state vector declared above.
-// */
-// /*
-// ** Register a statically linked extension that is automatically
-// ** loaded by every new database connection.
-// */
-#[unsafe(no_mangle)]
-#[unsafe(link_section = ".text.slate_distinct.loadext.sqlite3_auto_extension")]
-extern "C-unwind" fn sqlite3_auto_extension(
-    mut xInit: Option<unsafe extern "C-unwind" fn()>,
-) -> i32 {
-    let mut rc: i32 = 0 as i32;
-    rc = unsafe { sqlite3_initialize() };
-    if rc != (0 as i32) {
-        return rc;
-    } else {
-        let mut i: u32 = 0 as u32;
-        let mut mutex: *mut sqlite3_mutex = unsafe { sqlite3MutexAlloc(2 as i32) };
-        {}
-        unsafe { sqlite3_mutex_enter(mutex) };
-        i = (0 as i32) as u32;
-        '__slate_break_1637: while i < unsafe { sqlite3Autoext.nExt } {
-            if (unsafe { *unsafe { unsafe { sqlite3Autoext.aExt }.offset(i as isize) } }) == xInit {
-                break '__slate_break_1637;
-            }
-            let __v1647: u32 = i;
-            let __v1648: u32 = __v1647.wrapping_add((1 as i32) as u32);
-            i = __v1648;
-        }
-        if i == unsafe { sqlite3Autoext.nExt } {
-            let mut nByte: u64 = (unsafe { sqlite3Autoext.nExt }.wrapping_add((1 as i32) as u32)
-                as u64)
-                .wrapping_mul(8 as u64);
-            let mut aNew: *mut Option<unsafe extern "C-unwind" fn()> =
-                unsafe { std::mem::zeroed() };
-            aNew =
-                (unsafe { sqlite3_realloc64((unsafe { sqlite3Autoext.aExt }) as *mut (), nByte) })
-                    as *mut Option<unsafe extern "C-unwind" fn()>;
-            if aNew == std::ptr::null_mut::<Option<unsafe extern "C-unwind" fn()>>() {
-                rc = 7 as i32;
-            } else {
-                unsafe {
-                    sqlite3Autoext.aExt = aNew;
-                }
-                unsafe {
-                    *unsafe {
-                        unsafe { sqlite3Autoext.aExt }
-                            .offset((unsafe { sqlite3Autoext.nExt }) as isize)
-                    } = xInit;
-                }
-                let __v1649: u32 = unsafe { sqlite3Autoext.nExt };
-                let __v1650: u32 = __v1649.wrapping_add((1 as i32) as u32);
-                unsafe {
-                    sqlite3Autoext.nExt = __v1650;
-                }
-            }
-        }
-        unsafe { sqlite3_mutex_leave(mutex) };
-        0 as i32;
-        return rc;
+    #[bitfields::bitfield([u8; 2], c_names = true, new = false, from_into_bits = false, from_traits = false, default = false, debug = false, builder = false, bit_ops = false)]
+    pub struct __SlateBits186U0 {
+        #[bits(2)]
+        pub eEName: u32,
+        #[bits(1)]
+        pub done: u32,
+        #[bits(1)]
+        pub reusable: u32,
+        #[bits(1)]
+        pub bSorterRef: u32,
+        #[bits(1)]
+        pub bNulls: u32,
+        #[bits(1)]
+        pub bUsed: u32,
+        #[bits(1)]
+        pub bUsingTerm: u32,
+        #[bits(1)]
+        pub bNoExpand: u32,
+        #[bits(7, access = na)]
+        pub __slate_pad_8: u8,
     }
-    return unsafe { std::mem::zeroed() };
-}
-
-// /*
-// ** Cancel a prior call to sqlite3_auto_extension.  Remove xInit from the
-// ** set of routines that is invoked for each new database connection, if it
-// ** is currently on the list.  If xInit is not on the list, then this
-// ** routine is a no-op.
-// **
-// ** Return 1 if xInit was found on the list and removed.  Return 0 if xInit
-// ** was not on the list.
-// */
-#[unsafe(no_mangle)]
-#[unsafe(link_section = ".text.slate_distinct.loadext.sqlite3_cancel_auto_extension")]
-extern "C-unwind" fn sqlite3_cancel_auto_extension(
-    mut xInit: Option<unsafe extern "C-unwind" fn()>,
-) -> i32 {
-    let mut mutex: *mut sqlite3_mutex = unsafe { sqlite3MutexAlloc(2 as i32) };
-    let mut i: i32 = 0 as i32;
-    let mut n: i32 = 0 as i32;
-    {}
-    unsafe { sqlite3_mutex_enter(mutex) };
-    i = ((unsafe { sqlite3Autoext.nExt }) as i32) - (1 as i32);
-    '__slate_break_1638: loop {
-        if !(i >= (0 as i32)) {
-            break;
-        }
-        if (unsafe { *unsafe { unsafe { sqlite3Autoext.aExt }.offset(i as isize) } }) == xInit {
-            let __v1653: u32 = unsafe { sqlite3Autoext.nExt };
-            let __v1654: u32 = __v1653.wrapping_sub((1 as i32) as u32);
-            unsafe {
-                sqlite3Autoext.nExt = __v1654;
-            }
-            unsafe {
-                *unsafe { unsafe { sqlite3Autoext.aExt }.offset(i as isize) } = unsafe {
-                    *unsafe {
-                        unsafe { sqlite3Autoext.aExt }
-                            .offset((unsafe { sqlite3Autoext.nExt }) as isize)
-                    }
-                };
-            }
-            let __v1655: i32 = n;
-            let __v1656: i32 = __v1655 + (1 as i32);
-            n = __v1656;
-            break '__slate_break_1638;
-        }
-        let __v1651: i32 = i;
-        let __v1652: i32 = __v1651 - (1 as i32);
-        i = __v1652;
+    #[bitfields::bitfield([u8; 3], c_names = true, new = false, from_into_bits = false, from_traits = false, default = false, debug = false, builder = false, bit_ops = false)]
+    pub struct __SlateBits190U0 {
+        #[bits(1)]
+        pub notIndexed: u32,
+        #[bits(1)]
+        pub isIndexedBy: u32,
+        #[bits(1)]
+        pub isSubquery: u32,
+        #[bits(1)]
+        pub isTabFunc: u32,
+        #[bits(1)]
+        pub isCorrelated: u32,
+        #[bits(1)]
+        pub isMaterialized: u32,
+        #[bits(1)]
+        pub viaCoroutine: u32,
+        #[bits(1)]
+        pub isRecursive: u32,
+        #[bits(1)]
+        pub fromDDL: u32,
+        #[bits(1)]
+        pub isCte: u32,
+        #[bits(1)]
+        pub notCte: u32,
+        #[bits(1)]
+        pub isUsing: u32,
+        #[bits(1)]
+        pub isOn: u32,
+        #[bits(1)]
+        pub isSynthUsing: u32,
+        #[bits(1)]
+        pub isNestedFrom: u32,
+        #[bits(1)]
+        pub rowidUsed: u32,
+        #[bits(1)]
+        pub fixedSchema: u32,
+        #[bits(1)]
+        pub hadSchema: u32,
+        #[bits(1)]
+        pub fromExists: u32,
+        #[bits(5, access = na)]
+        pub __slate_pad_19: u8,
     }
-    unsafe { sqlite3_mutex_leave(mutex) };
-    return n;
-}
-
-// /*
-// ** Reset the automatic extension loading mechanism.
-// */
-#[unsafe(no_mangle)]
-#[unsafe(link_section = ".text.slate_distinct.loadext.sqlite3_reset_auto_extension")]
-extern "C-unwind" fn sqlite3_reset_auto_extension() {
-    if (unsafe { sqlite3_initialize() }) == (0 as i32) {
-        let mut mutex: *mut sqlite3_mutex = unsafe { sqlite3MutexAlloc(2 as i32) };
-        {}
-        unsafe { sqlite3_mutex_enter(mutex) };
-        unsafe { sqlite3_free((unsafe { sqlite3Autoext.aExt }) as *mut ()) };
-        unsafe {
-            sqlite3Autoext.aExt = std::ptr::null_mut::<Option<unsafe extern "C-unwind" fn()>>();
-        }
-        unsafe {
-            sqlite3Autoext.nExt = (0 as i32) as u32;
-        }
-        unsafe { sqlite3_mutex_leave(mutex) };
+    #[bitfields::bitfield([u8; 2], c_names = true, new = false, from_into_bits = false, from_traits = false, default = false, debug = false, builder = false, bit_ops = false)]
+    pub struct __SlateBits100U0 {
+        #[bits(2)]
+        pub idxType: u32,
+        #[bits(1)]
+        pub bUnordered: u32,
+        #[bits(1)]
+        pub uniqNotNull: u32,
+        #[bits(1)]
+        pub isResized: u32,
+        #[bits(1)]
+        pub isCovering: u32,
+        #[bits(1)]
+        pub noSkipScan: u32,
+        #[bits(1)]
+        pub hasStat1: u32,
+        #[bits(1)]
+        pub bNoQuery: u32,
+        #[bits(1)]
+        pub bAscKeyBug: u32,
+        #[bits(1)]
+        pub bHasVCol: u32,
+        #[bits(1)]
+        pub bHasExpr: u32,
+        #[bits(4, access = na)]
+        pub __slate_pad_11: u8,
+    }
+    #[bitfields::bitfield(
+        u8,
+        c_names = true,
+        new = false,
+        from_into_bits = false,
+        from_traits = false,
+        default = false,
+        debug = false,
+        builder = false,
+        bit_ops = false
+    )]
+    pub struct __SlateBits168U0 {
+        #[bits(1)]
+        pub orphanTrigger: u32,
+        #[bits(2)]
+        pub imposterTable: u32,
+        #[bits(1)]
+        pub reopenMemdb: u32,
+        #[bits(4, access = na)]
+        pub __slate_pad_3: u8,
+    }
+    #[bitfields::bitfield([u8; 2], c_names = true, new = false, from_into_bits = false, from_traits = false, default = false, debug = false, builder = false, bit_ops = false)]
+    pub struct __SlateBits112U0 {
+        #[bits(1)]
+        pub disableTriggers: u32,
+        #[bits(1)]
+        pub mayAbort: u32,
+        #[bits(1)]
+        pub hasCompound: u32,
+        #[bits(1)]
+        pub bReturning: u32,
+        #[bits(1)]
+        pub bHasExists: u32,
+        #[bits(1)]
+        pub colNamesSet: u32,
+        #[bits(1)]
+        pub bHasWith: u32,
+        #[bits(1)]
+        pub okConstFactor: u32,
+        #[bits(1)]
+        pub checkSchema: u32,
+        #[bits(1)]
+        pub usesAinc: u32,
+        #[bits(6, access = na)]
+        pub __slate_pad_10: u8,
     }
 }
 
-// /*
-// ** Load all automatic extensions.
-// **
-// ** If anything goes wrong, set an error in the database connection.
-// */
-#[unsafe(no_mangle)]
-extern "C-unwind" fn sqlite3AutoLoadExtensions(mut db: *mut sqlite3) {
-    let mut i: u32 = 0 as u32;
-    let mut go: i32 = 1 as i32;
-    let mut rc: i32 = 0 as i32;
-    let mut xInit: Option<
-        unsafe extern "C-unwind" fn(*mut sqlite3, *mut *mut i8, *const sqlite3_api_routines) -> i32,
-    > = unsafe { std::mem::zeroed() };
-    {}
-    if (unsafe { sqlite3Autoext.nExt }) == ((0 as i32) as u32) {
-        // /* Common case: early out without every having to acquire a mutex */
-        return;
-    }
-    i = (0 as i32) as u32;
-    '__slate_break_1639: while go != (0 as i32) {
-        let mut zErrmsg: *mut i8 = unsafe { std::mem::zeroed() };
-        let mut mutex: *mut sqlite3_mutex = unsafe { sqlite3MutexAlloc(2 as i32) };
-        let mut pThunk: *const sqlite3_api_routines = unsafe { std::ptr::addr_of!(sqlite3Apis) };
-        unsafe { sqlite3_mutex_enter(mutex) };
-        if i >= unsafe { sqlite3Autoext.nExt } {
-            xInit = None;
-            go = 0 as i32;
-        } else {
-            xInit = unsafe {
-                std::mem::transmute::<
-                    Option<unsafe extern "C-unwind" fn()>,
-                    Option<
-                        unsafe extern "C-unwind" fn(
-                            *mut sqlite3,
-                            *mut *mut i8,
-                            *const sqlite3_api_routines,
-                        ) -> i32,
-                    >,
-                >(unsafe {
-                    *unsafe { unsafe { sqlite3Autoext.aExt }.offset(i as isize) }
-                })
-            };
-        }
-        unsafe { sqlite3_mutex_leave(mutex) };
-        zErrmsg = std::ptr::null_mut::<i8>();
-        let __v1659: bool;
-        if xInit != None {
-            let __v1660: i32 =
-                unsafe { xInit.unwrap()(db, std::ptr::addr_of_mut!(zErrmsg), pThunk) };
-            rc = __v1660;
-            __v1659 = __v1660 != (0 as i32);
-        } else {
-            __v1659 = false as bool;
-        }
-        if __v1659 {
-            unsafe {
-                sqlite3ErrorWithMsg(
-                    db,
-                    rc,
-                    (b"automatic extension loading failed: %s\0".as_ptr() as *mut i8) as *const i8,
-                    zErrmsg,
-                )
-            };
-            go = 0 as i32;
-        }
-        unsafe { sqlite3_free(zErrmsg as *mut ()) };
-        let __v1657: u32 = i;
-        let __v1658: u32 = __v1657.wrapping_add((1 as i32) as u32);
-        i = __v1658;
-    }
-}
-
-// /* Load the extension into this database connection */
-// /* Name of the shared library containing extension */
-// /* Entry point.  Use "sqlite3_extension_init" if 0 */
-// /* Put error message here if not 0 */
-// /*
-// ** Call this routine when the database connection is closing in order
-// ** to clean up loaded extensions
-// */
-#[unsafe(no_mangle)]
-extern "C-unwind" fn sqlite3CloseExtensions(mut db: *mut sqlite3) {
-    let mut i: i32 = 0 as i32;
-    0 as i32;
-    i = 0 as i32;
-    '__slate_break_1636: loop {
-        if !(i < unsafe { (*db).nExtension }) {
-            break;
-        }
-        unsafe {
-            sqlite3OsDlClose(unsafe { (*db).pVfs }, unsafe {
-                *unsafe { unsafe { (*db).aExtension }.offset(i as isize) }
-            })
-        };
-        let __v1661: i32 = i;
-        let __v1662: i32 = __v1661 + (1 as i32);
-        i = __v1662;
-    }
-    unsafe { sqlite3DbFree(db, (unsafe { (*db).aExtension }) as *mut ()) };
-}
-
-// /* Was sqlite3_global_recover(), but that function is deprecated */
-// /*
-//   ** The original API set ends here.  All extensions can call any
-//   ** of the APIs above provided that the pointer is not NULL.  But
-//   ** before calling APIs that follow, extension should check the
-//   ** sqlite3_libversion_number() to make sure they are dealing with
-//   ** a library that is new enough to support that API.
-//   *************************************************************************
-//   */
-// /*
-//   ** Added after 3.3.13
-//   */
-// /*
-//   ** Added for 3.4.1
-//   */
-// /*
-//   ** Added for 3.5.0
-//   */
-// /*
-//   ** Added for 3.5.8
-//   */
-// /*
-//   ** Added for 3.6.0
-//   */
-// /*
-//   ** Added for 3.7.4
-//   */
-// /* Version 3.8.7 and later */
-// /* Version 3.8.11 and later */
-// /* Version 3.9.0 and later */
-// /* Version 3.10.0 and later */
-// /* Version 3.12.0 and later */
-// /* Version 3.14.0 and later */
-// /* Version 3.18.0 and later */
-// /* Version 3.20.0 and later */
-// /* Version 3.22.0 and later */
-// /* Version 3.24.0 and later */
-// /* Version 3.25.0 and later */
-// /* Version 3.26.0 and later */
-// /* Version 3.28.0 and later */
-// /* Version 3.30.0 and later */
-// /* Version 3.31.0 and later */
-// /* Version 3.32.0 and later */
-// /* Version 3.34.0 and later */
-// /* Version 3.36.1 and later */
-// /* Version 3.37.0 and later */
-// /* Version 3.38.0 and later */
-// /* Version 3.39.0 and later */
-// /* Version 3.40.0 and later */
-// /* Version 3.41.0 and later */
-// /* Version 3.43.0 and later */
-// /* Version 3.44.0 and later */
-// /* Version 3.50.0 and later */
-// /* Version 3.51.0 and later */
-// /* Version 3.52.0 and later */
-// /* Version 3.54.0 and later */
-// /* True if x is the directory separator character
-// */
-// /*
-// ** Attempt to load an SQLite extension library contained in the file
-// ** zFile.  The entry point is zProc.  zProc may be 0 in which case a
-// ** default entry point name (sqlite3_extension_init) is used.  Use
-// ** of the default name is recommended.
-// **
-// ** Return SQLITE_OK on success and SQLITE_ERROR if something goes wrong.
-// **
-// ** If an error occurs and pzErrMsg is not 0, then fill *pzErrMsg with
-// ** error message text.  The calling function should free this memory
-// ** by calling sqlite3DbFree(db, ).
-// */
+// True if x is the directory separator character
+/// Attempt to load an SQLite extension library contained in the file
+/// zFile.  The entry point is zProc.  zProc may be 0 in which case a
+/// default entry point name (sqlite3_extension_init) is used.  Use
+/// of the default name is recommended.
+///
+/// Return SQLITE_OK on success and SQLITE_ERROR if something goes wrong.
+///
+/// If an error occurs and pzErrMsg is not 0, then fill *pzErrMsg with
+/// error message text.  The calling function should free this memory
+/// by calling sqlite3DbFree(db, ).
+///
+/// # Arguments
+///
+/// * `db` - Load the extension into this database connection
+/// * `zFile` - Name of the shared library containing extension
+/// * `zProc` - Entry point.  Use "sqlite3_extension_init" if 0
+/// * `pzErrMsg` - Put error message here if not 0
 fn sqlite3LoadExtension(
     mut db: *mut sqlite3,
     mut zFile: *const i8,
@@ -5383,20 +5057,19 @@ fn sqlite3LoadExtension(
             std::ptr::write(__slate_slot_936, std::ptr::null_mut::<i8>());
             std::ptr::write(__slate_slot_938, std::ptr::null_mut::<i8>());
             std::ptr::write(__slate_slot_940, unsafe { strlen(zFile) });
-            // /* Shared library endings to try if zFile cannot be loaded as written */
+            // Shared library endings to try if zFile cannot be loaded as written
             if pzErrMsg != std::ptr::null_mut::<*mut i8>() {
                 unsafe {
                     *pzErrMsg = std::ptr::null_mut::<i8>();
                 }
             }
         }
-        // /* Ticket #1863.  To avoid a creating security problems for older
-        //   ** applications that relink against newer versions of SQLite, the
-        //   ** ability to run load_extension is turned off by default.  One
-        //   ** must call either sqlite3_enable_load_extension(db) or
-        //   ** sqlite3_db_config(db, SQLITE_DBCONFIG_ENABLE_LOAD_EXTENSION, 1, 0)
-        //   ** to turn on extension loading.
-        //   */
+        // Ticket #1863.  To avoid a creating security problems for older
+        // applications that relink against newer versions of SQLite, the
+        // ability to run load_extension is turned off by default.  One
+        // must call either sqlite3_enable_load_extension(db) or
+        // sqlite3_db_config(db, SQLITE_DBCONFIG_ENABLE_LOAD_EXTENSION, 1, 0)
+        // to turn on extension loading.
         if (unsafe { (*db).flags }) & (((65536 as i32) as i64) as u64)
             == (((0 as i32) as i64) as u64)
         {
@@ -5414,18 +5087,17 @@ fn sqlite3LoadExtension(
             } else {
                 (b"sqlite3_extension_init\0".as_ptr() as *mut i8) as *const i8
             };
-            // /* tag-20210611-1.  Some dlopen() implementations will segfault if given
-            //   ** an oversize filename.  Most filesystems have a pathname limit of 4K,
-            //   ** so limit the extension filename length to about twice that.
-            //   ** https://sqlite.org/forum/forumpost/08a0d6d9bf
-            //   **
-            //   ** Later (2023-03-25): Save an extra 6 bytes for the filename suffix.
-            //   ** See https://sqlite.org/forum/forumpost/24083b579d.
-            //   */
+            // tag-20210611-1.  Some dlopen() implementations will segfault if given
+            // an oversize filename.  Most filesystems have a pathname limit of 4K,
+            // so limit the extension filename length to about twice that.
+            // https://sqlite.org/forum/forumpost/08a0d6d9bf
+            //
+            // Later (2023-03-25): Save an extra 6 bytes for the filename suffix.
+            // See https://sqlite.org/forum/forumpost/24083b579d.
             if *__slate_slot_940 > (((4096 as i32) as i64) as u64) {
             } else {
-                // /* Do not allow sqlite3_load_extension() to link to a copy of the
-                //   ** running application, by passing in an empty filename. */
+                // Do not allow sqlite3_load_extension() to link to a copy of the
+                // running application, by passing in an empty filename.
                 if *__slate_slot_940 == (((0 as i32) as i64) as u64) {
                 } else {
                     *__slate_slot_934 = unsafe { sqlite3OsDlOpen(*__slate_slot_933, zFile) };
@@ -5504,23 +5176,22 @@ fn sqlite3LoadExtension(
                                     )
                                 })
                             };
-                            // /* If no entry point was specified and the default legacy
-                            //   ** entry point name "sqlite3_extension_init" was not found, then
-                            //   ** construct an entry point name "sqlite3_X_init" where the X is
-                            //   ** replaced by the lowercase value of every ASCII alphabetic
-                            //   ** character in the filename after the last "/" up to the first ".",
-                            //   ** and skipping the first three characters if they are "lib".
-                            //   ** Examples:
-                            //   **
-                            //   **    /usr/local/lib/libExample5.4.3.so ==>  sqlite3_example_init
-                            //   **    C:/lib/mathfuncs.dll              ==>  sqlite3_mathfuncs_init
-                            //   **
-                            //   ** If that still finds no entry point, repeat a second time but this
-                            //   ** time include both alphabetic and numeric characters up to the first
-                            //   ** ".".  Example:
-                            //   **
-                            //   **    /usr/local/lib/libExample5.4.3.so ==>  sqlite3_example5_init
-                            //   */
+                            // If no entry point was specified and the default legacy
+                            // entry point name "sqlite3_extension_init" was not found, then
+                            // construct an entry point name "sqlite3_X_init" where the X is
+                            // replaced by the lowercase value of every ASCII alphabetic
+                            // character in the filename after the last "/" up to the first ".",
+                            // and skipping the first three characters if they are "lib".
+                            // Examples:
+                            //
+                            //    /usr/local/lib/libExample5.4.3.so ==>  sqlite3_example_init
+                            //    C:/lib/mathfuncs.dll              ==>  sqlite3_mathfuncs_init
+                            //
+                            // If that still finds no entry point, repeat a second time but this
+                            // time include both alphabetic and numeric characters up to the first
+                            // ".".  Example:
+                            //
+                            //    /usr/local/lib/libExample5.4.3.so ==>  sqlite3_example5_init
                             if *__slate_slot_935 == None && zProc == std::ptr::null::<i8>() {
                                 std::ptr::write(__slate_slot_948, unsafe {
                                     sqlite3Strlen30(zFile)
@@ -5758,8 +5429,7 @@ fn sqlite3LoadExtension(
                                     *pzErrMsg = *__slate_slot_1681;
                                 }
                                 if *__slate_slot_936 != std::ptr::null_mut::<i8>() {
-                                    // /* zErrmsg would be NULL if not so */
-                                    0 as i32;
+                                    0 as i32; // zErrmsg would be NULL if not so
                                     unsafe {
                                         sqlite3_snprintf(
                                             (*__slate_slot_940 as u32) as i32,
@@ -5819,7 +5489,7 @@ fn sqlite3LoadExtension(
                                     return 1 as i32;
                                 }
                             } else {
-                                // /* Append the new shared library handle to the db->aExtension array. */
+                                // Append the new shared library handle to the db->aExtension array.
                                 *__slate_slot_939 = (unsafe {
                                     sqlite3DbMallocZero(
                                         db,
@@ -5890,8 +5560,7 @@ fn sqlite3LoadExtension(
                     *pzErrMsg = *__slate_slot_1687;
                 }
                 if *__slate_slot_936 != std::ptr::null_mut::<i8>() {
-                    // /* zErrmsg would be NULL if not so */
-                    0 as i32;
+                    0 as i32; // zErrmsg would be NULL if not so
                     unsafe {
                         sqlite3_snprintf(
                             (*__slate_slot_940 as u32) as i32,
@@ -5916,4 +5585,297 @@ fn sqlite3LoadExtension(
         }
     }
     return unsafe { std::mem::zeroed() };
+}
+
+static mut azEndings: [*const i8; 1] = [(b"so\0".as_ptr() as *mut i8) as *const i8];
+
+/// # Arguments
+///
+/// * `db` - Load the extension into this database connection
+/// * `zFile` - Name of the shared library containing extension
+/// * `zProc` - Entry point.  Use "sqlite3_extension_init" if 0
+/// * `pzErrMsg` - Put error message here if not 0
+#[unsafe(no_mangle)]
+#[unsafe(link_section = ".text.slate_distinct.loadext.sqlite3_load_extension")]
+extern "C-unwind" fn sqlite3_load_extension(
+    mut db: *mut sqlite3,
+    mut zFile: *const i8,
+    mut zProc: *const i8,
+    mut pzErrMsg: *mut *mut i8,
+) -> i32 {
+    let mut rc: i32 = 0 as i32;
+    unsafe { sqlite3_mutex_enter(unsafe { (*db).mutex }) };
+    rc = sqlite3LoadExtension(db, zFile, zProc, pzErrMsg);
+    rc = unsafe { sqlite3ApiExit(db, rc) };
+    unsafe { sqlite3_mutex_leave(unsafe { (*db).mutex }) };
+    return rc;
+}
+
+/// Call this routine when the database connection is closing in order
+/// to clean up loaded extensions
+#[unsafe(no_mangle)]
+extern "C-unwind" fn sqlite3CloseExtensions(mut db: *mut sqlite3) {
+    let mut i: i32 = 0 as i32;
+    0 as i32;
+    i = 0 as i32;
+    '__slate_break_1636: loop {
+        if !(i < unsafe { (*db).nExtension }) {
+            break;
+        }
+        unsafe {
+            sqlite3OsDlClose(unsafe { (*db).pVfs }, unsafe {
+                *unsafe { unsafe { (*db).aExtension }.offset(i as isize) }
+            })
+        };
+        let __v1661: i32 = i;
+        let __v1662: i32 = __v1661 + (1 as i32);
+        i = __v1662;
+    }
+    unsafe { sqlite3DbFree(db, (unsafe { (*db).aExtension }) as *mut ()) };
+}
+
+/// Enable or disable extension loading.  Extension loading is disabled by
+/// default so as not to open security holes in older applications.
+#[unsafe(no_mangle)]
+extern "C-unwind" fn sqlite3_enable_load_extension(mut db: *mut sqlite3, mut onoff: i32) -> i32 {
+    unsafe { sqlite3_mutex_enter(unsafe { (*db).mutex }) };
+    if onoff != (0 as i32) {
+        let __v1641: *mut sqlite3 = db;
+        let __v1642: u64 = unsafe { (*__v1641).flags };
+        let __v1643: u64 = __v1642 | ((((65536 as i32) | (131072 as i32)) as i64) as u64);
+        unsafe {
+            (*__v1641).flags = __v1643;
+        }
+    } else {
+        let __v1644: *mut sqlite3 = db;
+        let __v1645: u64 = unsafe { (*__v1644).flags };
+        let __v1646: u64 = __v1645 & !((((65536 as i32) | (131072 as i32)) as i64) as u64);
+        unsafe {
+            (*__v1644).flags = __v1646;
+        }
+    }
+    unsafe { sqlite3_mutex_leave(unsafe { (*db).mutex }) };
+    return 0 as i32;
+}
+
+/// The following object holds the list of automatically loaded
+/// extensions.
+///
+/// This list is shared across threads.  The SQLITE_MUTEX_STATIC_MAIN
+/// mutex must be held while accessing this list.
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3AutoExtList {
+    /// Number of entries in aExt[]
+    nExt: u32,
+    /// Pointers to the extension init functions
+    aExt: *mut Option<unsafe extern "C-unwind" fn()>,
+}
+
+static mut sqlite3Autoext: sqlite3AutoExtList = sqlite3AutoExtList {
+    nExt: (0 as i32) as u32,
+    aExt: std::ptr::null_mut::<Option<unsafe extern "C-unwind" fn()>>(),
+};
+
+// The "wsdAutoext" macro will resolve to the autoextension
+// state vector.  If writable static data is unsupported on the target,
+// we have to locate the state vector at run-time.  In the more common
+// case where writable static data is supported, wsdStat can refer directly
+// to the "sqlite3Autoext" state vector declared above.
+/// Register a statically linked extension that is automatically
+/// loaded by every new database connection.
+#[unsafe(no_mangle)]
+#[unsafe(link_section = ".text.slate_distinct.loadext.sqlite3_auto_extension")]
+extern "C-unwind" fn sqlite3_auto_extension(
+    mut xInit: Option<unsafe extern "C-unwind" fn()>,
+) -> i32 {
+    let mut rc: i32 = 0 as i32;
+    rc = unsafe { sqlite3_initialize() };
+    if rc != (0 as i32) {
+        return rc;
+    } else {
+        let mut i: u32 = 0 as u32;
+        let mut mutex: *mut sqlite3_mutex = unsafe { sqlite3MutexAlloc(2 as i32) };
+        {}
+        unsafe { sqlite3_mutex_enter(mutex) };
+        i = (0 as i32) as u32;
+        '__slate_break_1637: while i < unsafe { sqlite3Autoext.nExt } {
+            if (unsafe { *unsafe { unsafe { sqlite3Autoext.aExt }.offset(i as isize) } }) == xInit {
+                break '__slate_break_1637;
+            }
+            let __v1647: u32 = i;
+            let __v1648: u32 = __v1647.wrapping_add((1 as i32) as u32);
+            i = __v1648;
+        }
+        if i == unsafe { sqlite3Autoext.nExt } {
+            let mut nByte: u64 = (unsafe { sqlite3Autoext.nExt }.wrapping_add((1 as i32) as u32)
+                as u64)
+                .wrapping_mul(8 as u64);
+            let mut aNew: *mut Option<unsafe extern "C-unwind" fn()> =
+                unsafe { std::mem::zeroed() };
+            aNew =
+                (unsafe { sqlite3_realloc64((unsafe { sqlite3Autoext.aExt }) as *mut (), nByte) })
+                    as *mut Option<unsafe extern "C-unwind" fn()>;
+            if aNew == std::ptr::null_mut::<Option<unsafe extern "C-unwind" fn()>>() {
+                rc = 7 as i32;
+            } else {
+                unsafe {
+                    sqlite3Autoext.aExt = aNew;
+                }
+                unsafe {
+                    *unsafe {
+                        unsafe { sqlite3Autoext.aExt }
+                            .offset((unsafe { sqlite3Autoext.nExt }) as isize)
+                    } = xInit;
+                }
+                let __v1649: u32 = unsafe { sqlite3Autoext.nExt };
+                let __v1650: u32 = __v1649.wrapping_add((1 as i32) as u32);
+                unsafe {
+                    sqlite3Autoext.nExt = __v1650;
+                }
+            }
+        }
+        unsafe { sqlite3_mutex_leave(mutex) };
+        0 as i32;
+        return rc;
+    }
+    return unsafe { std::mem::zeroed() };
+}
+
+/// Cancel a prior call to sqlite3_auto_extension.  Remove xInit from the
+/// set of routines that is invoked for each new database connection, if it
+/// is currently on the list.  If xInit is not on the list, then this
+/// routine is a no-op.
+///
+/// Return 1 if xInit was found on the list and removed.  Return 0 if xInit
+/// was not on the list.
+#[unsafe(no_mangle)]
+#[unsafe(link_section = ".text.slate_distinct.loadext.sqlite3_cancel_auto_extension")]
+extern "C-unwind" fn sqlite3_cancel_auto_extension(
+    mut xInit: Option<unsafe extern "C-unwind" fn()>,
+) -> i32 {
+    let mut mutex: *mut sqlite3_mutex = unsafe { sqlite3MutexAlloc(2 as i32) };
+    let mut i: i32 = 0 as i32;
+    let mut n: i32 = 0 as i32;
+    {}
+    unsafe { sqlite3_mutex_enter(mutex) };
+    i = ((unsafe { sqlite3Autoext.nExt }) as i32) - (1 as i32);
+    '__slate_break_1638: loop {
+        if !(i >= (0 as i32)) {
+            break;
+        }
+        if (unsafe { *unsafe { unsafe { sqlite3Autoext.aExt }.offset(i as isize) } }) == xInit {
+            let __v1653: u32 = unsafe { sqlite3Autoext.nExt };
+            let __v1654: u32 = __v1653.wrapping_sub((1 as i32) as u32);
+            unsafe {
+                sqlite3Autoext.nExt = __v1654;
+            }
+            unsafe {
+                *unsafe { unsafe { sqlite3Autoext.aExt }.offset(i as isize) } = unsafe {
+                    *unsafe {
+                        unsafe { sqlite3Autoext.aExt }
+                            .offset((unsafe { sqlite3Autoext.nExt }) as isize)
+                    }
+                };
+            }
+            let __v1655: i32 = n;
+            let __v1656: i32 = __v1655 + (1 as i32);
+            n = __v1656;
+            break '__slate_break_1638;
+        }
+        let __v1651: i32 = i;
+        let __v1652: i32 = __v1651 - (1 as i32);
+        i = __v1652;
+    }
+    unsafe { sqlite3_mutex_leave(mutex) };
+    return n;
+}
+
+/// Reset the automatic extension loading mechanism.
+#[unsafe(no_mangle)]
+#[unsafe(link_section = ".text.slate_distinct.loadext.sqlite3_reset_auto_extension")]
+extern "C-unwind" fn sqlite3_reset_auto_extension() {
+    if (unsafe { sqlite3_initialize() }) == (0 as i32) {
+        let mut mutex: *mut sqlite3_mutex = unsafe { sqlite3MutexAlloc(2 as i32) };
+        {}
+        unsafe { sqlite3_mutex_enter(mutex) };
+        unsafe { sqlite3_free((unsafe { sqlite3Autoext.aExt }) as *mut ()) };
+        unsafe {
+            sqlite3Autoext.aExt = std::ptr::null_mut::<Option<unsafe extern "C-unwind" fn()>>();
+        }
+        unsafe {
+            sqlite3Autoext.nExt = (0 as i32) as u32;
+        }
+        unsafe { sqlite3_mutex_leave(mutex) };
+    }
+}
+
+/// Load all automatic extensions.
+///
+/// If anything goes wrong, set an error in the database connection.
+#[unsafe(no_mangle)]
+extern "C-unwind" fn sqlite3AutoLoadExtensions(mut db: *mut sqlite3) {
+    let mut i: u32 = 0 as u32;
+    let mut go: i32 = 1 as i32;
+    let mut rc: i32 = 0 as i32;
+    let mut xInit: Option<
+        unsafe extern "C-unwind" fn(*mut sqlite3, *mut *mut i8, *const sqlite3_api_routines) -> i32,
+    > = unsafe { std::mem::zeroed() };
+    {}
+    if (unsafe { sqlite3Autoext.nExt }) == ((0 as i32) as u32) {
+        // Common case: early out without every having to acquire a mutex
+        return;
+    }
+    i = (0 as i32) as u32;
+    '__slate_break_1639: while go != (0 as i32) {
+        let mut zErrmsg: *mut i8 = unsafe { std::mem::zeroed() };
+        let mut mutex: *mut sqlite3_mutex = unsafe { sqlite3MutexAlloc(2 as i32) };
+        let mut pThunk: *const sqlite3_api_routines = unsafe { std::ptr::addr_of!(sqlite3Apis) };
+        unsafe { sqlite3_mutex_enter(mutex) };
+        if i >= unsafe { sqlite3Autoext.nExt } {
+            xInit = None;
+            go = 0 as i32;
+        } else {
+            xInit = unsafe {
+                std::mem::transmute::<
+                    Option<unsafe extern "C-unwind" fn()>,
+                    Option<
+                        unsafe extern "C-unwind" fn(
+                            *mut sqlite3,
+                            *mut *mut i8,
+                            *const sqlite3_api_routines,
+                        ) -> i32,
+                    >,
+                >(unsafe {
+                    *unsafe { unsafe { sqlite3Autoext.aExt }.offset(i as isize) }
+                })
+            };
+        }
+        unsafe { sqlite3_mutex_leave(mutex) };
+        zErrmsg = std::ptr::null_mut::<i8>();
+        let __v1659: bool;
+        if xInit != None {
+            let __v1660: i32 =
+                unsafe { xInit.unwrap()(db, std::ptr::addr_of_mut!(zErrmsg), pThunk) };
+            rc = __v1660;
+            __v1659 = __v1660 != (0 as i32);
+        } else {
+            __v1659 = false as bool;
+        }
+        if __v1659 {
+            unsafe {
+                sqlite3ErrorWithMsg(
+                    db,
+                    rc,
+                    (b"automatic extension loading failed: %s\0".as_ptr() as *mut i8) as *const i8,
+                    zErrmsg,
+                )
+            };
+            go = 0 as i32;
+        }
+        unsafe { sqlite3_free(zErrmsg as *mut ()) };
+        let __v1657: u32 = i;
+        let __v1658: u32 = __v1657.wrapping_add((1 as i32) as u32);
+        i = __v1658;
+    }
 }

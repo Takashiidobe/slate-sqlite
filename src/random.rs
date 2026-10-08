@@ -1,3 +1,18 @@
+//! 2001 September 15
+//!
+//! The author disclaims copyright to this source code.  In place of
+//! a legal notice, here is a blessing:
+//!
+//!    May you do good and not evil.
+//!    May you find forgiveness for yourself and forgive others.
+//!    May you share freely, never taking more than you give.
+//!
+//!
+//! This file contains code to implement a pseudo-random number
+//! generator (PRNG) for SQLite.
+//!
+//! Random numbers are used by some of the database backends in order
+//! to generate random integer keys for tables or random filenames.
 unsafe extern "C" {
     fn sqlite3_initialize() -> i32;
     fn sqlite3_vfs_find(zVfsName: *const i8) -> *mut sqlite3_vfs;
@@ -97,35 +112,17 @@ struct sqlite3_vfs {
     xNextSystemCall: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8) -> *const i8>,
 }
 
-// /*
-// ** 2001 September 15
-// **
-// ** The author disclaims copyright to this source code.  In place of
-// ** a legal notice, here is a blessing:
-// **
-// **    May you do good and not evil.
-// **    May you find forgiveness for yourself and forgive others.
-// **    May you share freely, never taking more than you give.
-// **
-// *************************************************************************
-// ** This file contains code to implement a pseudo-random number
-// ** generator (PRNG) for SQLite.
-// **
-// ** Random numbers are used by some of the database backends in order
-// ** to generate random integer keys for tables or random filenames.
-// */
-// /* All threads share a single random number generator.
-// ** This structure is the current state of the generator.
-// */
+/// All threads share a single random number generator.
+/// This structure is the current state of the generator.
 #[repr(C)]
 #[derive(Clone, Copy)]
 struct sqlite3PrngType {
+    /// 64 bytes of chacha20 state
     s: [u32; 16],
-    // /* 64 bytes of chacha20 state */
+    /// Output bytes
     out: [u8; 64],
-    // /* Output bytes */
+    /// Output bytes remaining
     n: u8,
-    // /* Output bytes remaining */
 }
 
 #[repr(C, align(16))]
@@ -133,199 +130,7 @@ struct __SlateAlign16<T>(T);
 
 static mut sqlite3Prng: sqlite3PrngType = unsafe { std::mem::zeroed() };
 
-static mut chacha20_init: __SlateAlign16<[u32; 4]> = __SlateAlign16([
-    (1634760805 as i32) as u32,
-    (857760878 as i32) as u32,
-    (2036477234 as i32) as u32,
-    (1797285236 as i32) as u32,
-]);
-
-// /*
-// ** For testing purposes, we sometimes want to preserve the state of
-// ** PRNG and restore the PRNG to its saved state at a later time, or
-// ** to reset the PRNG to its initial state.  These routines accomplish
-// ** those tasks.
-// **
-// ** The sqlite3_test_control() interface calls these routines to
-// ** control the PRNG.
-// */
-static mut sqlite3SavedPrng: sqlite3PrngType = unsafe { std::mem::zeroed() };
-
-// /*
-// ** Return N random bytes.
-// */
-#[unsafe(no_mangle)]
-#[unsafe(link_section = ".text.slate_distinct.random.sqlite3_randomness")]
-extern "C-unwind" fn sqlite3_randomness(mut N: i32, mut pBuf: *mut ()) {
-    let mut zBuf: *mut u8 = pBuf as *mut u8;
-    // /* The "wsdPrng" macro will resolve to the pseudo-random number generator
-    //   ** state vector.  If writable static data is unsupported on the target,
-    //   ** we have to locate the state vector at run-time.  In the more common
-    //   ** case where writable static data is supported, wsdPrng can refer directly
-    //   ** to the "sqlite3Prng" state vector declared above.
-    //   */
-    let mut mutex: *mut sqlite3_mutex = unsafe { std::mem::zeroed() };
-    if (unsafe { sqlite3_initialize() }) != (0 as i32) {
-        return;
-    }
-    mutex = unsafe { sqlite3MutexAlloc(5 as i32) };
-    unsafe { sqlite3_mutex_enter(mutex) };
-    if N <= (0 as i32) || pBuf == std::ptr::null_mut::<()>() {
-        unsafe {
-            *unsafe {
-                unsafe { std::ptr::addr_of_mut!(sqlite3Prng.s) as *mut u32 }
-                    .offset((0 as i32) as isize)
-            } = (0 as i32) as u32;
-        }
-        unsafe { sqlite3_mutex_leave(mutex) };
-        return;
-    }
-    // /* Initialize the state of the random number generator once,
-    //   ** the first time this routine is called.
-    //   */
-    if (unsafe {
-        *unsafe {
-            unsafe { std::ptr::addr_of_mut!(sqlite3Prng.s) as *mut u32 }.offset((0 as i32) as isize)
-        }
-    }) == ((0 as i32) as u32)
-    {
-        let mut pVfs: *mut sqlite3_vfs = unsafe { sqlite3_vfs_find(std::ptr::null::<i8>()) };
-        unsafe {
-            memcpy(
-                (unsafe {
-                    unsafe { std::ptr::addr_of_mut!(sqlite3Prng.s) as *mut u32 }
-                        .offset((0 as i32) as isize)
-                }) as *mut (),
-                (unsafe { std::ptr::addr_of!(chacha20_init.0) as *const u32 }) as *const (),
-                ((16 as i32) as i64) as u64,
-            )
-        };
-        if pVfs == std::ptr::null_mut::<sqlite3_vfs>() {
-            unsafe {
-                memset(
-                    (unsafe {
-                        unsafe { std::ptr::addr_of_mut!(sqlite3Prng.s) as *mut u32 }
-                            .offset((4 as i32) as isize)
-                    }) as *mut (),
-                    0 as i32,
-                    ((44 as i32) as i64) as u64,
-                )
-            };
-        } else {
-            unsafe {
-                sqlite3OsRandomness(
-                    pVfs,
-                    44 as i32,
-                    (unsafe {
-                        unsafe { std::ptr::addr_of_mut!(sqlite3Prng.s) as *mut u32 }
-                            .offset((4 as i32) as isize)
-                    }) as *mut i8,
-                )
-            };
-        }
-        unsafe {
-            *unsafe {
-                unsafe { std::ptr::addr_of_mut!(sqlite3Prng.s) as *mut u32 }
-                    .offset((15 as i32) as isize)
-            } = unsafe {
-                *unsafe {
-                    unsafe { std::ptr::addr_of_mut!(sqlite3Prng.s) as *mut u32 }
-                        .offset((12 as i32) as isize)
-                }
-            };
-        }
-        unsafe {
-            *unsafe {
-                unsafe { std::ptr::addr_of_mut!(sqlite3Prng.s) as *mut u32 }
-                    .offset((12 as i32) as isize)
-            } = (0 as i32) as u32;
-        }
-        unsafe {
-            sqlite3Prng.n = ((0 as i32) as i8) as u8;
-        }
-    }
-    0 as i32;
-    // /* exit by break */
-    '__slate_break_112: while (1 as i32) != (0 as i32) {
-        if N <= (((unsafe { sqlite3Prng.n }) as u32) as i32) {
-            unsafe {
-                memcpy(
-                    zBuf as *mut (),
-                    (unsafe {
-                        unsafe { std::ptr::addr_of_mut!(sqlite3Prng.out) as *mut u8 }
-                            .offset(((((unsafe { sqlite3Prng.n }) as u32) as i32) - N) as isize)
-                    }) as *const (),
-                    (N as i64) as u64,
-                )
-            };
-            let __v113: u8 = unsafe { sqlite3Prng.n };
-            let __v114: u8 = ((((__v113 as u32) as i32) - N) as i8) as u8;
-            unsafe {
-                sqlite3Prng.n = __v114;
-            }
-            break '__slate_break_112;
-        }
-        if (((unsafe { sqlite3Prng.n }) as u32) as i32) > (0 as i32) {
-            unsafe {
-                memcpy(
-                    zBuf as *mut (),
-                    (unsafe { std::ptr::addr_of_mut!(sqlite3Prng.out) as *mut u8 }) as *const (),
-                    (unsafe { sqlite3Prng.n }) as u64,
-                )
-            };
-            let __v115: i32 = N;
-            let __v116: i32 = __v115 - (((unsafe { sqlite3Prng.n }) as u32) as i32);
-            N = __v116;
-            let __v117: *mut u8 = zBuf;
-            let __v118: *mut u8 =
-                unsafe { __v117.offset((((unsafe { sqlite3Prng.n }) as u32) as i32) as isize) };
-            zBuf = __v118;
-        }
-        let __v119: *mut u32 = unsafe {
-            unsafe { std::ptr::addr_of_mut!(sqlite3Prng.s) as *mut u32 }
-                .offset((12 as i32) as isize)
-        };
-        let __v120: u32 = unsafe { *__v119 };
-        let __v121: u32 = __v120.wrapping_add((1 as i32) as u32);
-        unsafe {
-            *__v119 = __v121;
-        }
-        chacha_block(
-            (unsafe { std::ptr::addr_of_mut!(sqlite3Prng.out) as *mut u8 }) as *mut u32,
-            (unsafe { std::ptr::addr_of_mut!(sqlite3Prng.s) as *mut u32 }) as *const u32,
-        );
-        unsafe {
-            sqlite3Prng.n = ((64 as i32) as i8) as u8;
-        }
-    }
-    unsafe { sqlite3_mutex_leave(mutex) };
-}
-
-#[unsafe(no_mangle)]
-extern "C-unwind" fn sqlite3PrngSaveState() {
-    unsafe {
-        memcpy(
-            (unsafe { std::ptr::addr_of_mut!(sqlite3SavedPrng) }) as *mut (),
-            (unsafe { std::ptr::addr_of_mut!(sqlite3Prng) }) as *const (),
-            132 as u64,
-        )
-    };
-}
-
-#[unsafe(no_mangle)]
-extern "C-unwind" fn sqlite3PrngRestoreState() {
-    unsafe {
-        memcpy(
-            (unsafe { std::ptr::addr_of_mut!(sqlite3Prng) }) as *mut (),
-            (unsafe { std::ptr::addr_of_mut!(sqlite3SavedPrng) }) as *const (),
-            132 as u64,
-        )
-    };
-}
-
-// /* The RFC-7539 ChaCha20 block function
-// */
-// /* SQLITE_UNTESTABLE */
+// The RFC-7539 ChaCha20 block function
 fn chacha_block(mut out: *mut u32, mut r#in: *const u32) {
     let mut i: i32 = 0 as i32;
     let mut x: __SlateAlign16<[u32; 16]> = __SlateAlign16([0 as u32; 16]);
@@ -1191,4 +996,188 @@ fn chacha_block(mut out: *mut u32, mut r#in: *const u32) {
         let __v349: i32 = __v348 + (1 as i32);
         i = __v349;
     }
+}
+
+/// Return N random bytes.
+#[unsafe(no_mangle)]
+#[unsafe(link_section = ".text.slate_distinct.random.sqlite3_randomness")]
+extern "C-unwind" fn sqlite3_randomness(mut N: i32, mut pBuf: *mut ()) {
+    let mut zBuf: *mut u8 = pBuf as *mut u8;
+    // The "wsdPrng" macro will resolve to the pseudo-random number generator
+    // state vector.  If writable static data is unsupported on the target,
+    // we have to locate the state vector at run-time.  In the more common
+    // case where writable static data is supported, wsdPrng can refer directly
+    // to the "sqlite3Prng" state vector declared above.
+    let mut mutex: *mut sqlite3_mutex = unsafe { std::mem::zeroed() };
+    if (unsafe { sqlite3_initialize() }) != (0 as i32) {
+        return;
+    }
+    mutex = unsafe { sqlite3MutexAlloc(5 as i32) };
+    unsafe { sqlite3_mutex_enter(mutex) };
+    if N <= (0 as i32) || pBuf == std::ptr::null_mut::<()>() {
+        unsafe {
+            *unsafe {
+                unsafe { std::ptr::addr_of_mut!(sqlite3Prng.s) as *mut u32 }
+                    .offset((0 as i32) as isize)
+            } = (0 as i32) as u32;
+        }
+        unsafe { sqlite3_mutex_leave(mutex) };
+        return;
+    }
+    // Initialize the state of the random number generator once,
+    // the first time this routine is called.
+    if (unsafe {
+        *unsafe {
+            unsafe { std::ptr::addr_of_mut!(sqlite3Prng.s) as *mut u32 }.offset((0 as i32) as isize)
+        }
+    }) == ((0 as i32) as u32)
+    {
+        let mut pVfs: *mut sqlite3_vfs = unsafe { sqlite3_vfs_find(std::ptr::null::<i8>()) };
+        unsafe {
+            memcpy(
+                (unsafe {
+                    unsafe { std::ptr::addr_of_mut!(sqlite3Prng.s) as *mut u32 }
+                        .offset((0 as i32) as isize)
+                }) as *mut (),
+                (unsafe { std::ptr::addr_of!(chacha20_init.0) as *const u32 }) as *const (),
+                ((16 as i32) as i64) as u64,
+            )
+        };
+        if pVfs == std::ptr::null_mut::<sqlite3_vfs>() {
+            unsafe {
+                memset(
+                    (unsafe {
+                        unsafe { std::ptr::addr_of_mut!(sqlite3Prng.s) as *mut u32 }
+                            .offset((4 as i32) as isize)
+                    }) as *mut (),
+                    0 as i32,
+                    ((44 as i32) as i64) as u64,
+                )
+            };
+        } else {
+            unsafe {
+                sqlite3OsRandomness(
+                    pVfs,
+                    44 as i32,
+                    (unsafe {
+                        unsafe { std::ptr::addr_of_mut!(sqlite3Prng.s) as *mut u32 }
+                            .offset((4 as i32) as isize)
+                    }) as *mut i8,
+                )
+            };
+        }
+        unsafe {
+            *unsafe {
+                unsafe { std::ptr::addr_of_mut!(sqlite3Prng.s) as *mut u32 }
+                    .offset((15 as i32) as isize)
+            } = unsafe {
+                *unsafe {
+                    unsafe { std::ptr::addr_of_mut!(sqlite3Prng.s) as *mut u32 }
+                        .offset((12 as i32) as isize)
+                }
+            };
+        }
+        unsafe {
+            *unsafe {
+                unsafe { std::ptr::addr_of_mut!(sqlite3Prng.s) as *mut u32 }
+                    .offset((12 as i32) as isize)
+            } = (0 as i32) as u32;
+        }
+        unsafe {
+            sqlite3Prng.n = ((0 as i32) as i8) as u8;
+        }
+    }
+    0 as i32;
+    '__slate_break_112: while (1 as i32) != (0 as i32) {
+        // exit by break
+        if N <= (((unsafe { sqlite3Prng.n }) as u32) as i32) {
+            unsafe {
+                memcpy(
+                    zBuf as *mut (),
+                    (unsafe {
+                        unsafe { std::ptr::addr_of_mut!(sqlite3Prng.out) as *mut u8 }
+                            .offset(((((unsafe { sqlite3Prng.n }) as u32) as i32) - N) as isize)
+                    }) as *const (),
+                    (N as i64) as u64,
+                )
+            };
+            let __v113: u8 = unsafe { sqlite3Prng.n };
+            let __v114: u8 = ((((__v113 as u32) as i32) - N) as i8) as u8;
+            unsafe {
+                sqlite3Prng.n = __v114;
+            }
+            break '__slate_break_112;
+        }
+        if (((unsafe { sqlite3Prng.n }) as u32) as i32) > (0 as i32) {
+            unsafe {
+                memcpy(
+                    zBuf as *mut (),
+                    (unsafe { std::ptr::addr_of_mut!(sqlite3Prng.out) as *mut u8 }) as *const (),
+                    (unsafe { sqlite3Prng.n }) as u64,
+                )
+            };
+            let __v115: i32 = N;
+            let __v116: i32 = __v115 - (((unsafe { sqlite3Prng.n }) as u32) as i32);
+            N = __v116;
+            let __v117: *mut u8 = zBuf;
+            let __v118: *mut u8 =
+                unsafe { __v117.offset((((unsafe { sqlite3Prng.n }) as u32) as i32) as isize) };
+            zBuf = __v118;
+        }
+        let __v119: *mut u32 = unsafe {
+            unsafe { std::ptr::addr_of_mut!(sqlite3Prng.s) as *mut u32 }
+                .offset((12 as i32) as isize)
+        };
+        let __v120: u32 = unsafe { *__v119 };
+        let __v121: u32 = __v120.wrapping_add((1 as i32) as u32);
+        unsafe {
+            *__v119 = __v121;
+        }
+        chacha_block(
+            (unsafe { std::ptr::addr_of_mut!(sqlite3Prng.out) as *mut u8 }) as *mut u32,
+            (unsafe { std::ptr::addr_of_mut!(sqlite3Prng.s) as *mut u32 }) as *const u32,
+        );
+        unsafe {
+            sqlite3Prng.n = ((64 as i32) as i8) as u8;
+        }
+    }
+    unsafe { sqlite3_mutex_leave(mutex) };
+}
+
+static mut chacha20_init: __SlateAlign16<[u32; 4]> = __SlateAlign16([
+    (1634760805 as i32) as u32,
+    (857760878 as i32) as u32,
+    (2036477234 as i32) as u32,
+    (1797285236 as i32) as u32,
+]);
+
+/// For testing purposes, we sometimes want to preserve the state of
+/// PRNG and restore the PRNG to its saved state at a later time, or
+/// to reset the PRNG to its initial state.  These routines accomplish
+/// those tasks.
+///
+/// The sqlite3_test_control() interface calls these routines to
+/// control the PRNG.
+static mut sqlite3SavedPrng: sqlite3PrngType = unsafe { std::mem::zeroed() };
+
+#[unsafe(no_mangle)]
+extern "C-unwind" fn sqlite3PrngSaveState() {
+    unsafe {
+        memcpy(
+            (unsafe { std::ptr::addr_of_mut!(sqlite3SavedPrng) }) as *mut (),
+            (unsafe { std::ptr::addr_of_mut!(sqlite3Prng) }) as *const (),
+            132 as u64,
+        )
+    };
+}
+
+#[unsafe(no_mangle)]
+extern "C-unwind" fn sqlite3PrngRestoreState() {
+    unsafe {
+        memcpy(
+            (unsafe { std::ptr::addr_of_mut!(sqlite3Prng) }) as *mut (),
+            (unsafe { std::ptr::addr_of_mut!(sqlite3SavedPrng) }) as *const (),
+            132 as u64,
+        )
+    };
 }

@@ -1,3 +1,16 @@
+//! 2005 November 29
+//!
+//! The author disclaims copyright to this source code.  In place of
+//! a legal notice, here is a blessing:
+//!
+//!    May you do good and not evil.
+//!    May you find forgiveness for yourself and forgive others.
+//!    May you share freely, never taking more than you give.
+//!
+//!
+//!
+//! This file contains OS interface code that is common to all
+//! architectures.
 unsafe extern "C" {
     static mut sqlite3Config: Sqlite3Config;
     fn sqlite3_initialize() -> i32;
@@ -210,163 +223,35 @@ struct Sqlite3Config {
     iPrngSeed: u32,
 }
 
-// /*
-// ** The list of all registered VFS implementations.
-// */
-static mut vfsList: *mut sqlite3_vfs = std::ptr::null_mut::<sqlite3_vfs>();
-
-// /*
-// ** Locate a VFS by name.  If no name is given, simply return the
-// ** first VFS on the list.
-// */
-#[unsafe(no_mangle)]
-#[unsafe(link_section = ".text.slate_distinct.os.sqlite3_vfs_find")]
-extern "C-unwind" fn sqlite3_vfs_find(mut zVfs: *const i8) -> *mut sqlite3_vfs {
-    let mut pVfs: *mut sqlite3_vfs = std::ptr::null_mut::<sqlite3_vfs>();
-    let mut mutex: *mut sqlite3_mutex = unsafe { std::mem::zeroed() };
-    let mut rc: i32 = unsafe { sqlite3_initialize() };
-    if rc != (0 as i32) {
-        return std::ptr::null_mut::<sqlite3_vfs>();
-    }
-    mutex = unsafe { sqlite3MutexAlloc(2 as i32) };
-    unsafe { sqlite3_mutex_enter(mutex) };
-    pVfs = unsafe { vfsList };
-    '__slate_break_377: while pVfs != std::ptr::null_mut::<sqlite3_vfs>() {
-        if zVfs == std::ptr::null::<i8>() {
-            break '__slate_break_377;
-        }
-        if (unsafe { strcmp(zVfs, unsafe { (*pVfs).zName }) }) == (0 as i32) {
-            break '__slate_break_377;
-        }
-        pVfs = unsafe { (*pVfs).pNext };
-    }
-    unsafe { sqlite3_mutex_leave(mutex) };
-    return pVfs;
-}
-
-// /*
-// ** Register a VFS with the system.  It is harmless to register the same
-// ** VFS multiple times.  The new VFS becomes the default if makeDflt is
-// ** true.
-// */
-#[unsafe(no_mangle)]
-#[unsafe(link_section = ".text.slate_distinct.os.sqlite3_vfs_register")]
-extern "C-unwind" fn sqlite3_vfs_register(mut pVfs: *mut sqlite3_vfs, mut makeDflt: i32) -> i32 {
-    let mut mutex: *mut sqlite3_mutex = unsafe { std::mem::zeroed() };
-    let mut rc: i32 = unsafe { sqlite3_initialize() };
-    if rc != (0 as i32) {
-        return rc;
-    }
-    mutex = unsafe { sqlite3MutexAlloc(2 as i32) };
-    unsafe { sqlite3_mutex_enter(mutex) };
-    vfsUnlink(pVfs);
-    if makeDflt != (0 as i32) || (unsafe { vfsList }) == std::ptr::null_mut::<sqlite3_vfs>() {
-        unsafe {
-            (*pVfs).pNext = unsafe { vfsList };
-        }
-        unsafe {
-            vfsList = pVfs;
-        }
-    } else {
-        unsafe {
-            (*pVfs).pNext = unsafe { (*unsafe { vfsList }).pNext };
-        }
-        unsafe {
-            (*unsafe { vfsList }).pNext = pVfs;
-        }
-    }
-    0 as i32;
-    unsafe { sqlite3_mutex_leave(mutex) };
-    return 0 as i32;
-}
-
-// /*
-// ** Unregister a VFS so that it is no longer accessible.
-// */
-#[unsafe(no_mangle)]
-#[unsafe(link_section = ".text.slate_distinct.os.sqlite3_vfs_unregister")]
-extern "C-unwind" fn sqlite3_vfs_unregister(mut pVfs: *mut sqlite3_vfs) -> i32 {
-    let mut mutex: *mut sqlite3_mutex = unsafe { std::mem::zeroed() };
-    let mut rc: i32 = unsafe { sqlite3_initialize() };
-    if rc != (0 as i32) {
-        return rc;
-    }
-    mutex = unsafe { sqlite3MutexAlloc(2 as i32) };
-    unsafe { sqlite3_mutex_enter(mutex) };
-    vfsUnlink(pVfs);
-    unsafe { sqlite3_mutex_leave(mutex) };
-    return 0 as i32;
-}
-
-// /*
-// ** This function is a wrapper around the OS specific implementation of
-// ** sqlite3_os_init(). The purpose of the wrapper is to provide the
-// ** ability to simulate a malloc failure, so that the handling of an
-// ** error in sqlite3_os_init() by the upper layers can be tested.
-// */
-#[unsafe(no_mangle)]
-extern "C-unwind" fn sqlite3OsInit() -> i32 {
-    let mut p: *mut () = unsafe { sqlite3_malloc(10 as i32) };
-    if p == std::ptr::null_mut::<()>() {
-        return 7 as i32;
-    }
-    unsafe { sqlite3_free(p) };
-    return unsafe { sqlite3_os_init() };
-}
-
-// /*
-// ** 2005 November 29
-// **
-// ** The author disclaims copyright to this source code.  In place of
-// ** a legal notice, here is a blessing:
-// **
-// **    May you do good and not evil.
-// **    May you find forgiveness for yourself and forgive others.
-// **    May you share freely, never taking more than you give.
-// **
-// ******************************************************************************
-// **
-// ** This file contains OS interface code that is common to all
-// ** architectures.
-// */
-// /*
-// ** If we compile with the SQLITE_TEST macro set, then the following block
-// ** of code will give us the ability to simulate a disk I/O error.  This
-// ** is used for testing the I/O recovery logic.
-// */
-// /*
-// ** When testing, also keep a count of the number of open files.
-// */
-// /*
-// ** The default SQLite sqlite3_vfs implementations do not allocate
-// ** memory (actually, os_unix.c allocates a small amount of memory
-// ** from within OsOpen()), but some third-party implementations may.
-// ** So we test the effects of a malloc() failing and the sqlite3OsXXX()
-// ** function returning SQLITE_IOERR_NOMEM using the DO_OS_MALLOC_TEST macro.
-// **
-// ** The following functions are instrumented for malloc() failure
-// ** testing:
-// **
-// **     sqlite3OsRead()
-// **     sqlite3OsWrite()
-// **     sqlite3OsSync()
-// **     sqlite3OsFileSize()
-// **     sqlite3OsLock()
-// **     sqlite3OsCheckReservedLock()
-// **     sqlite3OsFileControl()
-// **     sqlite3OsShmMap()
-// **     sqlite3OsOpen()
-// **     sqlite3OsDelete()
-// **     sqlite3OsAccess()
-// **     sqlite3OsFullPathname()
-// **
-// */
-// /*
-// ** The following routines are convenience wrappers around methods
-// ** of the sqlite3_file object.  This is mostly just syntactic sugar. All
-// ** of this would be completely automatic if SQLite were coded using
-// ** C++ instead of plain old C.
-// */
+/// If we compile with the SQLITE_TEST macro set, then the following block
+/// of code will give us the ability to simulate a disk I/O error.  This
+/// is used for testing the I/O recovery logic.
+/// When testing, also keep a count of the number of open files.
+/// The default SQLite sqlite3_vfs implementations do not allocate
+/// memory (actually, os_unix.c allocates a small amount of memory
+/// from within OsOpen()), but some third-party implementations may.
+/// So we test the effects of a malloc() failing and the sqlite3OsXXX()
+/// function returning SQLITE_IOERR_NOMEM using the DO_OS_MALLOC_TEST macro.
+///
+/// The following functions are instrumented for malloc() failure
+/// testing:
+///
+///     sqlite3OsRead()
+///     sqlite3OsWrite()
+///     sqlite3OsSync()
+///     sqlite3OsFileSize()
+///     sqlite3OsLock()
+///     sqlite3OsCheckReservedLock()
+///     sqlite3OsFileControl()
+///     sqlite3OsShmMap()
+///     sqlite3OsOpen()
+///     sqlite3OsDelete()
+///     sqlite3OsAccess()
+///     sqlite3OsFullPathname()
+/// The following routines are convenience wrappers around methods
+/// of the sqlite3_file object.  This is mostly just syntactic sugar. All
+/// of this would be completely automatic if SQLite were coded using
+/// C++ instead of plain old C.
 #[unsafe(no_mangle)]
 extern "C-unwind" fn sqlite3OsClose(mut pId: *mut sqlite3_file) {
     if (unsafe { (*pId).pMethods }) != std::ptr::null::<sqlite3_io_methods>() {
@@ -450,14 +335,12 @@ extern "C-unwind" fn sqlite3OsCheckReservedLock(
     };
 }
 
-// /*
-// ** Use sqlite3OsFileControl() when we are doing something that might fail
-// ** and we need to know about the failures.  Use sqlite3OsFileControlHint()
-// ** when simply tossing information over the wall to the VFS and we do not
-// ** really care if the VFS receives and understands the information since it
-// ** is only a hint and can be safely ignored.  The sqlite3OsFileControlHint()
-// ** routine has no return value since the return value would be meaningless.
-// */
+/// Use sqlite3OsFileControl() when we are doing something that might fail
+/// and we need to know about the failures.  Use sqlite3OsFileControlHint()
+/// when simply tossing information over the wall to the VFS and we do not
+/// really care if the VFS receives and understands the information since it
+/// is only a hint and can be safely ignored.  The sqlite3OsFileControlHint()
+/// routine has no return value since the return value would be meaningless.
 #[unsafe(no_mangle)]
 extern "C-unwind" fn sqlite3OsFileControl(
     mut id: *mut sqlite3_file,
@@ -503,20 +386,6 @@ extern "C-unwind" fn sqlite3OsDeviceCharacteristics(mut id: *mut sqlite3_file) -
 }
 
 #[unsafe(no_mangle)]
-extern "C-unwind" fn sqlite3OsShmMap(
-    mut id: *mut sqlite3_file,
-    mut iPage: i32,
-    mut pgsz: i32,
-    mut bExtend: i32,
-    mut pp: *mut *mut (),
-) -> i32 {
-    {}
-    return unsafe {
-        unsafe { (*unsafe { (*id).pMethods }).xShmMap }.unwrap()(id, iPage, pgsz, bExtend, pp)
-    };
-}
-
-#[unsafe(no_mangle)]
 extern "C-unwind" fn sqlite3OsShmLock(
     mut id: *mut sqlite3_file,
     mut offset: i32,
@@ -538,11 +407,26 @@ extern "C-unwind" fn sqlite3OsShmUnmap(mut id: *mut sqlite3_file, mut deleteFlag
     return unsafe { unsafe { (*unsafe { (*id).pMethods }).xShmUnmap }.unwrap()(id, deleteFlag) };
 }
 
-// /* Database file handle */
-// /* True to extend file if necessary */
-// /* OUT: Pointer to mapping */
-// /* SQLITE_OMIT_WAL */
-// /* The real implementation of xFetch and xUnfetch */
+/// # Arguments
+///
+/// * `id` - Database file handle
+/// * `bExtend` - True to extend file if necessary
+/// * `pp` - OUT: Pointer to mapping
+#[unsafe(no_mangle)]
+extern "C-unwind" fn sqlite3OsShmMap(
+    mut id: *mut sqlite3_file,
+    mut iPage: i32,
+    mut pgsz: i32,
+    mut bExtend: i32,
+    mut pp: *mut *mut (),
+) -> i32 {
+    {}
+    return unsafe {
+        unsafe { (*unsafe { (*id).pMethods }).xShmMap }.unwrap()(id, iPage, pgsz, bExtend, pp)
+    };
+}
+
+/// The real implementation of xFetch and xUnfetch
 #[unsafe(no_mangle)]
 extern "C-unwind" fn sqlite3OsFetch(
     mut id: *mut sqlite3_file,
@@ -563,10 +447,8 @@ extern "C-unwind" fn sqlite3OsUnfetch(
     return unsafe { unsafe { (*unsafe { (*id).pMethods }).xUnfetch }.unwrap()(id, iOff, p) };
 }
 
-// /*
-// ** The next group of routines are convenience wrappers around the
-// ** VFS methods.
-// */
+/// The next group of routines are convenience wrappers around the
+/// VFS methods.
 #[unsafe(no_mangle)]
 extern "C-unwind" fn sqlite3OsOpen(
     mut pVfs: *mut sqlite3_vfs,
@@ -577,10 +459,10 @@ extern "C-unwind" fn sqlite3OsOpen(
 ) -> i32 {
     let mut rc: i32 = 0 as i32;
     {}
-    // /* 0x87f7f is a mask of SQLITE_OPEN_ flags that are valid to be passed
-    //   ** down into the VFS layer.  Some SQLITE_OPEN_ flags (for example,
-    //   ** SQLITE_OPEN_FULLMUTEX or SQLITE_OPEN_SHAREDCACHE) are blocked before
-    //   ** reaching the VFS. */
+    // 0x87f7f is a mask of SQLITE_OPEN_ flags that are valid to be passed
+    // down into the VFS layer.  Some SQLITE_OPEN_ flags (for example,
+    // SQLITE_OPEN_FULLMUTEX or SQLITE_OPEN_SHAREDCACHE) are blocked before
+    // reaching the VFS.
     0 as i32;
     rc = unsafe {
         unsafe { (*pVfs).xOpen }.unwrap()(pVfs, zPath, pFile, flags & (17334143 as i32), pFlagsOut)
@@ -634,8 +516,7 @@ extern "C-unwind" fn sqlite3OsFullPathname(
 #[unsafe(no_mangle)]
 extern "C-unwind" fn sqlite3OsDlOpen(mut pVfs: *mut sqlite3_vfs, mut zPath: *const i8) -> *mut () {
     0 as i32;
-    // /* tag-20210611-1 */
-    0 as i32;
+    0 as i32; // tag-20210611-1
     return unsafe { unsafe { (*pVfs).xDlOpen }.unwrap()(pVfs, zPath) };
 }
 
@@ -662,7 +543,6 @@ extern "C-unwind" fn sqlite3OsDlClose(mut pVfs: *mut sqlite3_vfs, mut pHandle: *
     unsafe { unsafe { (*pVfs).xDlClose }.unwrap()(pVfs, pHandle) };
 }
 
-// /* SQLITE_OMIT_LOAD_EXTENSION */
 #[unsafe(no_mangle)]
 extern "C-unwind" fn sqlite3OsRandomness(
     mut pVfs: *mut sqlite3_vfs,
@@ -712,12 +592,11 @@ extern "C-unwind" fn sqlite3OsCurrentTimeInt64(
     mut pTimeOut: *mut i64,
 ) -> i32 {
     let mut rc: i32 = 0 as i32;
-    // /* IMPLEMENTATION-OF: R-49045-42493 SQLite will use the xCurrentTimeInt64()
-    //   ** method to get the current date and time if that method is available
-    //   ** (if iVersion is 2 or greater and the function pointer is not NULL) and
-    //   ** will fall back to xCurrentTime() if xCurrentTimeInt64() is
-    //   ** unavailable.
-    //   */
+    // IMPLEMENTATION-OF: R-49045-42493 SQLite will use the xCurrentTimeInt64()
+    // method to get the current date and time if that method is available
+    // (if iVersion is 2 or greater and the function pointer is not NULL) and
+    // will fall back to xCurrentTime() if xCurrentTimeInt64() is
+    // unavailable.
     if (unsafe { (*pVfs).iVersion }) >= (2 as i32) && (unsafe { (*pVfs).xCurrentTimeInt64 }) != None
     {
         rc = unsafe { unsafe { (*pVfs).xCurrentTimeInt64 }.unwrap()(pVfs, pTimeOut) };
@@ -772,13 +651,55 @@ extern "C-unwind" fn sqlite3OsCloseFree(mut pFile: *mut sqlite3_file) {
     unsafe { sqlite3_free(pFile as *mut ()) };
 }
 
-// /*
-// ** Unlink a VFS from the linked list
-// */
+/// This function is a wrapper around the OS specific implementation of
+/// sqlite3_os_init(). The purpose of the wrapper is to provide the
+/// ability to simulate a malloc failure, so that the handling of an
+/// error in sqlite3_os_init() by the upper layers can be tested.
+#[unsafe(no_mangle)]
+extern "C-unwind" fn sqlite3OsInit() -> i32 {
+    let mut p: *mut () = unsafe { sqlite3_malloc(10 as i32) };
+    if p == std::ptr::null_mut::<()>() {
+        return 7 as i32;
+    }
+    unsafe { sqlite3_free(p) };
+    return unsafe { sqlite3_os_init() };
+}
+
+/// The list of all registered VFS implementations.
+static mut vfsList: *mut sqlite3_vfs = std::ptr::null_mut::<sqlite3_vfs>();
+
+/// Locate a VFS by name.  If no name is given, simply return the
+/// first VFS on the list.
+#[unsafe(no_mangle)]
+#[unsafe(link_section = ".text.slate_distinct.os.sqlite3_vfs_find")]
+extern "C-unwind" fn sqlite3_vfs_find(mut zVfs: *const i8) -> *mut sqlite3_vfs {
+    let mut pVfs: *mut sqlite3_vfs = std::ptr::null_mut::<sqlite3_vfs>();
+    let mut mutex: *mut sqlite3_mutex = unsafe { std::mem::zeroed() };
+    let mut rc: i32 = unsafe { sqlite3_initialize() };
+    if rc != (0 as i32) {
+        return std::ptr::null_mut::<sqlite3_vfs>();
+    }
+    mutex = unsafe { sqlite3MutexAlloc(2 as i32) };
+    unsafe { sqlite3_mutex_enter(mutex) };
+    pVfs = unsafe { vfsList };
+    '__slate_break_377: while pVfs != std::ptr::null_mut::<sqlite3_vfs>() {
+        if zVfs == std::ptr::null::<i8>() {
+            break '__slate_break_377;
+        }
+        if (unsafe { strcmp(zVfs, unsafe { (*pVfs).zName }) }) == (0 as i32) {
+            break '__slate_break_377;
+        }
+        pVfs = unsafe { (*pVfs).pNext };
+    }
+    unsafe { sqlite3_mutex_leave(mutex) };
+    return pVfs;
+}
+
+/// Unlink a VFS from the linked list
 fn vfsUnlink(mut pVfs: *mut sqlite3_vfs) {
     0 as i32;
     if pVfs == std::ptr::null_mut::<sqlite3_vfs>() {
-        // /* No-op */
+        // No-op
     } else {
         if (unsafe { vfsList }) == pVfs {
             unsafe {
@@ -801,4 +722,54 @@ fn vfsUnlink(mut pVfs: *mut sqlite3_vfs) {
             }
         }
     }
+}
+
+/// Register a VFS with the system.  It is harmless to register the same
+/// VFS multiple times.  The new VFS becomes the default if makeDflt is
+/// true.
+#[unsafe(no_mangle)]
+#[unsafe(link_section = ".text.slate_distinct.os.sqlite3_vfs_register")]
+extern "C-unwind" fn sqlite3_vfs_register(mut pVfs: *mut sqlite3_vfs, mut makeDflt: i32) -> i32 {
+    let mut mutex: *mut sqlite3_mutex = unsafe { std::mem::zeroed() };
+    let mut rc: i32 = unsafe { sqlite3_initialize() };
+    if rc != (0 as i32) {
+        return rc;
+    }
+    mutex = unsafe { sqlite3MutexAlloc(2 as i32) };
+    unsafe { sqlite3_mutex_enter(mutex) };
+    vfsUnlink(pVfs);
+    if makeDflt != (0 as i32) || (unsafe { vfsList }) == std::ptr::null_mut::<sqlite3_vfs>() {
+        unsafe {
+            (*pVfs).pNext = unsafe { vfsList };
+        }
+        unsafe {
+            vfsList = pVfs;
+        }
+    } else {
+        unsafe {
+            (*pVfs).pNext = unsafe { (*unsafe { vfsList }).pNext };
+        }
+        unsafe {
+            (*unsafe { vfsList }).pNext = pVfs;
+        }
+    }
+    0 as i32;
+    unsafe { sqlite3_mutex_leave(mutex) };
+    return 0 as i32;
+}
+
+/// Unregister a VFS so that it is no longer accessible.
+#[unsafe(no_mangle)]
+#[unsafe(link_section = ".text.slate_distinct.os.sqlite3_vfs_unregister")]
+extern "C-unwind" fn sqlite3_vfs_unregister(mut pVfs: *mut sqlite3_vfs) -> i32 {
+    let mut mutex: *mut sqlite3_mutex = unsafe { std::mem::zeroed() };
+    let mut rc: i32 = unsafe { sqlite3_initialize() };
+    if rc != (0 as i32) {
+        return rc;
+    }
+    mutex = unsafe { sqlite3MutexAlloc(2 as i32) };
+    unsafe { sqlite3_mutex_enter(mutex) };
+    vfsUnlink(pVfs);
+    unsafe { sqlite3_mutex_leave(mutex) };
+    return 0 as i32;
 }

@@ -1,3 +1,46 @@
+//! 2003 October 31
+//!
+//! The author disclaims copyright to this source code.  In place of
+//! a legal notice, here is a blessing:
+//!
+//!    May you do good and not evil.
+//!    May you find forgiveness for yourself and forgive others.
+//!    May you share freely, never taking more than you give.
+//!
+//!
+//! This file contains the C functions that implement date and time
+//! functions for SQLite.
+//!
+//! There is only one exported symbol in this file - the function
+//! sqlite3RegisterDateTimeFunctions() found at the bottom of the file.
+//! All other code has file scope.
+//!
+//! SQLite processes all times and dates as julian day numbers.  The
+//! dates and times are stored as the number of days since noon
+//! in Greenwich on November 24, 4714 B.C. according to the Gregorian
+//! calendar system.
+//!
+//! 1970-01-01 00:00:00 is JD 2440587.5
+//! 2000-01-01 00:00:00 is JD 2451544.5
+//!
+//! This implementation requires years to be expressed as a 4-digit number
+//! which means that only dates between 0000-01-01 and 9999-12-31 can
+//! be represented, even though julian day numbers allow a much wider
+//! range of dates.
+//!
+//! The Gregorian calendar system is used for all dates and times,
+//! even those that predate the Gregorian calendar.  Historians usually
+//! use the julian calendar for dates prior to 1582-10-15 and for some
+//! dates afterwards, depending on locale.  Beware of this difference.
+//!
+//! The conversion algorithms are implemented based on descriptions
+//! in the following text:
+//!
+//!      Jean Meeus
+//!      Astronomical Algorithms, 2nd Edition, 1998
+//!      ISBN 0-943396-61-1
+//!      Willmann-Bell, Inc
+//!      Richmond, Virginia (USA)
 unsafe extern "C" {
     static mut sqlite3UpperToLower: [u8; 0];
     static mut sqlite3CtypeMap: [u8; 0];
@@ -43,6 +86,424 @@ unsafe extern "C" {
     );
     fn sqlite3StmtCurrentTime(__v619: *mut sqlite3_context) -> i64;
     fn localtime_r(__timer: *const i64, __tp: *mut tm) -> *mut tm;
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_file {
+    pMethods: *const sqlite3_io_methods,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_io_methods {
+    iVersion: i32,
+    xClose: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file) -> i32>,
+    xRead: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, *mut (), i32, i64) -> i32>,
+    xWrite: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, *const (), i32, i64) -> i32>,
+    xTruncate: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i64) -> i32>,
+    xSync: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32) -> i32>,
+    xFileSize: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, *mut i64) -> i32>,
+    xLock: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32) -> i32>,
+    xUnlock: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32) -> i32>,
+    xCheckReservedLock: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, *mut i32) -> i32>,
+    xFileControl: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32, *mut ()) -> i32>,
+    xSectorSize: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file) -> i32>,
+    xDeviceCharacteristics: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file) -> i32>,
+    xShmMap:
+        Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32, i32, i32, *mut *mut ()) -> i32>,
+    xShmLock: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32, i32, i32) -> i32>,
+    xShmBarrier: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file)>,
+    xShmUnmap: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32) -> i32>,
+    xFetch: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i64, i32, *mut *mut ()) -> i32>,
+    xUnfetch: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i64, *mut ()) -> i32>,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_vfs {
+    iVersion: i32,
+    szOsFile: i32,
+    mxPathname: i32,
+    pNext: *mut sqlite3_vfs,
+    zName: *const i8,
+    pAppData: *mut (),
+    xOpen: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vfs,
+            *const i8,
+            *mut sqlite3_file,
+            i32,
+            *mut i32,
+        ) -> i32,
+    >,
+    xDelete: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8, i32) -> i32>,
+    xAccess: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8, i32, *mut i32) -> i32>,
+    xFullPathname:
+        Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8, i32, *mut i8) -> i32>,
+    xDlOpen: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8) -> *mut ()>,
+    xDlError: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, i32, *mut i8)>,
+    xDlSym: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vfs,
+            *mut (),
+            *const i8,
+        ) -> Option<unsafe extern "C-unwind" fn()>,
+    >,
+    xDlClose: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *mut ())>,
+    xRandomness: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, i32, *mut i8) -> i32>,
+    xSleep: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, i32) -> i32>,
+    xCurrentTime: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *mut f64) -> i32>,
+    xGetLastError: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, i32, *mut i8) -> i32>,
+    xCurrentTimeInt64: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *mut i64) -> i32>,
+    xSetSystemCall: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vfs,
+            *const i8,
+            Option<unsafe extern "C-unwind" fn()>,
+        ) -> i32,
+    >,
+    xGetSystemCall: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vfs,
+            *const i8,
+        ) -> Option<unsafe extern "C-unwind" fn()>,
+    >,
+    xNextSystemCall: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8) -> *const i8>,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_mutex {}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_mem_methods {
+    xMalloc: Option<unsafe extern "C-unwind" fn(i32) -> *mut ()>,
+    xFree: Option<unsafe extern "C-unwind" fn(*mut ())>,
+    xRealloc: Option<unsafe extern "C-unwind" fn(*mut (), i32) -> *mut ()>,
+    xSize: Option<unsafe extern "C-unwind" fn(*mut ()) -> i32>,
+    xRoundup: Option<unsafe extern "C-unwind" fn(i32) -> i32>,
+    xInit: Option<unsafe extern "C-unwind" fn(*mut ()) -> i32>,
+    xShutdown: Option<unsafe extern "C-unwind" fn(*mut ())>,
+    pAppData: *mut (),
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_module {
+    iVersion: i32,
+    xCreate: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3,
+            *mut (),
+            i32,
+            *const *const i8,
+            *mut *mut sqlite3_vtab,
+            *mut *mut i8,
+        ) -> i32,
+    >,
+    xConnect: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3,
+            *mut (),
+            i32,
+            *const *const i8,
+            *mut *mut sqlite3_vtab,
+            *mut *mut i8,
+        ) -> i32,
+    >,
+    xBestIndex:
+        Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, *mut sqlite3_index_info) -> i32>,
+    xDisconnect: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
+    xDestroy: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
+    xOpen: Option<
+        unsafe extern "C-unwind" fn(*mut sqlite3_vtab, *mut *mut sqlite3_vtab_cursor) -> i32,
+    >,
+    xClose: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor) -> i32>,
+    xFilter: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vtab_cursor,
+            i32,
+            *const i8,
+            i32,
+            *mut *mut sqlite3_value,
+        ) -> i32,
+    >,
+    xNext: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor) -> i32>,
+    xEof: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor) -> i32>,
+    xColumn: Option<
+        unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor, *mut sqlite3_context, i32) -> i32,
+    >,
+    xRowid: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor, *mut i64) -> i32>,
+    xUpdate: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vtab,
+            i32,
+            *mut *mut sqlite3_value,
+            *mut i64,
+        ) -> i32,
+    >,
+    xBegin: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
+    xSync: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
+    xCommit: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
+    xRollback: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
+    xFindFunction: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vtab,
+            i32,
+            *const i8,
+            *mut Option<
+                unsafe extern "C-unwind" fn(*mut sqlite3_context, i32, *mut *mut sqlite3_value),
+            >,
+            *mut *mut (),
+        ) -> i32,
+    >,
+    xRename: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, *const i8) -> i32>,
+    xSavepoint: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, i32) -> i32>,
+    xRelease: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, i32) -> i32>,
+    xRollbackTo: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, i32) -> i32>,
+    xShadowName: Option<unsafe extern "C-unwind" fn(*const i8) -> i32>,
+    xIntegrity: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vtab,
+            *const i8,
+            *const i8,
+            i32,
+            *mut *mut i8,
+        ) -> i32,
+    >,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_value {}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_context {}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_index_info {
+    nConstraint: i32,
+    aConstraint: *mut sqlite3_index_constraint,
+    nOrderBy: i32,
+    aOrderBy: *mut sqlite3_index_orderby,
+    aConstraintUsage: *mut sqlite3_index_constraint_usage,
+    idxNum: i32,
+    idxStr: *mut i8,
+    needToFreeIdxStr: i32,
+    orderByConsumed: i32,
+    estimatedCost: f64,
+    estimatedRows: i64,
+    idxFlags: i32,
+    colUsed: u64,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_vtab {
+    pModule: *const sqlite3_module,
+    nRef: i32,
+    zErrMsg: *mut i8,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_vtab_cursor {
+    pVtab: *mut sqlite3_vtab,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_mutex_methods {
+    xMutexInit: Option<unsafe extern "C-unwind" fn() -> i32>,
+    xMutexEnd: Option<unsafe extern "C-unwind" fn() -> i32>,
+    xMutexAlloc: Option<unsafe extern "C-unwind" fn(i32) -> *mut sqlite3_mutex>,
+    xMutexFree: Option<unsafe extern "C-unwind" fn(*mut sqlite3_mutex)>,
+    xMutexEnter: Option<unsafe extern "C-unwind" fn(*mut sqlite3_mutex)>,
+    xMutexTry: Option<unsafe extern "C-unwind" fn(*mut sqlite3_mutex) -> i32>,
+    xMutexLeave: Option<unsafe extern "C-unwind" fn(*mut sqlite3_mutex)>,
+    xMutexHeld: Option<unsafe extern "C-unwind" fn(*mut sqlite3_mutex) -> i32>,
+    xMutexNotheld: Option<unsafe extern "C-unwind" fn(*mut sqlite3_mutex) -> i32>,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_index_constraint {
+    iColumn: i32,
+    op: u8,
+    usable: u8,
+    iTermOffset: i32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_index_orderby {
+    iColumn: i32,
+    desc: u8,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_index_constraint_usage {
+    argvIndex: i32,
+    omit: u8,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_pcache_page {
+    pBuf: *mut (),
+    pExtra: *mut (),
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_pcache_methods2 {
+    iVersion: i32,
+    pArg: *mut (),
+    xInit: Option<unsafe extern "C-unwind" fn(*mut ()) -> i32>,
+    xShutdown: Option<unsafe extern "C-unwind" fn(*mut ())>,
+    xCreate: Option<unsafe extern "C-unwind" fn(i32, i32, i32) -> *mut sqlite3_pcache>,
+    xCachesize: Option<unsafe extern "C-unwind" fn(*mut sqlite3_pcache, i32)>,
+    xPagecount: Option<unsafe extern "C-unwind" fn(*mut sqlite3_pcache) -> i32>,
+    xFetch: Option<
+        unsafe extern "C-unwind" fn(*mut sqlite3_pcache, u32, i32) -> *mut sqlite3_pcache_page,
+    >,
+    xUnpin: Option<unsafe extern "C-unwind" fn(*mut sqlite3_pcache, *mut sqlite3_pcache_page, i32)>,
+    xRekey: Option<
+        unsafe extern "C-unwind" fn(*mut sqlite3_pcache, *mut sqlite3_pcache_page, u32, u32),
+    >,
+    xTruncate: Option<unsafe extern "C-unwind" fn(*mut sqlite3_pcache, u32)>,
+    xDestroy: Option<unsafe extern "C-unwind" fn(*mut sqlite3_pcache)>,
+    xShrink: Option<unsafe extern "C-unwind" fn(*mut sqlite3_pcache)>,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_pcache {}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Hash {
+    htsize: u32,
+    count: u32,
+    first: *mut HashElem,
+    ht: *mut _ht,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct HashElem {
+    next: *mut HashElem,
+    prev: *mut HashElem,
+    data: *mut (),
+    pKey: *const i8,
+    h: u32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct BusyHandler {
+    xBusyHandler: Option<unsafe extern "C-unwind" fn(*mut (), i32) -> i32>,
+    pBusyArg: *mut (),
+    nBusy: i32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct SubrtnSig {
+    selId: i32,
+    bComplete: u8,
+    zAff: *mut i8,
+    iTable: i32,
+    iAddr: i32,
+    regReturn: i32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct _ht {
+    count: u32,
+    chain: *mut HashElem,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct VdbeOp {
+    opcode: u8,
+    p4type: i8,
+    p5: u16,
+    p1: i32,
+    p2: i32,
+    p3: i32,
+    p4: p4union,
+    zComment: *mut i8,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct SubProgram {
+    aOp: *mut VdbeOp,
+    nOp: i32,
+    nMem: i32,
+    nCsr: i32,
+    aOnce: *mut u8,
+    token: *mut (),
+    pNext: *mut SubProgram,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Db {
+    zDbSName: *mut i8,
+    pBt: *mut Btree,
+    safety_level: u8,
+    bSyncSet: u8,
+    pSchema: *mut Schema,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Schema {
+    schema_cookie: i32,
+    iGeneration: i32,
+    tblHash: Hash,
+    idxHash: Hash,
+    trigHash: Hash,
+    fkeyHash: Hash,
+    pSeqTab: *mut Table,
+    file_format: u8,
+    enc: u8,
+    schemaFlags: u16,
+    cache_size: i32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Lookaside {
+    bDisable: u32,
+    sz: u16,
+    szTrue: u16,
+    bMalloced: u8,
+    nSlot: u32,
+    anStat: [u32; 3],
+    pInit: *mut LookasideSlot,
+    pFree: *mut LookasideSlot,
+    pSmallInit: *mut LookasideSlot,
+    pSmallFree: *mut LookasideSlot,
+    pMiddle: *mut (),
+    pStart: *mut (),
+    pEnd: *mut (),
+    pTrueEnd: *mut (),
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct LookasideSlot {
+    pNext: *mut LookasideSlot,
 }
 
 #[repr(C)]
@@ -152,345 +613,163 @@ struct sqlite3 {
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct sqlite3_file {
-    pMethods: *const sqlite3_io_methods,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct sqlite3_io_methods {
-    iVersion: i32,
-    xClose: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file) -> i32>,
-    xRead: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, *mut (), i32, i64) -> i32>,
-    xWrite: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, *const (), i32, i64) -> i32>,
-    xTruncate: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i64) -> i32>,
-    xSync: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32) -> i32>,
-    xFileSize: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, *mut i64) -> i32>,
-    xLock: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32) -> i32>,
-    xUnlock: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32) -> i32>,
-    xCheckReservedLock: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, *mut i32) -> i32>,
-    xFileControl: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32, *mut ()) -> i32>,
-    xSectorSize: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file) -> i32>,
-    xDeviceCharacteristics: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file) -> i32>,
-    xShmMap:
-        Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32, i32, i32, *mut *mut ()) -> i32>,
-    xShmLock: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32, i32, i32) -> i32>,
-    xShmBarrier: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file)>,
-    xShmUnmap: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32) -> i32>,
-    xFetch: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i64, i32, *mut *mut ()) -> i32>,
-    xUnfetch: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i64, *mut ()) -> i32>,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct sqlite3_mutex {}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct sqlite3_vfs {
-    iVersion: i32,
-    szOsFile: i32,
-    mxPathname: i32,
-    pNext: *mut sqlite3_vfs,
+struct FuncDef {
+    nArg: i16,
+    funcFlags: u32,
+    pUserData: *mut (),
+    pNext: *mut FuncDef,
+    xSFunc: Option<unsafe extern "C-unwind" fn(*mut sqlite3_context, i32, *mut *mut sqlite3_value)>,
+    xFinalize: Option<unsafe extern "C-unwind" fn(*mut sqlite3_context)>,
+    xValue: Option<unsafe extern "C-unwind" fn(*mut sqlite3_context)>,
+    xInverse:
+        Option<unsafe extern "C-unwind" fn(*mut sqlite3_context, i32, *mut *mut sqlite3_value)>,
     zName: *const i8,
-    pAppData: *mut (),
-    xOpen: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3_vfs,
-            *const i8,
-            *mut sqlite3_file,
-            i32,
-            *mut i32,
-        ) -> i32,
-    >,
-    xDelete: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8, i32) -> i32>,
-    xAccess: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8, i32, *mut i32) -> i32>,
-    xFullPathname:
-        Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8, i32, *mut i8) -> i32>,
-    xDlOpen: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8) -> *mut ()>,
-    xDlError: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, i32, *mut i8)>,
-    xDlSym: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3_vfs,
-            *mut (),
-            *const i8,
-        ) -> Option<unsafe extern "C-unwind" fn()>,
-    >,
-    xDlClose: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *mut ())>,
-    xRandomness: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, i32, *mut i8) -> i32>,
-    xSleep: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, i32) -> i32>,
-    xCurrentTime: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *mut f64) -> i32>,
-    xGetLastError: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, i32, *mut i8) -> i32>,
-    xCurrentTimeInt64: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *mut i64) -> i32>,
-    xSetSystemCall: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3_vfs,
-            *const i8,
-            Option<unsafe extern "C-unwind" fn()>,
-        ) -> i32,
-    >,
-    xGetSystemCall: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3_vfs,
-            *const i8,
-        ) -> Option<unsafe extern "C-unwind" fn()>,
-    >,
-    xNextSystemCall: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8) -> *const i8>,
+    u: __SlateRecord175,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct sqlite3_mem_methods {
-    xMalloc: Option<unsafe extern "C-unwind" fn(i32) -> *mut ()>,
-    xFree: Option<unsafe extern "C-unwind" fn(*mut ())>,
-    xRealloc: Option<unsafe extern "C-unwind" fn(*mut (), i32) -> *mut ()>,
-    xSize: Option<unsafe extern "C-unwind" fn(*mut ()) -> i32>,
-    xRoundup: Option<unsafe extern "C-unwind" fn(i32) -> i32>,
-    xInit: Option<unsafe extern "C-unwind" fn(*mut ()) -> i32>,
-    xShutdown: Option<unsafe extern "C-unwind" fn(*mut ())>,
-    pAppData: *mut (),
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct sqlite3_value {}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct sqlite3_context {}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct sqlite3_vtab {
-    pModule: *const sqlite3_module,
+struct FuncDestructor {
     nRef: i32,
-    zErrMsg: *mut i8,
+    xDestroy: Option<unsafe extern "C-unwind" fn(*mut ())>,
+    pUserData: *mut (),
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct sqlite3_index_info {
-    nConstraint: i32,
-    aConstraint: *mut sqlite3_index_constraint,
-    nOrderBy: i32,
-    aOrderBy: *mut sqlite3_index_orderby,
-    aConstraintUsage: *mut sqlite3_index_constraint_usage,
-    idxNum: i32,
-    idxStr: *mut i8,
-    needToFreeIdxStr: i32,
-    orderByConsumed: i32,
-    estimatedCost: f64,
-    estimatedRows: i64,
-    idxFlags: i32,
-    colUsed: u64,
+struct Savepoint {
+    zName: *mut i8,
+    nDeferredCons: i64,
+    nDeferredImmCons: i64,
+    pNext: *mut Savepoint,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct sqlite3_vtab_cursor {
-    pVtab: *mut sqlite3_vtab,
+struct Module {
+    pModule: *const sqlite3_module,
+    zName: *const i8,
+    nRefModule: i32,
+    pAux: *mut (),
+    xDestroy: Option<unsafe extern "C-unwind" fn(*mut ())>,
+    pEpoTab: *mut Table,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct sqlite3_module {
-    iVersion: i32,
-    xCreate: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3,
-            *mut (),
-            i32,
-            *const *const i8,
-            *mut *mut sqlite3_vtab,
-            *mut *mut i8,
-        ) -> i32,
-    >,
-    xConnect: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3,
-            *mut (),
-            i32,
-            *const *const i8,
-            *mut *mut sqlite3_vtab,
-            *mut *mut i8,
-        ) -> i32,
-    >,
-    xBestIndex:
-        Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, *mut sqlite3_index_info) -> i32>,
-    xDisconnect: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
-    xDestroy: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
-    xOpen: Option<
-        unsafe extern "C-unwind" fn(*mut sqlite3_vtab, *mut *mut sqlite3_vtab_cursor) -> i32,
-    >,
-    xClose: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor) -> i32>,
-    xFilter: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3_vtab_cursor,
-            i32,
-            *const i8,
-            i32,
-            *mut *mut sqlite3_value,
-        ) -> i32,
-    >,
-    xNext: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor) -> i32>,
-    xEof: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor) -> i32>,
-    xColumn: Option<
-        unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor, *mut sqlite3_context, i32) -> i32,
-    >,
-    xRowid: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor, *mut i64) -> i32>,
-    xUpdate: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3_vtab,
-            i32,
-            *mut *mut sqlite3_value,
-            *mut i64,
-        ) -> i32,
-    >,
-    xBegin: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
-    xSync: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
-    xCommit: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
-    xRollback: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
-    xFindFunction: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3_vtab,
-            i32,
-            *const i8,
-            *mut Option<
-                unsafe extern "C-unwind" fn(*mut sqlite3_context, i32, *mut *mut sqlite3_value),
-            >,
-            *mut *mut (),
-        ) -> i32,
-    >,
-    xRename: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, *const i8) -> i32>,
-    xSavepoint: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, i32) -> i32>,
-    xRelease: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, i32) -> i32>,
-    xRollbackTo: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, i32) -> i32>,
-    xShadowName: Option<unsafe extern "C-unwind" fn(*const i8) -> i32>,
-    xIntegrity: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3_vtab,
-            *const i8,
-            *const i8,
-            i32,
-            *mut *mut i8,
-        ) -> i32,
-    >,
+struct Column {
+    zCnName: *mut i8,
+    __slate_bits_0: __slate_bits::__SlateBits79U0,
+    affinity: i8,
+    szEst: u8,
+    hName: u8,
+    iDflt: u16,
+    colFlags: u16,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct sqlite3_index_constraint {
-    iColumn: i32,
-    op: u8,
-    usable: u8,
-    iTermOffset: i32,
+struct CollSeq {
+    zName: *mut i8,
+    enc: u8,
+    pUser: *mut (),
+    xCmp: Option<unsafe extern "C-unwind" fn(*mut (), i32, *const (), i32, *const ()) -> i32>,
+    xDel: Option<unsafe extern "C-unwind" fn(*mut ())>,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct sqlite3_index_orderby {
-    iColumn: i32,
-    desc: u8,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct sqlite3_index_constraint_usage {
-    argvIndex: i32,
-    omit: u8,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct sqlite3_mutex_methods {
-    xMutexInit: Option<unsafe extern "C-unwind" fn() -> i32>,
-    xMutexEnd: Option<unsafe extern "C-unwind" fn() -> i32>,
-    xMutexAlloc: Option<unsafe extern "C-unwind" fn(i32) -> *mut sqlite3_mutex>,
-    xMutexFree: Option<unsafe extern "C-unwind" fn(*mut sqlite3_mutex)>,
-    xMutexEnter: Option<unsafe extern "C-unwind" fn(*mut sqlite3_mutex)>,
-    xMutexTry: Option<unsafe extern "C-unwind" fn(*mut sqlite3_mutex) -> i32>,
-    xMutexLeave: Option<unsafe extern "C-unwind" fn(*mut sqlite3_mutex)>,
-    xMutexHeld: Option<unsafe extern "C-unwind" fn(*mut sqlite3_mutex) -> i32>,
-    xMutexNotheld: Option<unsafe extern "C-unwind" fn(*mut sqlite3_mutex) -> i32>,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct sqlite3_str {
+struct VTable {
     db: *mut sqlite3,
-    zText: *mut i8,
-    nAlloc: u32,
-    mxAlloc: u32,
-    nChar: u32,
-    accError: u8,
-    printfFlags: u8,
+    pMod: *mut Module,
+    pVtab: *mut sqlite3_vtab,
+    nRef: i32,
+    bConstraint: u8,
+    bAllSchemas: u8,
+    eVtabRisk: u8,
+    iSavepoint: i32,
+    pNext: *mut VTable,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct sqlite3_pcache {}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct sqlite3_pcache_page {
-    pBuf: *mut (),
-    pExtra: *mut (),
+struct Table {
+    zName: *mut i8,
+    aCol: *mut Column,
+    pIndex: *mut Index,
+    zColAff: *mut i8,
+    pCheck: *mut ExprList,
+    tnum: u32,
+    nTabRef: u32,
+    tabFlags: u32,
+    iPKey: i16,
+    nCol: i16,
+    nNVCol: i16,
+    nRowLogEst: i16,
+    szTabRow: i16,
+    keyConf: u8,
+    eTabType: u8,
+    u: __SlateRecord176,
+    pTrigger: *mut Trigger,
+    pSchema: *mut Schema,
+    aHx: [u8; 16],
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct sqlite3_pcache_methods2 {
-    iVersion: i32,
-    pArg: *mut (),
-    xInit: Option<unsafe extern "C-unwind" fn(*mut ()) -> i32>,
-    xShutdown: Option<unsafe extern "C-unwind" fn(*mut ())>,
-    xCreate: Option<unsafe extern "C-unwind" fn(i32, i32, i32) -> *mut sqlite3_pcache>,
-    xCachesize: Option<unsafe extern "C-unwind" fn(*mut sqlite3_pcache, i32)>,
-    xPagecount: Option<unsafe extern "C-unwind" fn(*mut sqlite3_pcache) -> i32>,
-    xFetch: Option<
-        unsafe extern "C-unwind" fn(*mut sqlite3_pcache, u32, i32) -> *mut sqlite3_pcache_page,
-    >,
-    xUnpin: Option<unsafe extern "C-unwind" fn(*mut sqlite3_pcache, *mut sqlite3_pcache_page, i32)>,
-    xRekey: Option<
-        unsafe extern "C-unwind" fn(*mut sqlite3_pcache, *mut sqlite3_pcache_page, u32, u32),
-    >,
-    xTruncate: Option<unsafe extern "C-unwind" fn(*mut sqlite3_pcache, u32)>,
-    xDestroy: Option<unsafe extern "C-unwind" fn(*mut sqlite3_pcache)>,
-    xShrink: Option<unsafe extern "C-unwind" fn(*mut sqlite3_pcache)>,
+struct FKey {
+    pFrom: *mut Table,
+    pNextFrom: *mut FKey,
+    zTo: *mut i8,
+    pNextTo: *mut FKey,
+    pPrevTo: *mut FKey,
+    nCol: i32,
+    isDeferred: u8,
+    aAction: [u8; 2],
+    apTrigger: [*mut Trigger; 2],
+    aCol: [sColMap; 0],
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct Hash {
-    htsize: u32,
-    count: u32,
-    first: *mut HashElem,
-    ht: *mut _ht,
+struct KeyInfo {
+    nRef: u32,
+    enc: u8,
+    nKeyField: u16,
+    nAllField: u16,
+    db: *mut sqlite3,
+    aSortFlags: *mut u8,
+    aColl: [*mut CollSeq; 0],
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct HashElem {
-    next: *mut HashElem,
-    prev: *mut HashElem,
-    data: *mut (),
-    pKey: *const i8,
-    h: u32,
+struct Index {
+    zName: *mut i8,
+    aiColumn: *mut i16,
+    aiRowLogEst: *mut i16,
+    pTable: *mut Table,
+    zColAff: *mut i8,
+    pNext: *mut Index,
+    pSchema: *mut Schema,
+    aSortOrder: *mut u8,
+    azColl: *mut *const i8,
+    pPartIdxWhere: *mut Expr,
+    aColExpr: *mut ExprList,
+    tnum: u32,
+    szIdxRow: i16,
+    nKeyCol: u16,
+    nColumn: u16,
+    onError: u8,
+    __slate_bits_0: __slate_bits::__SlateBits103U0,
+    colNotIdxed: u64,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct _ht {
-    count: u32,
-    chain: *mut HashElem,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct BusyHandler {
-    xBusyHandler: Option<unsafe extern "C-unwind" fn(*mut (), i32) -> i32>,
-    pBusyArg: *mut (),
-    nBusy: i32,
+struct Token {
+    z: *const i8,
+    n: u32,
 }
 
 #[repr(C)]
@@ -509,94 +788,6 @@ struct AggInfo {
     aFunc: *mut AggInfo_func,
     nFunc: i32,
     selId: u32,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct AutoincInfo {
-    pNext: *mut AutoincInfo,
-    pTab: *mut Table,
-    iDb: i32,
-    regCtr: i32,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct CollSeq {
-    zName: *mut i8,
-    enc: u8,
-    pUser: *mut (),
-    xCmp: Option<unsafe extern "C-unwind" fn(*mut (), i32, *const (), i32, *const ()) -> i32>,
-    xDel: Option<unsafe extern "C-unwind" fn(*mut ())>,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Column {
-    zCnName: *mut i8,
-    __slate_bits_0: __slate_bits::__SlateBits79U0,
-    affinity: i8,
-    szEst: u8,
-    hName: u8,
-    iDflt: u16,
-    colFlags: u16,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Cte {
-    zName: *mut i8,
-    pCols: *mut ExprList,
-    pSelect: *mut Select,
-    zCteErr: *const i8,
-    pUse: *mut CteUse,
-    eM10d: u8,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct CteUse {
-    nUse: i32,
-    addrM9e: i32,
-    regRtn: i32,
-    iCur: i32,
-    nRowEst: i16,
-    eM10d: u8,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Db {
-    zDbSName: *mut i8,
-    pBt: *mut Btree,
-    safety_level: u8,
-    bSyncSet: u8,
-    pSchema: *mut Schema,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct DbClientData {
-    pNext: *mut DbClientData,
-    pData: *mut (),
-    xDestructor: Option<unsafe extern "C-unwind" fn(*mut ())>,
-    zName: [i8; 0],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Schema {
-    schema_cookie: i32,
-    iGeneration: i32,
-    tblHash: Hash,
-    idxHash: Hash,
-    trigHash: Hash,
-    fkeyHash: Hash,
-    pSeqTab: *mut Table,
-    file_format: u8,
-    enc: u8,
-    schemaFlags: u16,
-    cache_size: i32,
 }
 
 #[repr(C)]
@@ -629,45 +820,6 @@ struct ExprList {
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct FKey {
-    pFrom: *mut Table,
-    pNextFrom: *mut FKey,
-    zTo: *mut i8,
-    pNextTo: *mut FKey,
-    pPrevTo: *mut FKey,
-    nCol: i32,
-    isDeferred: u8,
-    aAction: [u8; 2],
-    apTrigger: [*mut Trigger; 2],
-    aCol: [sColMap; 0],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct FuncDestructor {
-    nRef: i32,
-    xDestroy: Option<unsafe extern "C-unwind" fn(*mut ())>,
-    pUserData: *mut (),
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct FuncDef {
-    nArg: i16,
-    funcFlags: u32,
-    pUserData: *mut (),
-    pNext: *mut FuncDef,
-    xSFunc: Option<unsafe extern "C-unwind" fn(*mut sqlite3_context, i32, *mut *mut sqlite3_value)>,
-    xFinalize: Option<unsafe extern "C-unwind" fn(*mut sqlite3_context)>,
-    xValue: Option<unsafe extern "C-unwind" fn(*mut sqlite3_context)>,
-    xInverse:
-        Option<unsafe extern "C-unwind" fn(*mut sqlite3_context, i32, *mut *mut sqlite3_value)>,
-    zName: *const i8,
-    u: __SlateRecord175,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
 struct IdList {
     nId: i32,
     a: [IdList_item; 0],
@@ -675,25 +827,98 @@ struct IdList {
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct Index {
+struct Subquery {
+    pSelect: *mut Select,
+    addrFillSub: i32,
+    regReturn: i32,
+    regResult: i32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct RenameToken {}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct SrcItem {
     zName: *mut i8,
-    aiColumn: *mut i16,
-    aiRowLogEst: *mut i16,
-    pTable: *mut Table,
-    zColAff: *mut i8,
-    pNext: *mut Index,
-    pSchema: *mut Schema,
-    aSortOrder: *mut u8,
-    azColl: *mut *const i8,
-    pPartIdxWhere: *mut Expr,
-    aColExpr: *mut ExprList,
-    tnum: u32,
-    szIdxRow: i16,
-    nKeyCol: u16,
-    nColumn: u16,
-    onError: u8,
-    __slate_bits_0: __slate_bits::__SlateBits103U0,
-    colNotIdxed: u64,
+    zAlias: *mut i8,
+    pSTab: *mut Table,
+    fg: __SlateRecord194,
+    iCursor: i32,
+    colUsed: u64,
+    u1: __SlateRecord195,
+    u2: __SlateRecord196,
+    u3: __SlateRecord197,
+    u4: __SlateRecord198,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct SrcList {
+    nSrc: i32,
+    nAlloc: u32,
+    a: [SrcItem; 0],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Upsert {
+    pUpsertTarget: *mut ExprList,
+    pUpsertTargetWhere: *mut Expr,
+    pUpsertSet: *mut ExprList,
+    pUpsertWhere: *mut Expr,
+    pNextUpsert: *mut Upsert,
+    isDoUpdate: u8,
+    isDup: u8,
+    pToFree: *mut (),
+    pUpsertIdx: *mut Index,
+    pUpsertSrc: *mut SrcList,
+    regData: i32,
+    iDataCur: i32,
+    iIdxCur: i32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Select {
+    op: u8,
+    nSelectRow: i16,
+    selFlags: u32,
+    iLimit: i32,
+    iOffset: i32,
+    selId: u32,
+    pEList: *mut ExprList,
+    pSrc: *mut SrcList,
+    pWhere: *mut Expr,
+    pGroupBy: *mut ExprList,
+    pHaving: *mut Expr,
+    pOrderBy: *mut ExprList,
+    pPrior: *mut Select,
+    pNext: *mut Select,
+    pLimit: *mut Expr,
+    pWith: *mut With,
+    pWin: *mut Window,
+    pWinDefn: *mut Window,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct AutoincInfo {
+    pNext: *mut AutoincInfo,
+    pTab: *mut Table,
+    iDb: i32,
+    regCtr: i32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct TriggerPrg {
+    pTrigger: *mut Trigger,
+    pNext: *mut TriggerPrg,
+    pProgram: *mut SubProgram,
+    orconf: i32,
+    aColmask: [u32; 2],
 }
 
 #[repr(C)]
@@ -706,54 +931,19 @@ struct IndexedExpr {
     bMaybeNullRow: u8,
     aff: u8,
     pIENext: *mut IndexedExpr,
+    zIdxName: *const i8,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct KeyInfo {
-    nRef: u32,
-    enc: u8,
-    nKeyField: u16,
-    nAllField: u16,
-    db: *mut sqlite3,
-    aSortFlags: *mut u8,
-    aColl: [*mut CollSeq; 0],
-}
+struct TableLock {}
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct Lookaside {
-    bDisable: u32,
-    sz: u16,
-    szTrue: u16,
-    bMalloced: u8,
-    nSlot: u32,
-    anStat: [u32; 3],
-    pInit: *mut LookasideSlot,
-    pFree: *mut LookasideSlot,
-    pSmallInit: *mut LookasideSlot,
-    pSmallFree: *mut LookasideSlot,
-    pMiddle: *mut (),
-    pStart: *mut (),
-    pEnd: *mut (),
-    pTrueEnd: *mut (),
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct LookasideSlot {
-    pNext: *mut LookasideSlot,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Module {
-    pModule: *const sqlite3_module,
-    zName: *const i8,
-    nRefModule: i32,
-    pAux: *mut (),
-    xDestroy: Option<unsafe extern "C-unwind" fn(*mut ())>,
-    pEpoTab: *mut Table,
+struct ParseCleanup {
+    pNext: *mut ParseCleanup,
+    pPtr: *mut (),
+    xCleanup: Option<unsafe extern "C-unwind" fn(*mut sqlite3, *mut ())>,
 }
 
 #[repr(C)]
@@ -829,130 +1019,6 @@ struct Parse {
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct ParseCleanup {
-    pNext: *mut ParseCleanup,
-    pPtr: *mut (),
-    xCleanup: Option<unsafe extern "C-unwind" fn(*mut sqlite3, *mut ())>,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct RenameToken {}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Returning {
-    pParse: *mut Parse,
-    pReturnEL: *mut ExprList,
-    retTrig: Trigger,
-    retTStep: TriggerStep,
-    iRetCur: i32,
-    nRetCol: i32,
-    iRetReg: i32,
-    zName: [i8; 40],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Savepoint {
-    zName: *mut i8,
-    nDeferredCons: i64,
-    nDeferredImmCons: i64,
-    pNext: *mut Savepoint,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Select {
-    op: u8,
-    nSelectRow: i16,
-    selFlags: u32,
-    iLimit: i32,
-    iOffset: i32,
-    selId: u32,
-    pEList: *mut ExprList,
-    pSrc: *mut SrcList,
-    pWhere: *mut Expr,
-    pGroupBy: *mut ExprList,
-    pHaving: *mut Expr,
-    pOrderBy: *mut ExprList,
-    pPrior: *mut Select,
-    pNext: *mut Select,
-    pLimit: *mut Expr,
-    pWith: *mut With,
-    pWin: *mut Window,
-    pWinDefn: *mut Window,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Subquery {
-    pSelect: *mut Select,
-    addrFillSub: i32,
-    regReturn: i32,
-    regResult: i32,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct SrcItem {
-    zName: *mut i8,
-    zAlias: *mut i8,
-    pSTab: *mut Table,
-    fg: __SlateRecord194,
-    iCursor: i32,
-    colUsed: u64,
-    u1: __SlateRecord195,
-    u2: __SlateRecord196,
-    u3: __SlateRecord197,
-    u4: __SlateRecord198,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct SrcList {
-    nSrc: i32,
-    nAlloc: u32,
-    a: [SrcItem; 0],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Table {
-    zName: *mut i8,
-    aCol: *mut Column,
-    pIndex: *mut Index,
-    zColAff: *mut i8,
-    pCheck: *mut ExprList,
-    tnum: u32,
-    nTabRef: u32,
-    tabFlags: u32,
-    iPKey: i16,
-    nCol: i16,
-    nNVCol: i16,
-    nRowLogEst: i16,
-    szTabRow: i16,
-    keyConf: u8,
-    eTabType: u8,
-    u: __SlateRecord176,
-    pTrigger: *mut Trigger,
-    pSchema: *mut Schema,
-    aHx: [u8; 16],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct TableLock {}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Token {
-    z: *const i8,
-    n: u32,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
 struct Trigger {
     zName: *mut i8,
     table: *mut i8,
@@ -965,16 +1031,6 @@ struct Trigger {
     pTabSchema: *mut Schema,
     step_list: *mut TriggerStep,
     pNext: *mut Trigger,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct TriggerPrg {
-    pTrigger: *mut Trigger,
-    pNext: *mut TriggerPrg,
-    pProgram: *mut SubProgram,
-    orconf: i32,
-    aColmask: [u32; 2],
 }
 
 #[repr(C)]
@@ -996,34 +1052,27 @@ struct TriggerStep {
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct Upsert {
-    pUpsertTarget: *mut ExprList,
-    pUpsertTargetWhere: *mut Expr,
-    pUpsertSet: *mut ExprList,
-    pUpsertWhere: *mut Expr,
-    pNextUpsert: *mut Upsert,
-    isDoUpdate: u8,
-    isDup: u8,
-    pToFree: *mut (),
-    pUpsertIdx: *mut Index,
-    pUpsertSrc: *mut SrcList,
-    regData: i32,
-    iDataCur: i32,
-    iIdxCur: i32,
+struct Returning {
+    pParse: *mut Parse,
+    pReturnEL: *mut ExprList,
+    retTrig: Trigger,
+    retTStep: TriggerStep,
+    iRetCur: i32,
+    nRetCol: i32,
+    iRetReg: i32,
+    zName: [i8; 40],
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct VTable {
+struct sqlite3_str {
     db: *mut sqlite3,
-    pMod: *mut Module,
-    pVtab: *mut sqlite3_vtab,
-    nRef: i32,
-    bConstraint: u8,
-    bAllSchemas: u8,
-    eVtabRisk: u8,
-    iSavepoint: i32,
-    pNext: *mut VTable,
+    zText: *mut i8,
+    nAlloc: u32,
+    mxAlloc: u32,
+    nChar: u32,
+    accError: u8,
+    printfFlags: u8,
 }
 
 #[repr(C)]
@@ -1032,44 +1081,61 @@ struct VtabCtx {}
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct Window {
-    zName: *mut i8,
-    zBase: *mut i8,
-    pPartition: *mut ExprList,
-    pOrderBy: *mut ExprList,
-    eFrmType: u8,
-    eStart: u8,
-    eEnd: u8,
-    bImplicitFrame: u8,
-    eExclude: u8,
-    pStart: *mut Expr,
-    pEnd: *mut Expr,
-    ppThis: *mut *mut Window,
-    pNextWin: *mut Window,
-    pFilter: *mut Expr,
-    pWFunc: *mut FuncDef,
-    iEphCsr: i32,
-    regAccum: i32,
-    regResult: i32,
-    csrApp: i32,
-    regApp: i32,
-    regPart: i32,
-    pOwner: *mut Expr,
-    nBufferCol: i32,
-    iArgCol: i32,
-    regOne: i32,
-    regStartRowid: i32,
-    regEndRowid: i32,
-    bExprArgs: u8,
+struct Sqlite3Config {
+    bMemstat: i32,
+    bCoreMutex: u8,
+    bFullMutex: u8,
+    bOpenUri: u8,
+    bUseCis: u8,
+    bSmallMalloc: u8,
+    bExtraSchemaChecks: u8,
+    mxStrlen: i32,
+    neverCorrupt: i32,
+    szLookaside: i32,
+    nLookaside: i32,
+    nStmtSpill: i32,
+    m: sqlite3_mem_methods,
+    mutex: sqlite3_mutex_methods,
+    pcache2: sqlite3_pcache_methods2,
+    pHeap: *mut (),
+    nHeap: i32,
+    mnReq: i32,
+    mxReq: i32,
+    szMmap: i64,
+    mxMmap: i64,
+    pPage: *mut (),
+    szPage: i32,
+    nPage: i32,
+    mxParserStack: i32,
+    sharedCacheEnabled: i32,
+    szPma: u32,
+    isInit: i32,
+    inProgress: i32,
+    isMutexInit: i32,
+    isMallocInit: i32,
+    isPCacheInit: i32,
+    nRefInitMutex: i32,
+    pInitMutex: *mut sqlite3_mutex,
+    xLog: Option<unsafe extern "C-unwind" fn(*mut (), i32, *const i8)>,
+    pLogArg: *mut (),
+    mxMemdbSize: i64,
+    xTestCallback: Option<unsafe extern "C-unwind" fn(i32) -> i32>,
+    bLocaltimeFault: i32,
+    xAltLocaltime: Option<unsafe extern "C-unwind" fn(*const (), *mut ()) -> i32>,
+    iOnceResetThreshold: i32,
+    szSorterRef: u32,
+    iPrngSeed: u32,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct With {
-    nCte: i32,
-    bView: i32,
-    pOuter: *mut With,
-    a: [Cte; 0],
+struct Cte {
+    zName: *mut i8,
+    pCols: *mut ExprList,
+    pSelect: *mut Select,
+    zCteErr: *const i8,
+    pUse: *mut CteUse,
+    eM10d: u8,
 }
 
 #[repr(C)]
@@ -1082,37 +1148,31 @@ struct Vdbe {}
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct SubProgram {
-    aOp: *mut VdbeOp,
-    nOp: i32,
-    nMem: i32,
-    nCsr: i32,
-    aOnce: *mut u8,
-    token: *mut (),
-    pNext: *mut SubProgram,
+struct With {
+    nCte: i32,
+    bView: i32,
+    pOuter: *mut With,
+    a: [Cte; 0],
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct SubrtnSig {
-    selId: i32,
-    bComplete: u8,
-    zAff: *mut i8,
-    iTable: i32,
-    iAddr: i32,
-    regReturn: i32,
+struct CteUse {
+    nUse: i32,
+    addrM9e: i32,
+    regRtn: i32,
+    iCur: i32,
+    nRowEst: i16,
+    eM10d: u8,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct VdbeOp {
-    opcode: u8,
-    p4type: i8,
-    p5: u16,
-    p1: i32,
-    p2: i32,
-    p3: i32,
-    p4: p4union,
+struct DbClientData {
+    pNext: *mut DbClientData,
+    pData: *mut (),
+    xDestructor: Option<unsafe extern "C-unwind" fn(*mut ())>,
+    zName: [i8; 0],
 }
 
 #[repr(C)]
@@ -1359,50 +1419,35 @@ struct __SlateRecord202 {
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct Sqlite3Config {
-    bMemstat: i32,
-    bCoreMutex: u8,
-    bFullMutex: u8,
-    bOpenUri: u8,
-    bUseCis: u8,
-    bSmallMalloc: u8,
-    bExtraSchemaChecks: u8,
-    mxStrlen: i32,
-    neverCorrupt: i32,
-    szLookaside: i32,
-    nLookaside: i32,
-    nStmtSpill: i32,
-    m: sqlite3_mem_methods,
-    mutex: sqlite3_mutex_methods,
-    pcache2: sqlite3_pcache_methods2,
-    pHeap: *mut (),
-    nHeap: i32,
-    mnReq: i32,
-    mxReq: i32,
-    szMmap: i64,
-    mxMmap: i64,
-    pPage: *mut (),
-    szPage: i32,
-    nPage: i32,
-    mxParserStack: i32,
-    sharedCacheEnabled: i32,
-    szPma: u32,
-    isInit: i32,
-    inProgress: i32,
-    isMutexInit: i32,
-    isMallocInit: i32,
-    isPCacheInit: i32,
-    nRefInitMutex: i32,
-    pInitMutex: *mut sqlite3_mutex,
-    xLog: Option<unsafe extern "C-unwind" fn(*mut (), i32, *const i8)>,
-    pLogArg: *mut (),
-    mxMemdbSize: i64,
-    xTestCallback: Option<unsafe extern "C-unwind" fn(i32) -> i32>,
-    bLocaltimeFault: i32,
-    xAltLocaltime: Option<unsafe extern "C-unwind" fn(*const (), *mut ()) -> i32>,
-    iOnceResetThreshold: i32,
-    szSorterRef: u32,
-    iPrngSeed: u32,
+struct Window {
+    zName: *mut i8,
+    zBase: *mut i8,
+    pPartition: *mut ExprList,
+    pOrderBy: *mut ExprList,
+    eFrmType: u8,
+    eStart: u8,
+    eEnd: u8,
+    bImplicitFrame: u8,
+    eExclude: u8,
+    pStart: *mut Expr,
+    pEnd: *mut Expr,
+    ppThis: *mut *mut Window,
+    pNextWin: *mut Window,
+    pFilter: *mut Expr,
+    pWFunc: *mut FuncDef,
+    iEphCsr: i32,
+    regAccum: i32,
+    regResult: i32,
+    csrApp: i32,
+    regApp: i32,
+    regPart: i32,
+    pOwner: *mut Expr,
+    nBufferCol: i32,
+    iArgCol: i32,
+    regOne: i32,
+    regStartRowid: i32,
+    regEndRowid: i32,
+    bExprArgs: u8,
 }
 
 #[repr(C)]
@@ -1421,114 +1466,206 @@ struct tm {
     tm_zone: *const i8,
 }
 
-// /*
-// ** 2003 October 31
-// **
-// ** The author disclaims copyright to this source code.  In place of
-// ** a legal notice, here is a blessing:
-// **
-// **    May you do good and not evil.
-// **    May you find forgiveness for yourself and forgive others.
-// **    May you share freely, never taking more than you give.
-// **
-// *************************************************************************
-// ** This file contains the C functions that implement date and time
-// ** functions for SQLite.
-// **
-// ** There is only one exported symbol in this file - the function
-// ** sqlite3RegisterDateTimeFunctions() found at the bottom of the file.
-// ** All other code has file scope.
-// **
-// ** SQLite processes all times and dates as julian day numbers.  The
-// ** dates and times are stored as the number of days since noon
-// ** in Greenwich on November 24, 4714 B.C. according to the Gregorian
-// ** calendar system.
-// **
-// ** 1970-01-01 00:00:00 is JD 2440587.5
-// ** 2000-01-01 00:00:00 is JD 2451544.5
-// **
-// ** This implementation requires years to be expressed as a 4-digit number
-// ** which means that only dates between 0000-01-01 and 9999-12-31 can
-// ** be represented, even though julian day numbers allow a much wider
-// ** range of dates.
-// **
-// ** The Gregorian calendar system is used for all dates and times,
-// ** even those that predate the Gregorian calendar.  Historians usually
-// ** use the julian calendar for dates prior to 1582-10-15 and for some
-// ** dates afterwards, depending on locale.  Beware of this difference.
-// **
-// ** The conversion algorithms are implemented based on descriptions
-// ** in the following text:
-// **
-// **      Jean Meeus
-// **      Astronomical Algorithms, 2nd Edition, 1998
-// **      ISBN 0-943396-61-1
-// **      Willmann-Bell, Inc
-// **      Richmond, Virginia (USA)
-// */
-// /*
-// ** The MSVC CRT on Windows CE may not have a localtime() function.
-// ** So declare a substitute.  The substitute function itself is
-// ** defined in "os_win.c".
-// */
-// /*
-// ** A structure for holding a single date and time.
-// */
+/// The MSVC CRT on Windows CE may not have a localtime() function.
+/// So declare a substitute.  The substitute function itself is
+/// defined in "os_win.c".
+/// A structure for holding a single date and time.
 #[repr(C)]
 #[derive(Clone, Copy)]
 struct DateTime {
+    /// The julian day number times 86400000
     iJD: i64,
-    // /* The julian day number times 86400000 */
     Y: i32,
     M: i32,
+    /// Year, month, and day
     D: i32,
-    // /* Year, month, and day */
     h: i32,
+    /// Hour and minutes
     m: i32,
-    // /* Hour and minutes */
+    /// Timezone offset in minutes
     tz: i32,
-    // /* Timezone offset in minutes */
+    /// Seconds
     s: f64,
-    // /* Seconds */
+    /// True (1) if iJD is valid
     validJD: i8,
-    // /* True (1) if iJD is valid */
+    /// True (1) if Y,M,D are valid
     validYMD: i8,
-    // /* True (1) if Y,M,D are valid */
+    /// True (1) if h,m,s are valid
     validHMS: i8,
-    // /* True (1) if h,m,s are valid */
+    /// Days to implement "floor"
     nFloor: i8,
-    // /* Days to implement "floor" */
+    /// Raw numeric value stored in s
     __slate_bits_0: __slate_bits::__SlateBits205U0,
+    // An overflow has occurred
+    // Display subsecond precision
+    // Time is known to be UTC
+    // Time is known to be localtime
 }
 
-// /* Date at which to calculate offset */
-// /* Write error here if one occurs */
-// /* SQLITE_OMIT_LOCALTIME */
-// /*
-// ** The following table defines various date transformations of the form
-// **
-// **            'NNN days'
-// **
-// ** Where NNN is an arbitrary floating-point number and "days" can be one
-// ** of several units of time.
-// */
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct __SlateRecord207 {
-    nName: u8,
-    // /* Length of the name */
-    zName: [i8; 7],
-    // /* Name of the transformation */
-    rLimit: f32,
-    // /* Maximum NNN value for this transform */
-    rXform: f32,
-    // /* 0 */
-    // /* 1 */
-    // /* 2 */
-    // /* 3 */
-    // /* 4 */
-    // /* 5 */
-    // /* Constant used for this transform */
+/// Convert zDate into one or more integers according to the conversion
+/// specifier zFormat.
+///
+/// zFormat[] contains 4 characters for each integer converted, except for
+/// the last integer which is specified by three characters.  The meaning
+/// of a four-character format specifiers ABCD is:
+///
+///    A:   number of digits to convert.  Always "2" or "4".
+///    B:   minimum value.  Always "0" or "1".
+///    C:   maximum value, decoded as:
+///           a:  12
+///           b:  14
+///           c:  24
+///           d:  31
+///           e:  59
+///           f:  9999
+///    D:   the separator character, or \000 to indicate this is the
+///         last number to convert.
+///
+/// Example:  To translate an ISO-8601 date YYYY-MM-DD, the format would
+/// be "40f-21a-20c".  The "40f-" indicates the 4-digit year followed by "-".
+/// The "21a-" indicates the 2-digit month followed by "-".  The "20c" indicates
+/// the 2-digit day which is the last integer in the set.
+///
+/// The function returns the number of successful conversions.
+unsafe extern "C-unwind" fn getDigits(
+    mut zDate: *const i8,
+    mut zFormat: *const i8,
+    mut __va_args: ...
+) -> i32 {
+    let mut __slate_storage_718: std::mem::MaybeUninit<*const i8> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_718: *mut *const i8 =
+        std::ptr::addr_of_mut!(__slate_storage_718) as *mut *const i8;
+    let mut __slate_storage_717: std::mem::MaybeUninit<*const i8> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_717: *mut *const i8 =
+        std::ptr::addr_of_mut!(__slate_storage_717) as *mut *const i8;
+    let mut __slate_storage_716: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_716: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_716) as *mut i32;
+    let mut __slate_storage_715: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_715: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_715) as *mut i32;
+    let mut __slate_storage_714: std::mem::MaybeUninit<*const i8> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_714: *mut *const i8 =
+        std::ptr::addr_of_mut!(__slate_storage_714) as *mut *const i8;
+    let mut __slate_storage_713: std::mem::MaybeUninit<*const i8> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_713: *mut *const i8 =
+        std::ptr::addr_of_mut!(__slate_storage_713) as *mut *const i8;
+    let mut __slate_storage_710: std::mem::MaybeUninit<i8> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_710: *mut i8 = std::ptr::addr_of_mut!(__slate_storage_710) as *mut i8;
+    let mut __slate_storage_709: std::mem::MaybeUninit<i8> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_709: *mut i8 = std::ptr::addr_of_mut!(__slate_storage_709) as *mut i8;
+    let mut __slate_storage_712: std::mem::MaybeUninit<*const i8> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_712: *mut *const i8 =
+        std::ptr::addr_of_mut!(__slate_storage_712) as *mut *const i8;
+    let mut __slate_storage_711: std::mem::MaybeUninit<*const i8> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_711: *mut *const i8 =
+        std::ptr::addr_of_mut!(__slate_storage_711) as *mut *const i8;
+    let mut __slate_storage_355: std::mem::MaybeUninit<u16> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_355: *mut u16 = std::ptr::addr_of_mut!(__slate_storage_355) as *mut u16;
+    let mut __slate_storage_354: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_354: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_354) as *mut i32;
+    let mut __slate_storage_353: std::mem::MaybeUninit<i8> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_353: *mut i8 = std::ptr::addr_of_mut!(__slate_storage_353) as *mut i8;
+    let mut __slate_storage_352: std::mem::MaybeUninit<i8> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_352: *mut i8 = std::ptr::addr_of_mut!(__slate_storage_352) as *mut i8;
+    let mut __slate_storage_351: std::mem::MaybeUninit<i8> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_351: *mut i8 = std::ptr::addr_of_mut!(__slate_storage_351) as *mut i8;
+    let mut __slate_storage_350: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_350: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_350) as *mut i32;
+    // The aMx[] array translates the 3rd character of each format
+    // spec into a max size:    a   b   c   d   e      f
+    let mut __slate_storage_349: std::mem::MaybeUninit<core::ffi::VaList<'_>> =
+        std::mem::MaybeUninit::uninit();
+    let __slate_slot_349: *mut core::ffi::VaList<'_> =
+        std::ptr::addr_of_mut!(__slate_storage_349) as *mut core::ffi::VaList<'_>;
+    unsafe {
+        std::ptr::write(__slate_slot_350, 0 as i32);
+        *__slate_slot_349 = __va_args.clone();
+        '__loop_6: loop {
+            std::ptr::write(
+                __slate_slot_352,
+                (((unsafe { *unsafe { zFormat.offset((0 as i32) as isize) } }) as i32)
+                    - (48 as i32)) as i8,
+            );
+            std::ptr::write(
+                __slate_slot_353,
+                (((unsafe { *unsafe { zFormat.offset((1 as i32) as isize) } }) as i32)
+                    - (48 as i32)) as i8,
+            );
+            std::ptr::write(__slate_slot_354, 0 as i32);
+            0 as i32;
+            *__slate_slot_355 = unsafe {
+                *unsafe {
+                    unsafe { std::ptr::addr_of!(aMx) as *const u16 }.offset(
+                        (((unsafe { *unsafe { zFormat.offset((2 as i32) as isize) } }) as i32)
+                            - (97 as i32)) as isize,
+                    )
+                }
+            };
+            *__slate_slot_351 = unsafe { *unsafe { zFormat.offset((3 as i32) as isize) } };
+            *__slate_slot_354 = 0 as i32;
+            loop {
+                std::ptr::write(__slate_slot_709, *__slate_slot_352);
+                std::ptr::write(
+                    __slate_slot_710,
+                    ((*__slate_slot_709 as i32) - (1 as i32)) as i8,
+                );
+                *__slate_slot_352 = *__slate_slot_710;
+                if *__slate_slot_709 != (0 as i8) {
+                    if !((((unsafe {
+                        *unsafe {
+                            unsafe { std::ptr::addr_of!(sqlite3CtypeMap) as *const u8 }
+                                .offset(((((unsafe { *zDate }) as u8) as u32) as i32) as isize)
+                        }
+                    }) as u32) as i32)
+                        & (4 as i32)
+                        != (0 as i32))
+                    {
+                        break '__loop_6;
+                    } else {
+                        *__slate_slot_354 = *__slate_slot_354 * (10 as i32)
+                            + ((unsafe { *zDate }) as i32)
+                            - (48 as i32);
+                        std::ptr::write(__slate_slot_711, zDate);
+                        std::ptr::write(__slate_slot_712, unsafe {
+                            (*__slate_slot_711).offset((1 as i32) as isize)
+                        });
+                        zDate = *__slate_slot_712;
+                    }
+                } else {
+                    break;
+                }
+            }
+            if *__slate_slot_354 < (*__slate_slot_353 as i32)
+                || *__slate_slot_354 > ((*__slate_slot_355 as u32) as i32)
+                || (*__slate_slot_351 as i32) != (0 as i32)
+                    && (*__slate_slot_351 as i32) != ((unsafe { *zDate }) as i32)
+            {
+                break;
+            } else {
+                unsafe {
+                    *unsafe { (*__slate_slot_349).next_arg::<*mut i32>() } = *__slate_slot_354;
+                }
+                std::ptr::write(__slate_slot_713, zDate);
+                std::ptr::write(__slate_slot_714, unsafe {
+                    (*__slate_slot_713).offset((1 as i32) as isize)
+                });
+                zDate = *__slate_slot_714;
+                std::ptr::write(__slate_slot_715, *__slate_slot_350);
+                std::ptr::write(__slate_slot_716, *__slate_slot_715 + (1 as i32));
+                *__slate_slot_350 = *__slate_slot_716;
+                std::ptr::write(__slate_slot_717, zFormat);
+                std::ptr::write(__slate_slot_718, unsafe {
+                    (*__slate_slot_717).offset((4 as i32) as isize)
+                });
+                zFormat = *__slate_slot_718;
+                if !(*__slate_slot_351 != (0 as i8)) {
+                    break;
+                }
+            }
+        }
+        {}
+        return *__slate_slot_350;
+    }
+    return unsafe { std::mem::zeroed() };
 }
 
 #[repr(C, align(16))]
@@ -1725,425 +1862,20 @@ static mut aMx: [u16; 6] = [
     ((14712 as i32) as i16) as u16,
 ];
 
-static mut aXformType: __SlateAlign16<[__SlateRecord207; 6]> = __SlateAlign16([
-    __SlateRecord207 {
-        nName: ((6 as i32) as i8) as u8,
-        zName: [
-            115 as i8, 101 as i8, 99 as i8, 111 as i8, 110 as i8, 100 as i8, 0 as i8,
-        ],
-        rLimit: 464270000000000.0f64 as f32,
-        rXform: 1.0f64 as f32,
-    },
-    __SlateRecord207 {
-        nName: ((6 as i32) as i8) as u8,
-        zName: [
-            109 as i8, 105 as i8, 110 as i8, 117 as i8, 116 as i8, 101 as i8, 0 as i8,
-        ],
-        rLimit: 7737900000000.0f64 as f32,
-        rXform: 60.0f64 as f32,
-    },
-    __SlateRecord207 {
-        nName: ((4 as i32) as i8) as u8,
-        zName: [
-            104 as i8, 111 as i8, 117 as i8, 114 as i8, 0 as i8, 0 as i8, 0 as i8,
-        ],
-        rLimit: 128970000000.0f64 as f32,
-        rXform: 3600.0f64 as f32,
-    },
-    __SlateRecord207 {
-        nName: ((3 as i32) as i8) as u8,
-        zName: [
-            100 as i8, 97 as i8, 121 as i8, 0 as i8, 0 as i8, 0 as i8, 0 as i8,
-        ],
-        rLimit: 5373485.0f64 as f32,
-        rXform: 86400.0f64 as f32,
-    },
-    __SlateRecord207 {
-        nName: ((5 as i32) as i8) as u8,
-        zName: [
-            109 as i8, 111 as i8, 110 as i8, 116 as i8, 104 as i8, 0 as i8, 0 as i8,
-        ],
-        rLimit: 176546.0f64 as f32,
-        rXform: 2592000.0f64 as f32,
-    },
-    __SlateRecord207 {
-        nName: ((4 as i32) as i8) as u8,
-        zName: [
-            121 as i8, 101 as i8, 97 as i8, 114 as i8, 0 as i8, 0 as i8, 0 as i8,
-        ],
-        rLimit: 14713.0f64 as f32,
-        rXform: 31536000.0f64 as f32,
-    },
-]);
-
-static mut aDateTimeFuncs: __SlateAlign16<[FuncDef; 10]> = __SlateAlign16([
-    FuncDef {
-        nArg: -(1 as i32) as i16,
-        funcFlags: ((8388608 as i32) | (8192 as i32) | (1 as i32) | (2048 as i32)) as u32,
-        pUserData: (unsafe { std::ptr::addr_of_mut!(sqlite3Config) }) as *mut (),
-        pNext: std::ptr::null_mut::<FuncDef>(),
-        xSFunc: Some(juliandayFunc),
-        xFinalize: None,
-        xValue: None,
-        xInverse: None,
-        zName: (b"julianday\0".as_ptr() as *mut i8) as *const i8,
-        u: {
-            let mut __t0: __SlateRecord175 = unsafe { std::mem::zeroed() };
-            __t0.pHash = std::ptr::null_mut::<FuncDef>();
-            __t0
-        },
-    },
-    FuncDef {
-        nArg: -(1 as i32) as i16,
-        funcFlags: ((8388608 as i32) | (8192 as i32) | (1 as i32) | (2048 as i32)) as u32,
-        pUserData: (unsafe { std::ptr::addr_of_mut!(sqlite3Config) }) as *mut (),
-        pNext: std::ptr::null_mut::<FuncDef>(),
-        xSFunc: Some(unixepochFunc),
-        xFinalize: None,
-        xValue: None,
-        xInverse: None,
-        zName: (b"unixepoch\0".as_ptr() as *mut i8) as *const i8,
-        u: {
-            let mut __t1: __SlateRecord175 = unsafe { std::mem::zeroed() };
-            __t1.pHash = std::ptr::null_mut::<FuncDef>();
-            __t1
-        },
-    },
-    FuncDef {
-        nArg: -(1 as i32) as i16,
-        funcFlags: ((8388608 as i32) | (8192 as i32) | (1 as i32) | (2048 as i32)) as u32,
-        pUserData: (unsafe { std::ptr::addr_of_mut!(sqlite3Config) }) as *mut (),
-        pNext: std::ptr::null_mut::<FuncDef>(),
-        xSFunc: Some(dateFunc),
-        xFinalize: None,
-        xValue: None,
-        xInverse: None,
-        zName: (b"date\0".as_ptr() as *mut i8) as *const i8,
-        u: {
-            let mut __t2: __SlateRecord175 = unsafe { std::mem::zeroed() };
-            __t2.pHash = std::ptr::null_mut::<FuncDef>();
-            __t2
-        },
-    },
-    FuncDef {
-        nArg: -(1 as i32) as i16,
-        funcFlags: ((8388608 as i32) | (8192 as i32) | (1 as i32) | (2048 as i32)) as u32,
-        pUserData: (unsafe { std::ptr::addr_of_mut!(sqlite3Config) }) as *mut (),
-        pNext: std::ptr::null_mut::<FuncDef>(),
-        xSFunc: Some(timeFunc),
-        xFinalize: None,
-        xValue: None,
-        xInverse: None,
-        zName: (b"time\0".as_ptr() as *mut i8) as *const i8,
-        u: {
-            let mut __t3: __SlateRecord175 = unsafe { std::mem::zeroed() };
-            __t3.pHash = std::ptr::null_mut::<FuncDef>();
-            __t3
-        },
-    },
-    FuncDef {
-        nArg: -(1 as i32) as i16,
-        funcFlags: ((8388608 as i32) | (8192 as i32) | (1 as i32) | (2048 as i32)) as u32,
-        pUserData: (unsafe { std::ptr::addr_of_mut!(sqlite3Config) }) as *mut (),
-        pNext: std::ptr::null_mut::<FuncDef>(),
-        xSFunc: Some(datetimeFunc),
-        xFinalize: None,
-        xValue: None,
-        xInverse: None,
-        zName: (b"datetime\0".as_ptr() as *mut i8) as *const i8,
-        u: {
-            let mut __t4: __SlateRecord175 = unsafe { std::mem::zeroed() };
-            __t4.pHash = std::ptr::null_mut::<FuncDef>();
-            __t4
-        },
-    },
-    FuncDef {
-        nArg: -(1 as i32) as i16,
-        funcFlags: ((8388608 as i32) | (8192 as i32) | (1 as i32) | (2048 as i32)) as u32,
-        pUserData: (unsafe { std::ptr::addr_of_mut!(sqlite3Config) }) as *mut (),
-        pNext: std::ptr::null_mut::<FuncDef>(),
-        xSFunc: Some(strftimeFunc),
-        xFinalize: None,
-        xValue: None,
-        xInverse: None,
-        zName: (b"strftime\0".as_ptr() as *mut i8) as *const i8,
-        u: {
-            let mut __t5: __SlateRecord175 = unsafe { std::mem::zeroed() };
-            __t5.pHash = std::ptr::null_mut::<FuncDef>();
-            __t5
-        },
-    },
-    FuncDef {
-        nArg: (2 as i32) as i16,
-        funcFlags: ((8388608 as i32) | (8192 as i32) | (1 as i32) | (2048 as i32)) as u32,
-        pUserData: (unsafe { std::ptr::addr_of_mut!(sqlite3Config) }) as *mut (),
-        pNext: std::ptr::null_mut::<FuncDef>(),
-        xSFunc: Some(timediffFunc),
-        xFinalize: None,
-        xValue: None,
-        xInverse: None,
-        zName: (b"timediff\0".as_ptr() as *mut i8) as *const i8,
-        u: {
-            let mut __t6: __SlateRecord175 = unsafe { std::mem::zeroed() };
-            __t6.pHash = std::ptr::null_mut::<FuncDef>();
-            __t6
-        },
-    },
-    FuncDef {
-        nArg: (0 as i32) as i16,
-        funcFlags: ((8388608 as i32) | (8192 as i32) | (1 as i32)) as u32,
-        pUserData: std::ptr::null_mut::<()>(),
-        pNext: std::ptr::null_mut::<FuncDef>(),
-        xSFunc: Some(ctimeFunc),
-        xFinalize: None,
-        xValue: None,
-        xInverse: None,
-        zName: (b"current_time\0".as_ptr() as *mut i8) as *const i8,
-        u: {
-            let mut __t7: __SlateRecord175 = unsafe { std::mem::zeroed() };
-            __t7.pHash = std::ptr::null_mut::<FuncDef>();
-            __t7
-        },
-    },
-    FuncDef {
-        nArg: (0 as i32) as i16,
-        funcFlags: ((8388608 as i32) | (8192 as i32) | (1 as i32)) as u32,
-        pUserData: std::ptr::null_mut::<()>(),
-        pNext: std::ptr::null_mut::<FuncDef>(),
-        xSFunc: Some(ctimestampFunc),
-        xFinalize: None,
-        xValue: None,
-        xInverse: None,
-        zName: (b"current_timestamp\0".as_ptr() as *mut i8) as *const i8,
-        u: {
-            let mut __t8: __SlateRecord175 = unsafe { std::mem::zeroed() };
-            __t8.pHash = std::ptr::null_mut::<FuncDef>();
-            __t8
-        },
-    },
-    FuncDef {
-        nArg: (0 as i32) as i16,
-        funcFlags: ((8388608 as i32) | (8192 as i32) | (1 as i32)) as u32,
-        pUserData: std::ptr::null_mut::<()>(),
-        pNext: std::ptr::null_mut::<FuncDef>(),
-        xSFunc: Some(cdateFunc),
-        xFinalize: None,
-        xValue: None,
-        xInverse: None,
-        zName: (b"current_date\0".as_ptr() as *mut i8) as *const i8,
-        u: {
-            let mut __t9: __SlateRecord175 = unsafe { std::mem::zeroed() };
-            __t9.pHash = std::ptr::null_mut::<FuncDef>();
-            __t9
-        },
-    },
-]);
-
-// /* !defined(SQLITE_OMIT_DATETIME_FUNCS) */
-// /*
-// ** This function registered all of the above C functions as SQL
-// ** functions.  This should be the only routine in this file with
-// ** external linkage.
-// */
-#[unsafe(no_mangle)]
-extern "C-unwind" fn sqlite3RegisterDateTimeFunctions() {
-    unsafe {
-        sqlite3InsertBuiltinFuncs(
-            unsafe { std::ptr::addr_of_mut!(aDateTimeFuncs.0) as *mut FuncDef },
-            (((720 as u64) / (72 as u64)) as u32) as i32,
-        )
-    };
-}
-
-// /* Raw numeric value stored in s */
-// /* An overflow has occurred */
-// /* Display subsecond precision */
-// /* Time is known to be UTC */
-// /* Time is known to be localtime */
-// /*
-// ** Convert zDate into one or more integers according to the conversion
-// ** specifier zFormat.
-// **
-// ** zFormat[] contains 4 characters for each integer converted, except for
-// ** the last integer which is specified by three characters.  The meaning
-// ** of a four-character format specifiers ABCD is:
-// **
-// **    A:   number of digits to convert.  Always "2" or "4".
-// **    B:   minimum value.  Always "0" or "1".
-// **    C:   maximum value, decoded as:
-// **           a:  12
-// **           b:  14
-// **           c:  24
-// **           d:  31
-// **           e:  59
-// **           f:  9999
-// **    D:   the separator character, or \000 to indicate this is the
-// **         last number to convert.
-// **
-// ** Example:  To translate an ISO-8601 date YYYY-MM-DD, the format would
-// ** be "40f-21a-20c".  The "40f-" indicates the 4-digit year followed by "-".
-// ** The "21a-" indicates the 2-digit month followed by "-".  The "20c" indicates
-// ** the 2-digit day which is the last integer in the set.
-// **
-// ** The function returns the number of successful conversions.
-// */
-unsafe extern "C-unwind" fn getDigits(
-    mut zDate: *const i8,
-    mut zFormat: *const i8,
-    mut __va_args: ...
-) -> i32 {
-    let mut __slate_storage_718: std::mem::MaybeUninit<*const i8> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_718: *mut *const i8 =
-        std::ptr::addr_of_mut!(__slate_storage_718) as *mut *const i8;
-    let mut __slate_storage_717: std::mem::MaybeUninit<*const i8> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_717: *mut *const i8 =
-        std::ptr::addr_of_mut!(__slate_storage_717) as *mut *const i8;
-    let mut __slate_storage_716: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_716: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_716) as *mut i32;
-    let mut __slate_storage_715: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_715: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_715) as *mut i32;
-    let mut __slate_storage_714: std::mem::MaybeUninit<*const i8> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_714: *mut *const i8 =
-        std::ptr::addr_of_mut!(__slate_storage_714) as *mut *const i8;
-    let mut __slate_storage_713: std::mem::MaybeUninit<*const i8> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_713: *mut *const i8 =
-        std::ptr::addr_of_mut!(__slate_storage_713) as *mut *const i8;
-    let mut __slate_storage_710: std::mem::MaybeUninit<i8> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_710: *mut i8 = std::ptr::addr_of_mut!(__slate_storage_710) as *mut i8;
-    let mut __slate_storage_709: std::mem::MaybeUninit<i8> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_709: *mut i8 = std::ptr::addr_of_mut!(__slate_storage_709) as *mut i8;
-    let mut __slate_storage_712: std::mem::MaybeUninit<*const i8> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_712: *mut *const i8 =
-        std::ptr::addr_of_mut!(__slate_storage_712) as *mut *const i8;
-    let mut __slate_storage_711: std::mem::MaybeUninit<*const i8> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_711: *mut *const i8 =
-        std::ptr::addr_of_mut!(__slate_storage_711) as *mut *const i8;
-    let mut __slate_storage_355: std::mem::MaybeUninit<u16> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_355: *mut u16 = std::ptr::addr_of_mut!(__slate_storage_355) as *mut u16;
-    let mut __slate_storage_354: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_354: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_354) as *mut i32;
-    let mut __slate_storage_353: std::mem::MaybeUninit<i8> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_353: *mut i8 = std::ptr::addr_of_mut!(__slate_storage_353) as *mut i8;
-    let mut __slate_storage_352: std::mem::MaybeUninit<i8> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_352: *mut i8 = std::ptr::addr_of_mut!(__slate_storage_352) as *mut i8;
-    let mut __slate_storage_351: std::mem::MaybeUninit<i8> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_351: *mut i8 = std::ptr::addr_of_mut!(__slate_storage_351) as *mut i8;
-    let mut __slate_storage_350: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_350: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_350) as *mut i32;
-    let mut __slate_storage_349: std::mem::MaybeUninit<core::ffi::VaList<'_>> =
-        std::mem::MaybeUninit::uninit();
-    let __slate_slot_349: *mut core::ffi::VaList<'_> =
-        std::ptr::addr_of_mut!(__slate_storage_349) as *mut core::ffi::VaList<'_>;
-    unsafe {
-        // /* The aMx[] array translates the 3rd character of each format
-        //   ** spec into a max size:    a   b   c   d   e      f */
-        std::ptr::write(__slate_slot_350, 0 as i32);
-        *__slate_slot_349 = __va_args.clone();
-        '__loop_6: loop {
-            std::ptr::write(
-                __slate_slot_352,
-                (((unsafe { *unsafe { zFormat.offset((0 as i32) as isize) } }) as i32)
-                    - (48 as i32)) as i8,
-            );
-            std::ptr::write(
-                __slate_slot_353,
-                (((unsafe { *unsafe { zFormat.offset((1 as i32) as isize) } }) as i32)
-                    - (48 as i32)) as i8,
-            );
-            std::ptr::write(__slate_slot_354, 0 as i32);
-            0 as i32;
-            *__slate_slot_355 = unsafe {
-                *unsafe {
-                    unsafe { std::ptr::addr_of!(aMx) as *const u16 }.offset(
-                        (((unsafe { *unsafe { zFormat.offset((2 as i32) as isize) } }) as i32)
-                            - (97 as i32)) as isize,
-                    )
-                }
-            };
-            *__slate_slot_351 = unsafe { *unsafe { zFormat.offset((3 as i32) as isize) } };
-            *__slate_slot_354 = 0 as i32;
-            loop {
-                std::ptr::write(__slate_slot_709, *__slate_slot_352);
-                std::ptr::write(
-                    __slate_slot_710,
-                    ((*__slate_slot_709 as i32) - (1 as i32)) as i8,
-                );
-                *__slate_slot_352 = *__slate_slot_710;
-                if *__slate_slot_709 != (0 as i8) {
-                    if !((((unsafe {
-                        *unsafe {
-                            unsafe { std::ptr::addr_of!(sqlite3CtypeMap) as *const u8 }
-                                .offset(((((unsafe { *zDate }) as u8) as u32) as i32) as isize)
-                        }
-                    }) as u32) as i32)
-                        & (4 as i32)
-                        != (0 as i32))
-                    {
-                        break '__loop_6;
-                    } else {
-                        *__slate_slot_354 = *__slate_slot_354 * (10 as i32)
-                            + ((unsafe { *zDate }) as i32)
-                            - (48 as i32);
-                        std::ptr::write(__slate_slot_711, zDate);
-                        std::ptr::write(__slate_slot_712, unsafe {
-                            (*__slate_slot_711).offset((1 as i32) as isize)
-                        });
-                        zDate = *__slate_slot_712;
-                    }
-                } else {
-                    break;
-                }
-            }
-            if *__slate_slot_354 < (*__slate_slot_353 as i32)
-                || *__slate_slot_354 > ((*__slate_slot_355 as u32) as i32)
-                || (*__slate_slot_351 as i32) != (0 as i32)
-                    && (*__slate_slot_351 as i32) != ((unsafe { *zDate }) as i32)
-            {
-                break;
-            } else {
-                unsafe {
-                    *unsafe { (*__slate_slot_349).next_arg::<*mut i32>() } = *__slate_slot_354;
-                }
-                std::ptr::write(__slate_slot_713, zDate);
-                std::ptr::write(__slate_slot_714, unsafe {
-                    (*__slate_slot_713).offset((1 as i32) as isize)
-                });
-                zDate = *__slate_slot_714;
-                std::ptr::write(__slate_slot_715, *__slate_slot_350);
-                std::ptr::write(__slate_slot_716, *__slate_slot_715 + (1 as i32));
-                *__slate_slot_350 = *__slate_slot_716;
-                std::ptr::write(__slate_slot_717, zFormat);
-                std::ptr::write(__slate_slot_718, unsafe {
-                    (*__slate_slot_717).offset((4 as i32) as isize)
-                });
-                zFormat = *__slate_slot_718;
-                if !(*__slate_slot_351 != (0 as i8)) {
-                    break;
-                }
-            }
-        }
-        {}
-        return *__slate_slot_350;
-    }
-    return unsafe { std::mem::zeroed() };
-}
-
-// /*
-// ** Parse a timezone extension on the end of a date-time.
-// ** The extension is of the form:
-// **
-// **        (+/-)HH:MM
-// **
-// ** Or the "zulu" notation:
-// **
-// **        Z
-// **
-// ** If the parse is successful, write the number of minutes
-// ** of change in p->tz and return 0.  If a parser error occurs,
-// ** return non-zero.
-// **
-// ** A missing specifier is not considered an error.
-// */
+/// Parse a timezone extension on the end of a date-time.
+/// The extension is of the form:
+///
+///        (+/-)HH:MM
+///
+/// Or the "zulu" notation:
+///
+///        Z
+///
+/// If the parse is successful, write the number of minutes
+/// of change in p->tz and return 0.  If a parser error occurs,
+/// return non-zero.
+///
+/// A missing specifier is not considered an error.
 fn parseTimezone(mut zDate: *const i8, mut p: *mut DateTime) -> i32 {
     let mut __slate_storage_728: std::mem::MaybeUninit<*const i8> = std::mem::MaybeUninit::uninit();
     let __slate_slot_728: *mut *const i8 =
@@ -2258,8 +1990,8 @@ fn parseTimezone(mut zDate: *const i8, mut p: *mut DateTime) -> i32 {
                     (*p).tz =
                         *__slate_slot_360 * (*__slate_slot_362 + *__slate_slot_361 * (60 as i32));
                 }
-                // /* Forum post 2025-09-17T10:12:14z */
                 if (unsafe { (*p).tz }) == (0 as i32) {
+                    // Forum post 2025-09-17T10:12:14z
                     unsafe {
                         (*p).__slate_bits_0.__set_isLocal((0 as i32) as u32);
                     }
@@ -2293,13 +2025,11 @@ fn parseTimezone(mut zDate: *const i8, mut p: *mut DateTime) -> i32 {
     return unsafe { std::mem::zeroed() };
 }
 
-// /*
-// ** Parse times of the form HH:MM or HH:MM:SS or HH:MM:SS.FFFF.
-// ** The HH, MM, and SS must each be exactly 2 digits.  The
-// ** fractional seconds FFFF can be one or more digits.
-// **
-// ** Return 1 if there is a parsing error and 0 on success.
-// */
+/// Parse times of the form HH:MM or HH:MM:SS or HH:MM:SS.FFFF.
+/// The HH, MM, and SS must each be exactly 2 digits.  The
+/// fractional seconds FFFF can be one or more digits.
+///
+/// Return 1 if there is a parsing error and 0 on success.
 fn parseHhMmSs(mut zDate: *const i8, mut p: *mut DateTime) -> i32 {
     let mut h: i32 = 0 as i32;
     let mut m: i32 = 0 as i32;
@@ -2372,8 +2102,8 @@ fn parseHhMmSs(mut zDate: *const i8, mut p: *mut DateTime) -> i32 {
             let __v741: f64 = ms;
             let __v742: f64 = __v741 / rScale;
             ms = __v742;
-            // /* Truncate to avoid problems with sub-milliseconds
-            //       ** rounding. https://sqlite.org/forum/forumpost/766a2c9231 */
+            // Truncate to avoid problems with sub-milliseconds
+            // rounding. https://sqlite.org/forum/forumpost/766a2c9231
             if ms > 0.999f64 {
                 ms = 0.999f64;
             }
@@ -2405,9 +2135,7 @@ fn parseHhMmSs(mut zDate: *const i8, mut p: *mut DateTime) -> i32 {
     return 0 as i32;
 }
 
-// /*
-// ** Put the DateTime object into its error state.
-// */
+/// Put the DateTime object into its error state.
 fn datetimeError(mut p: *mut DateTime) {
     unsafe { memset(p as *mut (), 0 as i32, 48 as u64) };
     unsafe {
@@ -2415,12 +2143,10 @@ fn datetimeError(mut p: *mut DateTime) {
     }
 }
 
-// /*
-// ** Convert from YYYY-MM-DD HH:MM:SS to julian day.  We always assume
-// ** that the YYYY-MM-DD is according to the Gregorian calendar.
-// **
-// ** Reference:  Meeus page 61
-// */
+/// Convert from YYYY-MM-DD HH:MM:SS to julian day.  We always assume
+/// that the YYYY-MM-DD is according to the Gregorian calendar.
+///
+/// Reference:  Meeus page 61
 fn computeJD(mut p: *mut DateTime) {
     let mut Y: i32 = 0 as i32;
     let mut M: i32 = 0 as i32;
@@ -2437,8 +2163,7 @@ fn computeJD(mut p: *mut DateTime) {
         M = unsafe { (*p).M };
         D = unsafe { (*p).D };
     } else {
-        // /* If no YMD specified, assume 2000-Jan-01 */
-        Y = 2000 as i32;
+        Y = 2000 as i32; // If no YMD specified, assume 2000-Jan-01
         M = 1 as i32;
         D = 1 as i32;
     }
@@ -2503,12 +2228,10 @@ fn computeJD(mut p: *mut DateTime) {
     }
 }
 
-// /*
-// ** Given the YYYY-MM-DD information current in p, determine if there
-// ** is day-of-month overflow and set nFloor to the number of days that
-// ** would need to be subtracted from the date in order to bring the
-// ** date back to the end of the month.
-// */
+/// Given the YYYY-MM-DD information current in p, determine if there
+/// is day-of-month overflow and set nFloor to the number of days that
+/// would need to be subtracted from the date in order to bring the
+/// date back to the end of the month.
 fn computeFloor(mut p: *mut DateTime) {
     0 as i32;
     0 as i32;
@@ -2545,18 +2268,16 @@ fn computeFloor(mut p: *mut DateTime) {
     }
 }
 
-// /*
-// ** Parse dates of the form
-// **
-// **     YYYY-MM-DD HH:MM:SS.FFF
-// **     YYYY-MM-DD HH:MM:SS
-// **     YYYY-MM-DD HH:MM
-// **     YYYY-MM-DD
-// **
-// ** Write the result into the DateTime structure and return 0
-// ** on success and 1 if the input string is not a well-formed
-// ** date.
-// */
+/// Parse dates of the form
+///
+///     YYYY-MM-DD HH:MM:SS.FFF
+///     YYYY-MM-DD HH:MM:SS
+///     YYYY-MM-DD HH:MM
+///     YYYY-MM-DD
+///
+/// Write the result into the DateTime structure and return 0
+/// on success and 1 if the input string is not a well-formed
+/// date.
 fn parseYyyyMmDd(mut zDate: *const i8, mut p: *mut DateTime) -> i32 {
     let mut Y: i32 = 0 as i32;
     let mut M: i32 = 0 as i32;
@@ -2600,7 +2321,7 @@ fn parseYyyyMmDd(mut zDate: *const i8, mut p: *mut DateTime) -> i32 {
         zDate = __v758;
     }
     if parseHhMmSs(zDate, p) == (0 as i32) {
-        // /* We got the time */
+        // We got the time
     } else {
         if ((unsafe { *zDate }) as i32) == (0 as i32) {
             unsafe {
@@ -2632,27 +2353,9 @@ fn parseYyyyMmDd(mut zDate: *const i8, mut p: *mut DateTime) -> i32 {
     return 0 as i32;
 }
 
-// /*
-// ** Clear the YMD and HMS and the TZ
-// */
-fn clearYMD_HMS_TZ(mut p: *mut DateTime) {
-    unsafe {
-        (*p).validYMD = (0 as i32) as i8;
-    }
-    unsafe {
-        (*p).validHMS = (0 as i32) as i8;
-    }
-    unsafe {
-        (*p).tz = 0 as i32;
-    }
-}
-
-// /* Forward declaration */
-// /*
-// ** Set the time to the current time reported by the VFS.
-// **
-// ** Return the number of errors.
-// */
+/// Set the time to the current time reported by the VFS.
+///
+/// Return the number of errors.
 fn setDateTimeToCurrent(mut context: *mut sqlite3_context, mut p: *mut DateTime) -> i32 {
     unsafe {
         (*p).iJD = unsafe { sqlite3StmtCurrentTime(context) };
@@ -2675,12 +2378,10 @@ fn setDateTimeToCurrent(mut context: *mut sqlite3_context, mut p: *mut DateTime)
     return unsafe { std::mem::zeroed() };
 }
 
-// /*
-// ** Input "r" is a numeric quantity which might be a julian day number,
-// ** or the number of seconds since 1970.  If the value if r is within
-// ** range of a julian day number, install it as such and set validJD.
-// ** If the value is a valid unix timestamp, put it in p->s and set p->rawS.
-// */
+/// Input "r" is a numeric quantity which might be a julian day number,
+/// or the number of seconds since 1970.  If the value if r is within
+/// range of a julian day number, install it as such and set validJD.
+/// If the value is a valid unix timestamp, put it in p->s and set p->rawS.
 fn setRawDateNumber(mut p: *mut DateTime, mut r: f64) {
     unsafe {
         (*p).s = r;
@@ -2698,22 +2399,20 @@ fn setRawDateNumber(mut p: *mut DateTime, mut r: f64) {
     }
 }
 
-// /*
-// ** Attempt to parse the given string into a julian day number.  Return
-// ** the number of errors.
-// **
-// ** The following are acceptable forms for the input string:
-// **
-// **      YYYY-MM-DD HH:MM:SS.FFF  +/-HH:MM
-// **      DDDD.DD
-// **      now
-// **
-// ** In the first form, the +/-HH:MM is always optional.  The fractional
-// ** seconds extension (the ".FFF") is optional.  The seconds portion
-// ** (":SS.FFF") is option.  The year and date can be omitted as long
-// ** as there is a time string.  The time string can be omitted as long
-// ** as there is a year and date.
-// */
+/// Attempt to parse the given string into a julian day number.  Return
+/// the number of errors.
+///
+/// The following are acceptable forms for the input string:
+///
+///      YYYY-MM-DD HH:MM:SS.FFF  +/-HH:MM
+///      DDDD.DD
+///      now
+///
+/// In the first form, the +/-HH:MM is always optional.  The fractional
+/// seconds extension (the ".FFF") is optional.  The seconds portion
+/// (":SS.FFF") is option.  The year and date can be omitted as long
+/// as there is a time string.  The time string can be omitted as long
+/// as there is a year and date.
 fn parseDateOrTime(
     mut context: *mut sqlite3_context,
     mut zDate: *const i8,
@@ -2771,27 +2470,22 @@ fn parseDateOrTime(
     return 1 as i32;
 }
 
-// /* The julian day number for 9999-12-31 23:59:59.999 is 5373484.4999999.
-// ** Multiplying this by 86400000 gives 464269060799999 as the maximum value
-// ** for DateTime.iJD.
-// **
-// ** But some older compilers (ex: gcc 4.2.1 on older Macs) cannot deal with
-// ** such a large integer literal, so we have to encode it.
-// */
-// /*
-// ** Return TRUE if the given julian day number is within range.
-// **
-// ** The input is the JulianDay times 86400000.
-// */
+// The julian day number for 9999-12-31 23:59:59.999 is 5373484.4999999.
+// Multiplying this by 86400000 gives 464269060799999 as the maximum value
+// for DateTime.iJD.
+//
+// But some older compilers (ex: gcc 4.2.1 on older Macs) cannot deal with
+// such a large integer literal, so we have to encode it.
+/// Return TRUE if the given julian day number is within range.
+///
+/// The input is the JulianDay times 86400000.
 fn validJulianDay(mut iJD: i64) -> i32 {
     return (iJD >= ((0 as i32) as i64)
         && iJD <= ((108096 as i32) as i64) << (32 as i32) | ((275971583 as i32) as i64))
         as i32;
 }
 
-// /*
-// ** Compute the Year, Month, and Day from the julian day number.
-// */
+/// Compute the Year, Month, and Day from the julian day number.
 fn computeYMD(mut p: *mut DateTime) {
     let mut Z: i32 = 0 as i32;
     let mut alpha: i32 = 0 as i32;
@@ -2852,13 +2546,10 @@ fn computeYMD(mut p: *mut DateTime) {
     }
 }
 
-// /*
-// ** Compute the Hour, Minute, and Seconds from the julian day number.
-// */
+/// Compute the Hour, Minute, and Seconds from the julian day number.
 fn computeHMS(mut p: *mut DateTime) {
-    // /* milliseconds, minutes into the day */
     let mut day_ms: i32 = 0 as i32;
-    let mut day_min: i32 = 0 as i32;
+    let mut day_min: i32 = 0 as i32; // milliseconds, minutes into the day
     if (unsafe { (*p).validHMS }) != (0 as i8) {
         return;
     }
@@ -2883,41 +2574,49 @@ fn computeHMS(mut p: *mut DateTime) {
     }
 }
 
-// /*
-// ** Compute both YMD and HMS
-// */
+/// Compute both YMD and HMS
 fn computeYMD_HMS(mut p: *mut DateTime) {
     computeYMD(p);
     computeHMS(p);
 }
 
-// /*
-// ** On recent Windows platforms, the localtime_s() function is available
-// ** as part of the "Secure CRT". It is essentially equivalent to
-// ** localtime_r() available under most POSIX platforms, except that the
-// ** order of the parameters is reversed.
-// **
-// ** See http://msdn.microsoft.com/en-us/library/a442x3ye(VS.80).aspx.
-// **
-// ** If the user has not indicated to use localtime_r() or localtime_s()
-// ** already, check for an MSVC build environment that provides
-// ** localtime_s().
-// */
-// /*
-// ** The following routine implements the rough equivalent of localtime_r()
-// ** using whatever operating-system specific localtime facility that
-// ** is available.  This routine returns 0 on success and
-// ** non-zero on any kind of error.
-// **
-// ** If the sqlite3GlobalConfig.bLocaltimeFault variable is non-zero then this
-// ** routine will always fail.  If bLocaltimeFault is nonzero and
-// ** sqlite3GlobalConfig.xAltLocaltime is not NULL, then xAltLocaltime() is
-// ** invoked in place of the OS-defined localtime() function.
-// **
-// ** EVIDENCE-OF: R-62172-00036 In this implementation, the standard C
-// ** library function localtime_r() is used to assist in the calculation of
-// ** local time.
-// */
+/// Clear the YMD and HMS and the TZ
+/// Forward declaration
+fn clearYMD_HMS_TZ(mut p: *mut DateTime) {
+    unsafe {
+        (*p).validYMD = (0 as i32) as i8;
+    }
+    unsafe {
+        (*p).validHMS = (0 as i32) as i8;
+    }
+    unsafe {
+        (*p).tz = 0 as i32;
+    }
+}
+
+/// On recent Windows platforms, the localtime_s() function is available
+/// as part of the "Secure CRT". It is essentially equivalent to
+/// localtime_r() available under most POSIX platforms, except that the
+/// order of the parameters is reversed.
+///
+/// See http://msdn.microsoft.com/en-us/library/a442x3ye(VS.80).aspx.
+///
+/// If the user has not indicated to use localtime_r() or localtime_s()
+/// already, check for an MSVC build environment that provides
+/// localtime_s().
+/// The following routine implements the rough equivalent of localtime_r()
+/// using whatever operating-system specific localtime facility that
+/// is available.  This routine returns 0 on success and
+/// non-zero on any kind of error.
+///
+/// If the sqlite3GlobalConfig.bLocaltimeFault variable is non-zero then this
+/// routine will always fail.  If bLocaltimeFault is nonzero and
+/// sqlite3GlobalConfig.xAltLocaltime is not NULL, then xAltLocaltime() is
+/// invoked in place of the OS-defined localtime() function.
+///
+/// EVIDENCE-OF: R-62172-00036 In this implementation, the standard C
+/// library function localtime_r() is used to assist in the calculation of
+/// local time.
 fn osLocaltime(mut t: *mut i64, mut pTm: *mut tm) -> i32 {
     let mut rc: i32 = 0 as i32;
     if (unsafe { sqlite3Config.bLocaltimeFault }) != (0 as i32) {
@@ -2930,19 +2629,20 @@ fn osLocaltime(mut t: *mut i64, mut pTm: *mut tm) -> i32 {
         }
     }
     rc = ((unsafe { localtime_r(t as *const i64, pTm) }) == std::ptr::null_mut::<tm>()) as i32;
-    // /* HAVE_LOCALTIME_R || HAVE_LOCALTIME_S */
     return rc;
 }
 
-// /* SQLITE_OMIT_LOCALTIME */
-// /*
-// ** Assuming the input DateTime is UTC, move it to its localtime equivalent.
-// */
+/// Assuming the input DateTime is UTC, move it to its localtime equivalent.
+///
+/// # Arguments
+///
+/// * `p` - Date at which to calculate offset
+/// * `pCtx` - Write error here if one occurs
 fn toLocaltime(mut p: *mut DateTime, mut pCtx: *mut sqlite3_context) -> i32 {
     let mut t: i64 = 0 as i64;
     let mut sLocal: tm = unsafe { std::mem::zeroed() };
     let mut iYearDiff: i32 = 0 as i32;
-    // /* Initialize the contents of sLocal to avoid a compiler warning. */
+    // Initialize the contents of sLocal to avoid a compiler warning.
     unsafe {
         memset(
             std::ptr::addr_of_mut!(sLocal) as *mut (),
@@ -2951,15 +2651,13 @@ fn toLocaltime(mut p: *mut DateTime, mut pCtx: *mut sqlite3_context) -> i32 {
         )
     };
     computeJD(p);
-    // /* 1970-01-01 */
     if (unsafe { (*p).iJD }) < ((2108667600 as i32) as i64) * ((100000 as i32) as i64)
         || (unsafe { (*p).iJD }) > ((2130141456 as i32) as i64) * ((100000 as i32) as i64)
     {
-        // /* EVIDENCE-OF: R-55269-29598 The localtime_r() C function normally only
-        //     ** works for years between 1970 and 2037. For dates outside this range,
-        //     ** SQLite attempts to map the year into an equivalent year within this
-        //     ** range, do the calculation, then map the year back.
-        //     */
+        // EVIDENCE-OF: R-55269-29598 The localtime_r() C function normally only
+        // works for years between 1970 and 2037. For dates outside this range,
+        // SQLite attempts to map the year into an equivalent year within this
+        // range, do the calculation, then map the year back.
         let mut x: DateTime = unsafe { *p };
         computeYMD_HMS(std::ptr::addr_of_mut!(x));
         iYearDiff = (2000 as i32) + x.Y % (4 as i32) - x.Y;
@@ -2974,7 +2672,8 @@ fn toLocaltime(mut p: *mut DateTime, mut pCtx: *mut sqlite3_context) -> i32 {
         t = (unsafe { (*p).iJD }) / ((1000 as i32) as i64)
             - ((21086676 as i32) as i64) * ((10000 as i32) as i64);
     }
-    // /* 2038-01-18 */
+    // 1970-01-01
+    // 2038-01-18
     if osLocaltime(std::ptr::addr_of_mut!(t), std::ptr::addr_of_mut!(sLocal)) != (0 as i32) {
         unsafe {
             sqlite3_result_error(
@@ -3025,11 +2724,85 @@ fn toLocaltime(mut p: *mut DateTime, mut pCtx: *mut sqlite3_context) -> i32 {
     return 0 as i32;
 }
 
-// /*
-// ** If the DateTime p is raw number, try to figure out if it is
-// ** a julian day number of a unix timestamp.  Set the p value
-// ** appropriately.
-// */
+/// The following table defines various date transformations of the form
+///
+///            'NNN days'
+///
+/// Where NNN is an arbitrary floating-point number and "days" can be one
+/// of several units of time.
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct __SlateRecord207 {
+    /// Length of the name
+    nName: u8,
+    /// Name of the transformation
+    zName: [i8; 7],
+    /// Maximum NNN value for this transform
+    rLimit: f32,
+    /// Constant used for this transform
+    rXform: f32,
+}
+
+/// 0
+/// 1
+/// 2
+/// 3
+/// 4
+/// 5
+static mut aXformType: __SlateAlign16<[__SlateRecord207; 6]> = __SlateAlign16([
+    __SlateRecord207 {
+        nName: ((6 as i32) as i8) as u8,
+        zName: [
+            115 as i8, 101 as i8, 99 as i8, 111 as i8, 110 as i8, 100 as i8, 0 as i8,
+        ],
+        rLimit: 464270000000000.0f64 as f32,
+        rXform: 1.0f64 as f32,
+    },
+    __SlateRecord207 {
+        nName: ((6 as i32) as i8) as u8,
+        zName: [
+            109 as i8, 105 as i8, 110 as i8, 117 as i8, 116 as i8, 101 as i8, 0 as i8,
+        ],
+        rLimit: 7737900000000.0f64 as f32,
+        rXform: 60.0f64 as f32,
+    },
+    __SlateRecord207 {
+        nName: ((4 as i32) as i8) as u8,
+        zName: [
+            104 as i8, 111 as i8, 117 as i8, 114 as i8, 0 as i8, 0 as i8, 0 as i8,
+        ],
+        rLimit: 128970000000.0f64 as f32,
+        rXform: 3600.0f64 as f32,
+    },
+    __SlateRecord207 {
+        nName: ((3 as i32) as i8) as u8,
+        zName: [
+            100 as i8, 97 as i8, 121 as i8, 0 as i8, 0 as i8, 0 as i8, 0 as i8,
+        ],
+        rLimit: 5373485.0f64 as f32,
+        rXform: 86400.0f64 as f32,
+    },
+    __SlateRecord207 {
+        nName: ((5 as i32) as i8) as u8,
+        zName: [
+            109 as i8, 111 as i8, 110 as i8, 116 as i8, 104 as i8, 0 as i8, 0 as i8,
+        ],
+        rLimit: 176546.0f64 as f32,
+        rXform: 2592000.0f64 as f32,
+    },
+    __SlateRecord207 {
+        nName: ((4 as i32) as i8) as u8,
+        zName: [
+            121 as i8, 101 as i8, 97 as i8, 114 as i8, 0 as i8, 0 as i8, 0 as i8,
+        ],
+        rLimit: 14713.0f64 as f32,
+        rXform: 31536000.0f64 as f32,
+    },
+]);
+
+/// If the DateTime p is raw number, try to figure out if it is
+/// a julian day number of a unix timestamp.  Set the p value
+/// appropriately.
 fn autoAdjustDate(mut p: *mut DateTime) {
     if !(((unsafe { (*p).__slate_bits_0.__get_rawS() }) as i32) != (0 as i32))
         || (unsafe { (*p).validJD }) != (0 as i8)
@@ -3037,7 +2810,6 @@ fn autoAdjustDate(mut p: *mut DateTime) {
         unsafe {
             (*p).__slate_bits_0.__set_rawS((0 as i32) as u32);
         }
-    // /* -4713-11-24 12:00:00 */
     } else {
         if (unsafe { (*p).s }) >= (((-(21086676 as i32) as i64) * ((10000 as i32) as i64)) as f64)
             && (unsafe { (*p).s })
@@ -3057,39 +2829,46 @@ fn autoAdjustDate(mut p: *mut DateTime) {
             }
         }
     }
-    // /*  9999-12-31 23:59:59 */
+    // -4713-11-24 12:00:00
+    //  9999-12-31 23:59:59
 }
 
-// /*
-// ** Process a modifier to a date-time stamp.  The modifiers are
-// ** as follows:
-// **
-// **     NNN days
-// **     NNN hours
-// **     NNN minutes
-// **     NNN.NNNN seconds
-// **     NNN months
-// **     NNN years
-// **     +/-YYYY-MM-DD HH:MM:SS.SSS
-// **     ceiling
-// **     floor
-// **     start of month
-// **     start of year
-// **     start of week
-// **     start of day
-// **     weekday N
-// **     unixepoch
-// **     auto
-// **     localtime
-// **     utc
-// **     subsec
-// **     subsecond
-// **
-// ** Return 0 on success and 1 if there is any kind of error. If the error
-// ** is in a system call (i.e. localtime()), then an error message is written
-// ** to context pCtx. If the error is an unrecognized modifier, no error is
-// ** written to pCtx.
-// */
+/// Process a modifier to a date-time stamp.  The modifiers are
+/// as follows:
+///
+///     NNN days
+///     NNN hours
+///     NNN minutes
+///     NNN.NNNN seconds
+///     NNN months
+///     NNN years
+///     +/-YYYY-MM-DD HH:MM:SS.SSS
+///     ceiling
+///     floor
+///     start of month
+///     start of year
+///     start of week
+///     start of day
+///     weekday N
+///     unixepoch
+///     auto
+///     localtime
+///     utc
+///     subsec
+///     subsecond
+///
+/// Return 0 on success and 1 if there is any kind of error. If the error
+/// is in a system call (i.e. localtime()), then an error message is written
+/// to context pCtx. If the error is an unrecognized modifier, no error is
+/// written to pCtx.
+///
+/// # Arguments
+///
+/// * `pCtx` - Function context
+/// * `z` - The text of the modifier
+/// * `n` - Length of zMod in bytes
+/// * `p` - The date/time value to be modified
+/// * `idx` - Parameter index of the modifier
 fn parseModifier(
     mut pCtx: *mut sqlite3_context,
     mut z: *const i8,
@@ -3110,31 +2889,27 @@ fn parseModifier(
         }) as u32) as i32
         {
             97 => {
-                // /*
-                //       **    auto
-                //       **
-                //       ** If rawS is available, then interpret as a julian day number, or
-                //       ** a unix timestamp, depending on its magnitude.
-                //       */
+                //    auto
+                //
+                // If rawS is available, then interpret as a julian day number, or
+                // a unix timestamp, depending on its magnitude.
                 if (unsafe { sqlite3_stricmp(z, (b"auto\0".as_ptr() as *mut i8) as *const i8) })
                     == (0 as i32)
                 {
-                    // /* IMP: R-33611-57934 */
                     if idx > (1 as i32) {
                         return 1 as i32;
                     }
+                    // IMP: R-33611-57934
                     autoAdjustDate(p);
                     rc = 0 as i32;
                 }
             }
             99 => {
-                // /*
-                //       **    ceiling
-                //       **
-                //       ** Resolve day-of-month overflow by rolling forward into the next
-                //       ** month.  As this is the default action, this modifier is really
-                //       ** a no-op that is only included for symmetry.  See "floor".
-                //       */
+                //    ceiling
+                //
+                // Resolve day-of-month overflow by rolling forward into the next
+                // month.  As this is the default action, this modifier is really
+                // a no-op that is only included for symmetry.  See "floor".
                 if (unsafe { sqlite3_stricmp(z, (b"ceiling\0".as_ptr() as *mut i8) as *const i8) })
                     == (0 as i32)
                 {
@@ -3147,14 +2922,12 @@ fn parseModifier(
                 }
             }
             101 => {
-                // /*
-                //       **    end of day
-                //       **    end of month
-                //       **    end of year
-                //       **
-                //       ** Move the date forwards to the last millisecond of the current
-                //       ** day, month or year.
-                //       */
+                //    end of day
+                //    end of month
+                //    end of year
+                //
+                // Move the date forwards to the last millisecond of the current
+                // day, month or year.
                 if (unsafe {
                     sqlite3_strnicmp(z, (b"end of \0".as_ptr() as *mut i8) as *const i8, 7 as i32)
                 }) != (0 as i32)
@@ -3251,12 +3024,10 @@ fn parseModifier(
                 }
             }
             102 => {
-                // /*
-                //       **    floor
-                //       **
-                //       ** Resolve day-of-month overflow by rolling back to the end of the
-                //       ** previous month.
-                //       */
+                //    floor
+                //
+                // Resolve day-of-month overflow by rolling back to the end of the
+                // previous month.
                 if (unsafe { sqlite3_stricmp(z, (b"floor\0".as_ptr() as *mut i8) as *const i8) })
                     == (0 as i32)
                 {
@@ -3273,22 +3044,20 @@ fn parseModifier(
                 }
             }
             106 => {
-                // /*
-                //       **    julianday
-                //       **
-                //       ** Always interpret the prior number as a julian-day value.  If this
-                //       ** is not the first modifier, or if the prior argument is not a numeric
-                //       ** value in the allowed range of julian day numbers understood by
-                //       ** SQLite (0..5373484.5) then the result will be NULL.
-                //       */
+                //    julianday
+                //
+                // Always interpret the prior number as a julian-day value.  If this
+                // is not the first modifier, or if the prior argument is not a numeric
+                // value in the allowed range of julian day numbers understood by
+                // SQLite (0..5373484.5) then the result will be NULL.
                 if (unsafe {
                     sqlite3_stricmp(z, (b"julianday\0".as_ptr() as *mut i8) as *const i8)
                 }) == (0 as i32)
                 {
-                    // /* IMP: R-31176-64601 */
                     if idx > (1 as i32) {
                         return 1 as i32;
                     }
+                    // IMP: R-31176-64601
                     if (unsafe { (*p).validJD }) != (0 as i8)
                         && ((unsafe { (*p).__slate_bits_0.__get_rawS() }) as i32) != (0 as i32)
                     {
@@ -3300,11 +3069,10 @@ fn parseModifier(
                 }
             }
             108 => {
-                // /*    localtime
-                //       **
-                //       ** Assuming the current time value is UTC (a.k.a. GMT), shift it to
-                //       ** show local time.
-                //       */
+                //    localtime
+                //
+                // Assuming the current time value is UTC (a.k.a. GMT), shift it to
+                // show local time.
                 let __v778: bool;
                 if (unsafe {
                     sqlite3_stricmp(z, (b"localtime\0".as_ptr() as *mut i8) as *const i8)
@@ -3331,21 +3099,19 @@ fn parseModifier(
                 }
             }
             117 => {
-                // /*
-                //       **    unixepoch
-                //       **
-                //       ** Treat the current value of p->s as the number of
-                //       ** seconds since 1970.  Convert to a real julian day number.
-                //       */
+                //    unixepoch
+                //
+                // Treat the current value of p->s as the number of
+                // seconds since 1970.  Convert to a real julian day number.
                 if (unsafe {
                     sqlite3_stricmp(z, (b"unixepoch\0".as_ptr() as *mut i8) as *const i8)
                 }) == (0 as i32)
                     && ((unsafe { (*p).__slate_bits_0.__get_rawS() }) as i32) != (0 as i32)
                 {
-                    // /* IMP: R-49255-55373 */
                     if idx > (1 as i32) {
                         return 1 as i32;
                     }
+                    // IMP: R-49255-55373
                     r = (unsafe { (*p).s }) * 1000.0f64 + 210866760000000.0f64;
                     if r >= 0.0f64 && r < 464269060800000.0f64 {
                         clearYMD_HMS_TZ(p);
@@ -3371,14 +3137,10 @@ fn parseModifier(
                     }
                     if __v780 {
                         if ((unsafe { (*p).__slate_bits_0.__get_isUtc() }) as i32) == (0 as i32) {
-                            // /* Original localtime */
-                            let mut iOrigJD: i64 = 0 as i64;
-                            // /* Guess at the corresponding utc time */
-                            let mut iGuess: i64 = 0 as i64;
-                            // /* Safety to prevent infinite loop */
-                            let mut cnt: i32 = 0 as i32;
-                            // /* Guess is off by this much */
-                            let mut iErr: i64 = 0 as i64;
+                            let mut iOrigJD: i64 = 0 as i64; // Original localtime
+                            let mut iGuess: i64 = 0 as i64; // Guess at the corresponding utc time
+                            let mut cnt: i32 = 0 as i32; // Safety to prevent infinite loop
+                            let mut iErr: i64 = 0 as i64; // Guess is off by this much
                             computeJD(p);
                             let __v781: i64 = unsafe { (*p).iJD };
                             iOrigJD = __v781;
@@ -3436,15 +3198,13 @@ fn parseModifier(
                 }
             }
             119 => {
-                // /*
-                //       **    weekday N
-                //       **    weekday -N
-                //       **
-                //       ** Move the date forward (for N>=0) or backward (for N<=-0) to the
-                //       ** same time on the next/previous occurrence of weekday abs(N)
-                //       ** where 0==Sunday, 1==Monday, and so forth.  If the date is already
-                //       ** on the appropriate weekday, this is a no-op.
-                //       */
+                //    weekday N
+                //    weekday -N
+                //
+                // Move the date forward (for N>=0) or backward (for N<=-0) to the
+                // same time on the next/previous occurrence of weekday abs(N)
+                // where 0==Sunday, 1==Monday, and so forth.  If the date is already
+                // on the appropriate weekday, this is a no-op.
                 let __v787: bool;
                 if (unsafe {
                     sqlite3_strnicmp(
@@ -3516,20 +3276,18 @@ fn parseModifier(
                 }
             }
             115 => {
-                // /*
-                //       **    start of day
-                //       **    start of month
-                //       **    start of year
-                //       **
-                //       ** Move the date backwards to the beginning of the current day,
-                //       ** or month or year.
-                //       **
-                //       **    subsecond
-                //       **    subsec
-                //       **
-                //       ** Show subsecond precision in the output of datetime() and
-                //       ** unixepoch() and strftime('%s').
-                //       */
+                //    start of day
+                //    start of month
+                //    start of year
+                //
+                // Move the date backwards to the beginning of the current day,
+                // or month or year.
+                //
+                //    subsecond
+                //    subsec
+                //
+                // Show subsecond precision in the output of datetime() and
+                // unixepoch() and strftime('%s').
                 if (unsafe {
                     sqlite3_strnicmp(
                         z,
@@ -3699,14 +3457,13 @@ fn parseModifier(
                         0 as i32;
                     } else {
                         if ((unsafe { *unsafe { z.offset(n as isize) } }) as i32) == (45 as i32) {
-                            // /* A modifier of the form (+|-)YYYY-MM-DD adds or subtracts the
-                            //         ** specified number of years, months, and days.  MM is limited to
-                            //         ** the range 0-11 and DD is limited to 0-30.
-                            //         */
-                            // /* Must start with +/- */
+                            // A modifier of the form (+|-)YYYY-MM-DD adds or subtracts the
+                            // specified number of years, months, and days.  MM is limited to
+                            // the range 0-11 and DD is limited to 0-30.
                             if (z0 as i32) != (43 as i32) && (z0 as i32) != (45 as i32) {
                                 break '__slate_break_637;
                             }
+                            // Must start with +/-
                             if n == (5 as i32) {
                                 if (unsafe {
                                     getDigits(
@@ -3739,14 +3496,14 @@ fn parseModifier(
                                     unsafe { __v805.offset((1 as i32) as isize) };
                                 z = __v806;
                             }
-                            // /* M range 0..11 */
                             if M >= (12 as i32) {
                                 break '__slate_break_637;
                             }
-                            // /* D range 0..30 */
+                            // M range 0..11
                             if D >= (31 as i32) {
                                 break '__slate_break_637;
                             }
+                            // D range 0..30
                             computeYMD_HMS(p);
                             unsafe {
                                 (*p).validJD = (0 as i32) as i8;
@@ -3852,11 +3609,10 @@ fn parseModifier(
                             }
                         }
                         if ((unsafe { *unsafe { z2.offset(n as isize) } }) as i32) == (58 as i32) {
-                            // /* A modifier of the form (+|-)HH:MM:SS.FFF adds (or subtracts) the
-                            //         ** specified number of hours, minutes, seconds, and fractional seconds
-                            //         ** to the time.  The ".FFF" may be omitted.  The ":SS.FFF" may be
-                            //         ** omitted.
-                            //         */
+                            // A modifier of the form (+|-)HH:MM:SS.FFF adds (or subtracts) the
+                            // specified number of hours, minutes, seconds, and fractional seconds
+                            // to the time.  The ".FFF" may be omitted.  The ":SS.FFF" may be
+                            // omitted.
                             let mut tx: DateTime = unsafe { std::mem::zeroed() };
                             let mut day: i64 = 0 as i64;
                             if !((((unsafe {
@@ -3900,8 +3656,8 @@ fn parseModifier(
                                 rc = 0 as i32;
                             }
                         } else {
-                            // /* If control reaches this point, it means the transformation is
-                            //       ** one of the forms like "+NNN days".  */
+                            // If control reaches this point, it means the transformation is
+                            // one of the forms like "+NNN days".
                             let __v838: *const i8 = z;
                             let __v839: *const i8 = unsafe { __v838.offset(n as isize) };
                             z = __v839;
@@ -4018,7 +3774,7 @@ fn parseModifier(
                                         '__slate_break_665: {
                                             match i {
                                                 4 => {
-                                                    // /* Special processing to add months */
+                                                    // Special processing to add months
                                                     0 as i32;
                                                     computeYMD_HMS(p);
                                                     let __v847: *mut DateTime = p;
@@ -4053,10 +3809,9 @@ fn parseModifier(
                                                     let __v856: f64 = r;
                                                     let __v857: f64 = __v856 - ((r as i32) as f64);
                                                     r = __v857;
-                                                    break '__slate_break_665;
-                                                    // /* Special processing to add years */
                                                 }
                                                 5 => {
+                                                    // Special processing to add years
                                                     let mut y: i32 = r as i32;
                                                     0 as i32;
                                                     computeYMD_HMS(p);
@@ -4119,20 +3874,13 @@ fn parseModifier(
     return rc;
 }
 
-// /* Function context */
-// /* The text of the modifier */
-// /* Length of zMod in bytes */
-// /* The date/time value to be modified */
-// /* Parameter index of the modifier */
-// /*
-// ** Process time function arguments.  argv[0] is a date-time stamp.
-// ** argv[1] and following are modifiers.  Parse them all and write
-// ** the resulting time into the DateTime structure p.  Return 0
-// ** on success and 1 if there are any errors.
-// **
-// ** If there are zero parameters (if even argv[0] is undefined)
-// ** then assume a default value of "now" for argv[0].
-// */
+/// Process time function arguments.  argv[0] is a date-time stamp.
+/// argv[1] and following are modifiers.  Parse them all and write
+/// the resulting time into the DateTime structure p.  Return 0
+/// on success and 1 if there are any errors.
+///
+/// If there are zero parameters (if even argv[0] is undefined)
+/// then assume a default value of "now" for argv[0].
 fn isDate(
     mut context: *mut sqlite3_context,
     mut argc: i32,
@@ -4203,8 +3951,8 @@ fn isDate(
         && (unsafe { (*p).validYMD }) != (0 as i8)
         && (unsafe { (*p).D }) > (28 as i32)
     {
-        // /* Make sure a YYYY-MM-DD is normalized.
-        //     ** Example: 2023-02-31 -> 2023-03-03 */
+        // Make sure a YYYY-MM-DD is normalized.
+        // Example: 2023-02-31 -> 2023-03-03
         0 as i32;
         unsafe {
             (*p).validYMD = (0 as i32) as i8;
@@ -4213,15 +3961,11 @@ fn isDate(
     return 0 as i32;
 }
 
-// /*
-// ** The following routines implement the various date and time functions
-// ** of SQLite.
-// */
-// /*
-// **    julianday( TIMESTRING, MOD, MOD, ...)
-// **
-// ** Return the julian day number of the date specified in the arguments
-// */
+// The following routines implement the various date and time functions
+// of SQLite.
+///    julianday( TIMESTRING, MOD, MOD, ...)
+///
+/// Return the julian day number of the date specified in the arguments
 #[unsafe(link_section = ".text.slate_distinct.date.juliandayFunc")]
 extern "C-unwind" fn juliandayFunc(
     mut context: *mut sqlite3_context,
@@ -4235,12 +3979,10 @@ extern "C-unwind" fn juliandayFunc(
     }
 }
 
-// /*
-// **    unixepoch( TIMESTRING, MOD, MOD, ...)
-// **
-// ** Return the number of seconds (including fractional seconds) since
-// ** the unix epoch of 1970-01-01 00:00:00 GMT.
-// */
+///    unixepoch( TIMESTRING, MOD, MOD, ...)
+///
+/// Return the number of seconds (including fractional seconds) since
+/// the unix epoch of 1970-01-01 00:00:00 GMT.
 #[unsafe(link_section = ".text.slate_distinct.date.unixepochFunc")]
 extern "C-unwind" fn unixepochFunc(
     mut context: *mut sqlite3_context,
@@ -4270,11 +4012,9 @@ extern "C-unwind" fn unixepochFunc(
     }
 }
 
-// /*
-// **    datetime( TIMESTRING, MOD, MOD, ...)
-// **
-// ** Return YYYY-MM-DD HH:MM:SS
-// */
+///    datetime( TIMESTRING, MOD, MOD, ...)
+///
+/// Return YYYY-MM-DD HH:MM:SS
 #[unsafe(link_section = ".text.slate_distinct.date.datetimeFunc")]
 extern "C-unwind" fn datetimeFunc(
     mut context: *mut sqlite3_context,
@@ -4442,11 +4182,9 @@ extern "C-unwind" fn datetimeFunc(
     }
 }
 
-// /*
-// **    time( TIMESTRING, MOD, MOD, ...)
-// **
-// ** Return HH:MM:SS
-// */
+///    time( TIMESTRING, MOD, MOD, ...)
+///
+/// Return HH:MM:SS
 #[unsafe(link_section = ".text.slate_distinct.date.timeFunc")]
 extern "C-unwind" fn timeFunc(
     mut context: *mut sqlite3_context,
@@ -4545,11 +4283,9 @@ extern "C-unwind" fn timeFunc(
     }
 }
 
-// /*
-// **    date( TIMESTRING, MOD, MOD, ...)
-// **
-// ** Return YYYY-MM-DD
-// */
+///    date( TIMESTRING, MOD, MOD, ...)
+///
+/// Return YYYY-MM-DD
 #[unsafe(link_section = ".text.slate_distinct.date.dateFunc")]
 extern "C-unwind" fn dateFunc(
     mut context: *mut sqlite3_context,
@@ -4644,15 +4380,13 @@ extern "C-unwind" fn dateFunc(
     }
 }
 
-// /*
-// ** Compute the number of days after the most recent January 1.
-// **
-// ** In other words, compute the zero-based day number for the
-// ** current year:
-// **
-// **   Jan01 = 0,  Jan02 = 1, ..., Jan31 = 30, Feb01 = 31, ...
-// **   Dec31 = 364 or 365.
-// */
+/// Compute the number of days after the most recent January 1.
+///
+/// In other words, compute the zero-based day number for the
+/// current year:
+///
+///   Jan01 = 0,  Jan02 = 1, ..., Jan31 = 30, Feb01 = 31, ...
+///   Dec31 = 364 or 365.
 fn daysAfterJan01(mut pDate: *mut DateTime) -> i32 {
     let mut jan01: DateTime = unsafe { *pDate };
     0 as i32;
@@ -4666,14 +4400,12 @@ fn daysAfterJan01(mut pDate: *mut DateTime) -> i32 {
         / ((86400000 as i32) as i64)) as i32;
 }
 
-// /*
-// ** Return the number of days after the most recent Monday.
-// **
-// ** In other words, return the day of the week according
-// ** to this code:
-// **
-// **   0=Monday, 1=Tuesday, 2=Wednesday, ..., 6=Sunday.
-// */
+/// Return the number of days after the most recent Monday.
+///
+/// In other words, return the day of the week according
+/// to this code:
+///
+///   0=Monday, 1=Tuesday, 2=Wednesday, ..., 6=Sunday.
 fn daysAfterMonday(mut pDate: *mut DateTime) -> i32 {
     0 as i32;
     return ((((unsafe { (*pDate).iJD }) + ((43200000 as i32) as i64)) / ((86400000 as i32) as i64))
@@ -4681,14 +4413,12 @@ fn daysAfterMonday(mut pDate: *mut DateTime) -> i32 {
         % (7 as i32);
 }
 
-// /*
-// ** Return the number of days after the most recent Sunday.
-// **
-// ** In other words, return the day of the week according
-// ** to this code:
-// **
-// **   0=Sunday, 1=Monday, 2=Tuesday, ..., 6=Saturday
-// */
+/// Return the number of days after the most recent Sunday.
+///
+/// In other words, return the day of the week according
+/// to this code:
+///
+///   0=Sunday, 1=Monday, 2=Tuesday, ..., 6=Saturday
 fn daysAfterSunday(mut pDate: *mut DateTime) -> i32 {
     0 as i32;
     return ((((unsafe { (*pDate).iJD }) + ((129600000 as i32) as i64)) / ((86400000 as i32) as i64))
@@ -4696,39 +4426,37 @@ fn daysAfterSunday(mut pDate: *mut DateTime) -> i32 {
         % (7 as i32);
 }
 
-// /*
-// **    strftime( FORMAT, TIMESTRING, MOD, MOD, ...)
-// **
-// ** Return a string described by FORMAT.  Conversions as follows:
-// **
-// **   %d  day of month  01-31
-// **   %e  day of month  1-31
-// **   %f  ** fractional seconds  SS.SSS
-// **   %F  ISO date.  YYYY-MM-DD
-// **   %G  ISO year corresponding to %V 0000-9999.
-// **   %g  2-digit ISO year corresponding to %V 00-99
-// **   %H  hour 00-24
-// **   %k  hour  0-24  (leading zero converted to space)
-// **   %I  hour 01-12
-// **   %j  day of year 001-366
-// **   %J  ** julian day number
-// **   %l  hour  1-12  (leading zero converted to space)
-// **   %m  month 01-12
-// **   %M  minute 00-59
-// **   %p  "AM" or "PM"
-// **   %P  "am" or "pm"
-// **   %R  time as HH:MM
-// **   %s  seconds since 1970-01-01
-// **   %S  seconds 00-59
-// **   %T  time as HH:MM:SS
-// **   %u  day of week 1-7  Monday==1, Sunday==7
-// **   %w  day of week 0-6  Sunday==0, Monday==1
-// **   %U  week of year 00-53  (First Sunday is start of week 01)
-// **   %V  week of year 01-53  (First week containing Thursday is week 01)
-// **   %W  week of year 00-53  (First Monday is start of week 01)
-// **   %Y  year 0000-9999
-// **   %%  %
-// */
+///    strftime( FORMAT, TIMESTRING, MOD, MOD, ...)
+///
+/// Return a string described by FORMAT.  Conversions as follows:
+///
+///   %d  day of month  01-31
+///   %e  day of month  1-31
+///   %f  ** fractional seconds  SS.SSS
+///   %F  ISO date.  YYYY-MM-DD
+///   %G  ISO year corresponding to %V 0000-9999.
+///   %g  2-digit ISO year corresponding to %V 00-99
+///   %H  hour 00-24
+///   %k  hour  0-24  (leading zero converted to space)
+///   %I  hour 01-12
+///   %j  day of year 001-366
+///   %J  ** julian day number
+///   %l  hour  1-12  (leading zero converted to space)
+///   %m  month 01-12
+///   %M  minute 00-59
+///   %p  "AM" or "PM"
+///   %P  "am" or "pm"
+///   %R  time as HH:MM
+///   %s  seconds since 1970-01-01
+///   %S  seconds 00-59
+///   %T  time as HH:MM:SS
+///   %u  day of week 1-7  Monday==1, Sunday==7
+///   %w  day of week 0-6  Sunday==0, Monday==1
+///   %U  week of year 00-53  (First Sunday is start of week 01)
+///   %V  week of year 01-53  (First week containing Thursday is week 01)
+///   %W  week of year 00-53  (First Monday is start of week 01)
+///   %Y  year 0000-9999
+///   %%  %
 #[unsafe(link_section = ".text.slate_distinct.date.strftimeFunc")]
 extern "C-unwind" fn strftimeFunc(
     mut context: *mut sqlite3_context,
@@ -4787,7 +4515,6 @@ extern "C-unwind" fn strftimeFunc(
             '__slate_break_668: {
                 match cf as i32 {
                     100 | 101 => {
-                        // /* Fall thru */
                         unsafe {
                             sqlite3_str_appendf(
                                 pRes,
@@ -4800,9 +4527,10 @@ extern "C-unwind" fn strftimeFunc(
                             )
                         };
                         break '__slate_break_668;
-                        // /* Fractional seconds.  (Non-standard) */
+                        // Fall thru
                     }
                     102 => {
+                        // Fractional seconds.  (Non-standard)
                         let mut s: f64 = x.s;
                         if s > 59.999f64 {
                             s = 59.999f64;
@@ -4825,13 +4553,11 @@ extern "C-unwind" fn strftimeFunc(
                                 x.D,
                             )
                         };
-                        break '__slate_break_668;
-                        // /* Fall thru */
                     }
                     71 | 103 => {
                         let mut y: DateTime = x;
                         0 as i32;
-                        // /* Move y so that it is the Thursday in the same week as x */
+                        // Move y so that it is the Thursday in the same week as x
                         let __v877: i64 = y.iJD;
                         let __v878: i64 = __v877
                             + ((((3 as i32) - daysAfterMonday(std::ptr::addr_of_mut!(x)))
@@ -4856,6 +4582,8 @@ extern "C-unwind" fn strftimeFunc(
                                 )
                             };
                         }
+                        break '__slate_break_668;
+                        // Fall thru
                     }
                     72 | 107 => {
                         unsafe {
@@ -4869,8 +4597,6 @@ extern "C-unwind" fn strftimeFunc(
                                 x.h,
                             )
                         };
-                        break '__slate_break_668;
-                        // /* Fall thru */
                     }
                     73 | 108 => {
                         let mut h: i32 = x.h;
@@ -4894,9 +4620,10 @@ extern "C-unwind" fn strftimeFunc(
                             )
                         };
                         break '__slate_break_668;
-                        // /* Day of year.  Jan01==1, Jan02==2, and so forth */
+                        // Fall thru
                     }
                     106 => {
+                        // Day of year.  Jan01==1, Jan02==2, and so forth
                         unsafe {
                             sqlite3_str_appendf(
                                 pRes,
@@ -4904,10 +4631,9 @@ extern "C-unwind" fn strftimeFunc(
                                 daysAfterJan01(std::ptr::addr_of_mut!(x)) + (1 as i32),
                             )
                         };
-                        break '__slate_break_668;
-                        // /* Julian day number.  (Non-standard) */
                     }
                     74 => {
+                        // Julian day number.  (Non-standard)
                         unsafe {
                             sqlite3_str_appendf(
                                 pRes,
@@ -4933,8 +4659,6 @@ extern "C-unwind" fn strftimeFunc(
                                 x.m,
                             )
                         };
-                        break '__slate_break_668;
-                        // /* Fall thru */
                     }
                     112 | 80 => {
                         if x.h >= (12 as i32) {
@@ -4962,6 +4686,8 @@ extern "C-unwind" fn strftimeFunc(
                                 )
                             };
                         }
+                        break '__slate_break_668;
+                        // Fall thru
                     }
                     82 => {
                         unsafe {
@@ -5016,10 +4742,9 @@ extern "C-unwind" fn strftimeFunc(
                                 x.s as i32,
                             )
                         };
-                        break '__slate_break_668;
-                        // /* Day of week.  1 to 7.  Monday==1, Sunday==7 */
                     }
                     117 | 119 => {
+                        // Day of week.  0 to 6.  Sunday==0, Monday==1
                         let mut c: i8 = (((daysAfterSunday(std::ptr::addr_of_mut!(x)) as i8)
                             as i32)
                             + (48 as i32)) as i8;
@@ -5028,10 +4753,10 @@ extern "C-unwind" fn strftimeFunc(
                         }
                         unsafe { sqlite3_str_appendchar(pRes, 1 as i32, c) };
                         break '__slate_break_668;
-                        // /* Day of week.  0 to 6.  Sunday==0, Monday==1 */
-                        // /* Week num. 00-53. First Sun of the year is week 01 */
+                        // Day of week.  1 to 7.  Monday==1, Sunday==7
                     }
                     85 => {
+                        // Week num. 00-53. First Sun of the year is week 01
                         unsafe {
                             sqlite3_str_appendf(
                                 pRes,
@@ -5042,12 +4767,11 @@ extern "C-unwind" fn strftimeFunc(
                                     / (7 as i32),
                             )
                         };
-                        break '__slate_break_668;
-                        // /* Week num. 01-53. First week with a Thur is week 01 */
                     }
                     86 => {
+                        // Week num. 01-53. First week with a Thur is week 01
                         let mut y: DateTime = x;
-                        // /* Adjust y so that is the Thursday in the same week as x */
+                        // Adjust y so that is the Thursday in the same week as x
                         0 as i32;
                         let __v881: i64 = y.iJD;
                         let __v882: i64 = __v881
@@ -5063,10 +4787,9 @@ extern "C-unwind" fn strftimeFunc(
                                 daysAfterJan01(std::ptr::addr_of_mut!(y)) / (7 as i32) + (1 as i32),
                             )
                         };
-                        break '__slate_break_668;
-                        // /* Week num. 00-53. First Mon of the year is week 01 */
                     }
                     87 => {
+                        // Week num. 00-53. First Mon of the year is week 01
                         unsafe {
                             sqlite3_str_appendf(
                                 pRes,
@@ -5113,11 +4836,9 @@ extern "C-unwind" fn strftimeFunc(
     unsafe { sqlite3_result_str(context, pRes, 2 as i32) };
 }
 
-// /*
-// ** current_time()
-// **
-// ** This function returns the same value as time('now').
-// */
+/// current_time()
+///
+/// This function returns the same value as time('now').
 #[unsafe(link_section = ".text.slate_distinct.date.ctimeFunc")]
 extern "C-unwind" fn ctimeFunc(
     mut context: *mut sqlite3_context,
@@ -5133,11 +4854,9 @@ extern "C-unwind" fn ctimeFunc(
     );
 }
 
-// /*
-// ** current_date()
-// **
-// ** This function returns the same value as date('now').
-// */
+/// current_date()
+///
+/// This function returns the same value as date('now').
 #[unsafe(link_section = ".text.slate_distinct.date.cdateFunc")]
 extern "C-unwind" fn cdateFunc(
     mut context: *mut sqlite3_context,
@@ -5153,23 +4872,21 @@ extern "C-unwind" fn cdateFunc(
     );
 }
 
-// /*
-// ** timediff(DATE1, DATE2)
-// **
-// ** Return the amount of time that must be added to DATE2 in order to
-// ** convert it into DATE2.  The time difference format is:
-// **
-// **     +YYYY-MM-DD HH:MM:SS.SSS
-// **
-// ** The initial "+" becomes "-" if DATE1 occurs before DATE2.  For
-// ** date/time values A and B, the following invariant should hold:
-// **
-// **     datetime(A) == (datetime(B, timediff(A,B))
-// **
-// ** Both DATE arguments must be either a julian day number, or an
-// ** ISO-8601 string.  The unix timestamps are not supported by this
-// ** routine.
-// */
+/// timediff(DATE1, DATE2)
+///
+/// Return the amount of time that must be added to DATE2 in order to
+/// convert it into DATE2.  The time difference format is:
+///
+///     +YYYY-MM-DD HH:MM:SS.SSS
+///
+/// The initial "+" becomes "-" if DATE1 occurs before DATE2.  For
+/// date/time values A and B, the following invariant should hold:
+///
+///     datetime(A) == (datetime(B, timediff(A,B))
+///
+/// Both DATE arguments must be either a julian day number, or an
+/// ISO-8601 string.  The unix timestamps are not supported by this
+/// routine.
 #[unsafe(link_section = ".text.slate_distinct.date.timediffFunc")]
 extern "C-unwind" fn timediffFunc(
     mut context: *mut sqlite3_context,
@@ -5255,8 +4972,8 @@ extern "C-unwind" fn timediffFunc(
             (((1486995408 as i32) as i64) as u64).wrapping_mul(((100000 as i32) as i64) as u64),
         ) as i64;
         d1.iJD = __v898;
-    // /* d1<d2 */
     } else {
+        // d1<d2
         sign = (45 as i32) as i8;
         Y = d2.Y - d1.Y;
         if Y != (0 as i32) {
@@ -5334,11 +5051,9 @@ extern "C-unwind" fn timediffFunc(
     unsafe { sqlite3_result_str(context, std::ptr::addr_of_mut!(sRes), 1 as i32) };
 }
 
-// /*
-// ** current_timestamp()
-// **
-// ** This function returns the same value as datetime('now').
-// */
+/// current_timestamp()
+///
+/// This function returns the same value as datetime('now').
 #[unsafe(link_section = ".text.slate_distinct.date.ctimestampFunc")]
 extern "C-unwind" fn ctimestampFunc(
     mut context: *mut sqlite3_context,
@@ -5353,3 +5068,179 @@ extern "C-unwind" fn ctimestampFunc(
         std::ptr::null_mut::<*mut sqlite3_value>(),
     );
 }
+
+/// This function registered all of the above C functions as SQL
+/// functions.  This should be the only routine in this file with
+/// external linkage.
+#[unsafe(no_mangle)]
+extern "C-unwind" fn sqlite3RegisterDateTimeFunctions() {
+    unsafe {
+        sqlite3InsertBuiltinFuncs(
+            unsafe { std::ptr::addr_of_mut!(aDateTimeFuncs.0) as *mut FuncDef },
+            (((720 as u64) / (72 as u64)) as u32) as i32,
+        )
+    };
+}
+
+static mut aDateTimeFuncs: __SlateAlign16<[FuncDef; 10]> = __SlateAlign16([
+    FuncDef {
+        nArg: -(1 as i32) as i16,
+        funcFlags: ((8388608 as i32) | (8192 as i32) | (1 as i32) | (2048 as i32)) as u32,
+        pUserData: (unsafe { std::ptr::addr_of_mut!(sqlite3Config) }) as *mut (),
+        pNext: std::ptr::null_mut::<FuncDef>(),
+        xSFunc: Some(juliandayFunc),
+        xFinalize: None,
+        xValue: None,
+        xInverse: None,
+        zName: (b"julianday\0".as_ptr() as *mut i8) as *const i8,
+        u: {
+            let mut __t0: __SlateRecord175 = unsafe { std::mem::zeroed() };
+            __t0.pHash = std::ptr::null_mut::<FuncDef>();
+            __t0
+        },
+    },
+    FuncDef {
+        nArg: -(1 as i32) as i16,
+        funcFlags: ((8388608 as i32) | (8192 as i32) | (1 as i32) | (2048 as i32)) as u32,
+        pUserData: (unsafe { std::ptr::addr_of_mut!(sqlite3Config) }) as *mut (),
+        pNext: std::ptr::null_mut::<FuncDef>(),
+        xSFunc: Some(unixepochFunc),
+        xFinalize: None,
+        xValue: None,
+        xInverse: None,
+        zName: (b"unixepoch\0".as_ptr() as *mut i8) as *const i8,
+        u: {
+            let mut __t1: __SlateRecord175 = unsafe { std::mem::zeroed() };
+            __t1.pHash = std::ptr::null_mut::<FuncDef>();
+            __t1
+        },
+    },
+    FuncDef {
+        nArg: -(1 as i32) as i16,
+        funcFlags: ((8388608 as i32) | (8192 as i32) | (1 as i32) | (2048 as i32)) as u32,
+        pUserData: (unsafe { std::ptr::addr_of_mut!(sqlite3Config) }) as *mut (),
+        pNext: std::ptr::null_mut::<FuncDef>(),
+        xSFunc: Some(dateFunc),
+        xFinalize: None,
+        xValue: None,
+        xInverse: None,
+        zName: (b"date\0".as_ptr() as *mut i8) as *const i8,
+        u: {
+            let mut __t2: __SlateRecord175 = unsafe { std::mem::zeroed() };
+            __t2.pHash = std::ptr::null_mut::<FuncDef>();
+            __t2
+        },
+    },
+    FuncDef {
+        nArg: -(1 as i32) as i16,
+        funcFlags: ((8388608 as i32) | (8192 as i32) | (1 as i32) | (2048 as i32)) as u32,
+        pUserData: (unsafe { std::ptr::addr_of_mut!(sqlite3Config) }) as *mut (),
+        pNext: std::ptr::null_mut::<FuncDef>(),
+        xSFunc: Some(timeFunc),
+        xFinalize: None,
+        xValue: None,
+        xInverse: None,
+        zName: (b"time\0".as_ptr() as *mut i8) as *const i8,
+        u: {
+            let mut __t3: __SlateRecord175 = unsafe { std::mem::zeroed() };
+            __t3.pHash = std::ptr::null_mut::<FuncDef>();
+            __t3
+        },
+    },
+    FuncDef {
+        nArg: -(1 as i32) as i16,
+        funcFlags: ((8388608 as i32) | (8192 as i32) | (1 as i32) | (2048 as i32)) as u32,
+        pUserData: (unsafe { std::ptr::addr_of_mut!(sqlite3Config) }) as *mut (),
+        pNext: std::ptr::null_mut::<FuncDef>(),
+        xSFunc: Some(datetimeFunc),
+        xFinalize: None,
+        xValue: None,
+        xInverse: None,
+        zName: (b"datetime\0".as_ptr() as *mut i8) as *const i8,
+        u: {
+            let mut __t4: __SlateRecord175 = unsafe { std::mem::zeroed() };
+            __t4.pHash = std::ptr::null_mut::<FuncDef>();
+            __t4
+        },
+    },
+    FuncDef {
+        nArg: -(1 as i32) as i16,
+        funcFlags: ((8388608 as i32) | (8192 as i32) | (1 as i32) | (2048 as i32)) as u32,
+        pUserData: (unsafe { std::ptr::addr_of_mut!(sqlite3Config) }) as *mut (),
+        pNext: std::ptr::null_mut::<FuncDef>(),
+        xSFunc: Some(strftimeFunc),
+        xFinalize: None,
+        xValue: None,
+        xInverse: None,
+        zName: (b"strftime\0".as_ptr() as *mut i8) as *const i8,
+        u: {
+            let mut __t5: __SlateRecord175 = unsafe { std::mem::zeroed() };
+            __t5.pHash = std::ptr::null_mut::<FuncDef>();
+            __t5
+        },
+    },
+    FuncDef {
+        nArg: (2 as i32) as i16,
+        funcFlags: ((8388608 as i32) | (8192 as i32) | (1 as i32) | (2048 as i32)) as u32,
+        pUserData: (unsafe { std::ptr::addr_of_mut!(sqlite3Config) }) as *mut (),
+        pNext: std::ptr::null_mut::<FuncDef>(),
+        xSFunc: Some(timediffFunc),
+        xFinalize: None,
+        xValue: None,
+        xInverse: None,
+        zName: (b"timediff\0".as_ptr() as *mut i8) as *const i8,
+        u: {
+            let mut __t6: __SlateRecord175 = unsafe { std::mem::zeroed() };
+            __t6.pHash = std::ptr::null_mut::<FuncDef>();
+            __t6
+        },
+    },
+    FuncDef {
+        nArg: (0 as i32) as i16,
+        funcFlags: ((8388608 as i32) | (8192 as i32) | (1 as i32)) as u32,
+        pUserData: std::ptr::null_mut::<()>(),
+        pNext: std::ptr::null_mut::<FuncDef>(),
+        xSFunc: Some(ctimeFunc),
+        xFinalize: None,
+        xValue: None,
+        xInverse: None,
+        zName: (b"current_time\0".as_ptr() as *mut i8) as *const i8,
+        u: {
+            let mut __t7: __SlateRecord175 = unsafe { std::mem::zeroed() };
+            __t7.pHash = std::ptr::null_mut::<FuncDef>();
+            __t7
+        },
+    },
+    FuncDef {
+        nArg: (0 as i32) as i16,
+        funcFlags: ((8388608 as i32) | (8192 as i32) | (1 as i32)) as u32,
+        pUserData: std::ptr::null_mut::<()>(),
+        pNext: std::ptr::null_mut::<FuncDef>(),
+        xSFunc: Some(ctimestampFunc),
+        xFinalize: None,
+        xValue: None,
+        xInverse: None,
+        zName: (b"current_timestamp\0".as_ptr() as *mut i8) as *const i8,
+        u: {
+            let mut __t8: __SlateRecord175 = unsafe { std::mem::zeroed() };
+            __t8.pHash = std::ptr::null_mut::<FuncDef>();
+            __t8
+        },
+    },
+    FuncDef {
+        nArg: (0 as i32) as i16,
+        funcFlags: ((8388608 as i32) | (8192 as i32) | (1 as i32)) as u32,
+        pUserData: std::ptr::null_mut::<()>(),
+        pNext: std::ptr::null_mut::<FuncDef>(),
+        xSFunc: Some(cdateFunc),
+        xFinalize: None,
+        xValue: None,
+        xInverse: None,
+        zName: (b"current_date\0".as_ptr() as *mut i8) as *const i8,
+        u: {
+            let mut __t9: __SlateRecord175 = unsafe { std::mem::zeroed() };
+            __t9.pHash = std::ptr::null_mut::<FuncDef>();
+            __t9
+        },
+    },
+]);

@@ -1,3 +1,12 @@
+//! The "printf" code that follows dates from the 1980's.  It is in
+//! the public domain.
+//!
+//!
+//!
+//! This file contains code for a set of "printf"-like routines.  These
+//! routines format strings much like the printf() from the standard C
+//! library, though the implementation here has enhancements to support
+//! SQLite.
 unsafe extern "C" {
     static mut sqlite3Config: Sqlite3Config;
     static mut sqlite3OomStr: sqlite3_str;
@@ -24,6 +33,424 @@ unsafe extern "C" {
     fn sqlite3ErrorToParser(__v665: *mut sqlite3, __v666: i32) -> i32;
     fn sqlite3AppendOneUtf8Character(__v667: *mut i8, __v668: u32) -> i32;
     fn sqlite3OomFault(__v669: *mut sqlite3) -> *mut ();
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_file {
+    pMethods: *const sqlite3_io_methods,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_io_methods {
+    iVersion: i32,
+    xClose: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file) -> i32>,
+    xRead: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, *mut (), i32, i64) -> i32>,
+    xWrite: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, *const (), i32, i64) -> i32>,
+    xTruncate: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i64) -> i32>,
+    xSync: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32) -> i32>,
+    xFileSize: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, *mut i64) -> i32>,
+    xLock: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32) -> i32>,
+    xUnlock: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32) -> i32>,
+    xCheckReservedLock: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, *mut i32) -> i32>,
+    xFileControl: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32, *mut ()) -> i32>,
+    xSectorSize: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file) -> i32>,
+    xDeviceCharacteristics: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file) -> i32>,
+    xShmMap:
+        Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32, i32, i32, *mut *mut ()) -> i32>,
+    xShmLock: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32, i32, i32) -> i32>,
+    xShmBarrier: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file)>,
+    xShmUnmap: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32) -> i32>,
+    xFetch: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i64, i32, *mut *mut ()) -> i32>,
+    xUnfetch: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i64, *mut ()) -> i32>,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_vfs {
+    iVersion: i32,
+    szOsFile: i32,
+    mxPathname: i32,
+    pNext: *mut sqlite3_vfs,
+    zName: *const i8,
+    pAppData: *mut (),
+    xOpen: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vfs,
+            *const i8,
+            *mut sqlite3_file,
+            i32,
+            *mut i32,
+        ) -> i32,
+    >,
+    xDelete: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8, i32) -> i32>,
+    xAccess: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8, i32, *mut i32) -> i32>,
+    xFullPathname:
+        Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8, i32, *mut i8) -> i32>,
+    xDlOpen: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8) -> *mut ()>,
+    xDlError: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, i32, *mut i8)>,
+    xDlSym: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vfs,
+            *mut (),
+            *const i8,
+        ) -> Option<unsafe extern "C-unwind" fn()>,
+    >,
+    xDlClose: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *mut ())>,
+    xRandomness: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, i32, *mut i8) -> i32>,
+    xSleep: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, i32) -> i32>,
+    xCurrentTime: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *mut f64) -> i32>,
+    xGetLastError: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, i32, *mut i8) -> i32>,
+    xCurrentTimeInt64: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *mut i64) -> i32>,
+    xSetSystemCall: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vfs,
+            *const i8,
+            Option<unsafe extern "C-unwind" fn()>,
+        ) -> i32,
+    >,
+    xGetSystemCall: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vfs,
+            *const i8,
+        ) -> Option<unsafe extern "C-unwind" fn()>,
+    >,
+    xNextSystemCall: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8) -> *const i8>,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_mutex {}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_mem_methods {
+    xMalloc: Option<unsafe extern "C-unwind" fn(i32) -> *mut ()>,
+    xFree: Option<unsafe extern "C-unwind" fn(*mut ())>,
+    xRealloc: Option<unsafe extern "C-unwind" fn(*mut (), i32) -> *mut ()>,
+    xSize: Option<unsafe extern "C-unwind" fn(*mut ()) -> i32>,
+    xRoundup: Option<unsafe extern "C-unwind" fn(i32) -> i32>,
+    xInit: Option<unsafe extern "C-unwind" fn(*mut ()) -> i32>,
+    xShutdown: Option<unsafe extern "C-unwind" fn(*mut ())>,
+    pAppData: *mut (),
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_module {
+    iVersion: i32,
+    xCreate: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3,
+            *mut (),
+            i32,
+            *const *const i8,
+            *mut *mut sqlite3_vtab,
+            *mut *mut i8,
+        ) -> i32,
+    >,
+    xConnect: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3,
+            *mut (),
+            i32,
+            *const *const i8,
+            *mut *mut sqlite3_vtab,
+            *mut *mut i8,
+        ) -> i32,
+    >,
+    xBestIndex:
+        Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, *mut sqlite3_index_info) -> i32>,
+    xDisconnect: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
+    xDestroy: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
+    xOpen: Option<
+        unsafe extern "C-unwind" fn(*mut sqlite3_vtab, *mut *mut sqlite3_vtab_cursor) -> i32,
+    >,
+    xClose: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor) -> i32>,
+    xFilter: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vtab_cursor,
+            i32,
+            *const i8,
+            i32,
+            *mut *mut sqlite3_value,
+        ) -> i32,
+    >,
+    xNext: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor) -> i32>,
+    xEof: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor) -> i32>,
+    xColumn: Option<
+        unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor, *mut sqlite3_context, i32) -> i32,
+    >,
+    xRowid: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor, *mut i64) -> i32>,
+    xUpdate: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vtab,
+            i32,
+            *mut *mut sqlite3_value,
+            *mut i64,
+        ) -> i32,
+    >,
+    xBegin: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
+    xSync: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
+    xCommit: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
+    xRollback: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
+    xFindFunction: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vtab,
+            i32,
+            *const i8,
+            *mut Option<
+                unsafe extern "C-unwind" fn(*mut sqlite3_context, i32, *mut *mut sqlite3_value),
+            >,
+            *mut *mut (),
+        ) -> i32,
+    >,
+    xRename: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, *const i8) -> i32>,
+    xSavepoint: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, i32) -> i32>,
+    xRelease: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, i32) -> i32>,
+    xRollbackTo: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, i32) -> i32>,
+    xShadowName: Option<unsafe extern "C-unwind" fn(*const i8) -> i32>,
+    xIntegrity: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vtab,
+            *const i8,
+            *const i8,
+            i32,
+            *mut *mut i8,
+        ) -> i32,
+    >,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_value {}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_context {}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_index_info {
+    nConstraint: i32,
+    aConstraint: *mut sqlite3_index_constraint,
+    nOrderBy: i32,
+    aOrderBy: *mut sqlite3_index_orderby,
+    aConstraintUsage: *mut sqlite3_index_constraint_usage,
+    idxNum: i32,
+    idxStr: *mut i8,
+    needToFreeIdxStr: i32,
+    orderByConsumed: i32,
+    estimatedCost: f64,
+    estimatedRows: i64,
+    idxFlags: i32,
+    colUsed: u64,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_vtab {
+    pModule: *const sqlite3_module,
+    nRef: i32,
+    zErrMsg: *mut i8,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_vtab_cursor {
+    pVtab: *mut sqlite3_vtab,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_mutex_methods {
+    xMutexInit: Option<unsafe extern "C-unwind" fn() -> i32>,
+    xMutexEnd: Option<unsafe extern "C-unwind" fn() -> i32>,
+    xMutexAlloc: Option<unsafe extern "C-unwind" fn(i32) -> *mut sqlite3_mutex>,
+    xMutexFree: Option<unsafe extern "C-unwind" fn(*mut sqlite3_mutex)>,
+    xMutexEnter: Option<unsafe extern "C-unwind" fn(*mut sqlite3_mutex)>,
+    xMutexTry: Option<unsafe extern "C-unwind" fn(*mut sqlite3_mutex) -> i32>,
+    xMutexLeave: Option<unsafe extern "C-unwind" fn(*mut sqlite3_mutex)>,
+    xMutexHeld: Option<unsafe extern "C-unwind" fn(*mut sqlite3_mutex) -> i32>,
+    xMutexNotheld: Option<unsafe extern "C-unwind" fn(*mut sqlite3_mutex) -> i32>,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_index_constraint {
+    iColumn: i32,
+    op: u8,
+    usable: u8,
+    iTermOffset: i32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_index_orderby {
+    iColumn: i32,
+    desc: u8,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_index_constraint_usage {
+    argvIndex: i32,
+    omit: u8,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_pcache_page {
+    pBuf: *mut (),
+    pExtra: *mut (),
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_pcache_methods2 {
+    iVersion: i32,
+    pArg: *mut (),
+    xInit: Option<unsafe extern "C-unwind" fn(*mut ()) -> i32>,
+    xShutdown: Option<unsafe extern "C-unwind" fn(*mut ())>,
+    xCreate: Option<unsafe extern "C-unwind" fn(i32, i32, i32) -> *mut sqlite3_pcache>,
+    xCachesize: Option<unsafe extern "C-unwind" fn(*mut sqlite3_pcache, i32)>,
+    xPagecount: Option<unsafe extern "C-unwind" fn(*mut sqlite3_pcache) -> i32>,
+    xFetch: Option<
+        unsafe extern "C-unwind" fn(*mut sqlite3_pcache, u32, i32) -> *mut sqlite3_pcache_page,
+    >,
+    xUnpin: Option<unsafe extern "C-unwind" fn(*mut sqlite3_pcache, *mut sqlite3_pcache_page, i32)>,
+    xRekey: Option<
+        unsafe extern "C-unwind" fn(*mut sqlite3_pcache, *mut sqlite3_pcache_page, u32, u32),
+    >,
+    xTruncate: Option<unsafe extern "C-unwind" fn(*mut sqlite3_pcache, u32)>,
+    xDestroy: Option<unsafe extern "C-unwind" fn(*mut sqlite3_pcache)>,
+    xShrink: Option<unsafe extern "C-unwind" fn(*mut sqlite3_pcache)>,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_pcache {}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Hash {
+    htsize: u32,
+    count: u32,
+    first: *mut HashElem,
+    ht: *mut _ht,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct HashElem {
+    next: *mut HashElem,
+    prev: *mut HashElem,
+    data: *mut (),
+    pKey: *const i8,
+    h: u32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct BusyHandler {
+    xBusyHandler: Option<unsafe extern "C-unwind" fn(*mut (), i32) -> i32>,
+    pBusyArg: *mut (),
+    nBusy: i32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct SubrtnSig {
+    selId: i32,
+    bComplete: u8,
+    zAff: *mut i8,
+    iTable: i32,
+    iAddr: i32,
+    regReturn: i32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct _ht {
+    count: u32,
+    chain: *mut HashElem,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct VdbeOp {
+    opcode: u8,
+    p4type: i8,
+    p5: u16,
+    p1: i32,
+    p2: i32,
+    p3: i32,
+    p4: p4union,
+    zComment: *mut i8,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct SubProgram {
+    aOp: *mut VdbeOp,
+    nOp: i32,
+    nMem: i32,
+    nCsr: i32,
+    aOnce: *mut u8,
+    token: *mut (),
+    pNext: *mut SubProgram,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Db {
+    zDbSName: *mut i8,
+    pBt: *mut Btree,
+    safety_level: u8,
+    bSyncSet: u8,
+    pSchema: *mut Schema,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Schema {
+    schema_cookie: i32,
+    iGeneration: i32,
+    tblHash: Hash,
+    idxHash: Hash,
+    trigHash: Hash,
+    fkeyHash: Hash,
+    pSeqTab: *mut Table,
+    file_format: u8,
+    enc: u8,
+    schemaFlags: u16,
+    cache_size: i32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Lookaside {
+    bDisable: u32,
+    sz: u16,
+    szTrue: u16,
+    bMalloced: u8,
+    nSlot: u32,
+    anStat: [u32; 3],
+    pInit: *mut LookasideSlot,
+    pFree: *mut LookasideSlot,
+    pSmallInit: *mut LookasideSlot,
+    pSmallFree: *mut LookasideSlot,
+    pMiddle: *mut (),
+    pStart: *mut (),
+    pEnd: *mut (),
+    pTrueEnd: *mut (),
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct LookasideSlot {
+    pNext: *mut LookasideSlot,
 }
 
 #[repr(C)]
@@ -133,345 +560,163 @@ struct sqlite3 {
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct sqlite3_file {
-    pMethods: *const sqlite3_io_methods,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct sqlite3_io_methods {
-    iVersion: i32,
-    xClose: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file) -> i32>,
-    xRead: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, *mut (), i32, i64) -> i32>,
-    xWrite: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, *const (), i32, i64) -> i32>,
-    xTruncate: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i64) -> i32>,
-    xSync: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32) -> i32>,
-    xFileSize: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, *mut i64) -> i32>,
-    xLock: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32) -> i32>,
-    xUnlock: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32) -> i32>,
-    xCheckReservedLock: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, *mut i32) -> i32>,
-    xFileControl: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32, *mut ()) -> i32>,
-    xSectorSize: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file) -> i32>,
-    xDeviceCharacteristics: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file) -> i32>,
-    xShmMap:
-        Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32, i32, i32, *mut *mut ()) -> i32>,
-    xShmLock: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32, i32, i32) -> i32>,
-    xShmBarrier: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file)>,
-    xShmUnmap: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32) -> i32>,
-    xFetch: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i64, i32, *mut *mut ()) -> i32>,
-    xUnfetch: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i64, *mut ()) -> i32>,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct sqlite3_mutex {}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct sqlite3_vfs {
-    iVersion: i32,
-    szOsFile: i32,
-    mxPathname: i32,
-    pNext: *mut sqlite3_vfs,
+struct FuncDef {
+    nArg: i16,
+    funcFlags: u32,
+    pUserData: *mut (),
+    pNext: *mut FuncDef,
+    xSFunc: Option<unsafe extern "C-unwind" fn(*mut sqlite3_context, i32, *mut *mut sqlite3_value)>,
+    xFinalize: Option<unsafe extern "C-unwind" fn(*mut sqlite3_context)>,
+    xValue: Option<unsafe extern "C-unwind" fn(*mut sqlite3_context)>,
+    xInverse:
+        Option<unsafe extern "C-unwind" fn(*mut sqlite3_context, i32, *mut *mut sqlite3_value)>,
     zName: *const i8,
-    pAppData: *mut (),
-    xOpen: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3_vfs,
-            *const i8,
-            *mut sqlite3_file,
-            i32,
-            *mut i32,
-        ) -> i32,
-    >,
-    xDelete: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8, i32) -> i32>,
-    xAccess: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8, i32, *mut i32) -> i32>,
-    xFullPathname:
-        Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8, i32, *mut i8) -> i32>,
-    xDlOpen: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8) -> *mut ()>,
-    xDlError: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, i32, *mut i8)>,
-    xDlSym: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3_vfs,
-            *mut (),
-            *const i8,
-        ) -> Option<unsafe extern "C-unwind" fn()>,
-    >,
-    xDlClose: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *mut ())>,
-    xRandomness: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, i32, *mut i8) -> i32>,
-    xSleep: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, i32) -> i32>,
-    xCurrentTime: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *mut f64) -> i32>,
-    xGetLastError: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, i32, *mut i8) -> i32>,
-    xCurrentTimeInt64: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *mut i64) -> i32>,
-    xSetSystemCall: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3_vfs,
-            *const i8,
-            Option<unsafe extern "C-unwind" fn()>,
-        ) -> i32,
-    >,
-    xGetSystemCall: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3_vfs,
-            *const i8,
-        ) -> Option<unsafe extern "C-unwind" fn()>,
-    >,
-    xNextSystemCall: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8) -> *const i8>,
+    u: __SlateRecord180,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct sqlite3_mem_methods {
-    xMalloc: Option<unsafe extern "C-unwind" fn(i32) -> *mut ()>,
-    xFree: Option<unsafe extern "C-unwind" fn(*mut ())>,
-    xRealloc: Option<unsafe extern "C-unwind" fn(*mut (), i32) -> *mut ()>,
-    xSize: Option<unsafe extern "C-unwind" fn(*mut ()) -> i32>,
-    xRoundup: Option<unsafe extern "C-unwind" fn(i32) -> i32>,
-    xInit: Option<unsafe extern "C-unwind" fn(*mut ()) -> i32>,
-    xShutdown: Option<unsafe extern "C-unwind" fn(*mut ())>,
-    pAppData: *mut (),
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct sqlite3_value {}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct sqlite3_context {}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct sqlite3_vtab {
-    pModule: *const sqlite3_module,
+struct FuncDestructor {
     nRef: i32,
-    zErrMsg: *mut i8,
+    xDestroy: Option<unsafe extern "C-unwind" fn(*mut ())>,
+    pUserData: *mut (),
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct sqlite3_index_info {
-    nConstraint: i32,
-    aConstraint: *mut sqlite3_index_constraint,
-    nOrderBy: i32,
-    aOrderBy: *mut sqlite3_index_orderby,
-    aConstraintUsage: *mut sqlite3_index_constraint_usage,
-    idxNum: i32,
-    idxStr: *mut i8,
-    needToFreeIdxStr: i32,
-    orderByConsumed: i32,
-    estimatedCost: f64,
-    estimatedRows: i64,
-    idxFlags: i32,
-    colUsed: u64,
+struct Savepoint {
+    zName: *mut i8,
+    nDeferredCons: i64,
+    nDeferredImmCons: i64,
+    pNext: *mut Savepoint,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct sqlite3_vtab_cursor {
-    pVtab: *mut sqlite3_vtab,
+struct Module {
+    pModule: *const sqlite3_module,
+    zName: *const i8,
+    nRefModule: i32,
+    pAux: *mut (),
+    xDestroy: Option<unsafe extern "C-unwind" fn(*mut ())>,
+    pEpoTab: *mut Table,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct sqlite3_module {
-    iVersion: i32,
-    xCreate: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3,
-            *mut (),
-            i32,
-            *const *const i8,
-            *mut *mut sqlite3_vtab,
-            *mut *mut i8,
-        ) -> i32,
-    >,
-    xConnect: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3,
-            *mut (),
-            i32,
-            *const *const i8,
-            *mut *mut sqlite3_vtab,
-            *mut *mut i8,
-        ) -> i32,
-    >,
-    xBestIndex:
-        Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, *mut sqlite3_index_info) -> i32>,
-    xDisconnect: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
-    xDestroy: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
-    xOpen: Option<
-        unsafe extern "C-unwind" fn(*mut sqlite3_vtab, *mut *mut sqlite3_vtab_cursor) -> i32,
-    >,
-    xClose: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor) -> i32>,
-    xFilter: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3_vtab_cursor,
-            i32,
-            *const i8,
-            i32,
-            *mut *mut sqlite3_value,
-        ) -> i32,
-    >,
-    xNext: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor) -> i32>,
-    xEof: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor) -> i32>,
-    xColumn: Option<
-        unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor, *mut sqlite3_context, i32) -> i32,
-    >,
-    xRowid: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor, *mut i64) -> i32>,
-    xUpdate: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3_vtab,
-            i32,
-            *mut *mut sqlite3_value,
-            *mut i64,
-        ) -> i32,
-    >,
-    xBegin: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
-    xSync: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
-    xCommit: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
-    xRollback: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
-    xFindFunction: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3_vtab,
-            i32,
-            *const i8,
-            *mut Option<
-                unsafe extern "C-unwind" fn(*mut sqlite3_context, i32, *mut *mut sqlite3_value),
-            >,
-            *mut *mut (),
-        ) -> i32,
-    >,
-    xRename: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, *const i8) -> i32>,
-    xSavepoint: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, i32) -> i32>,
-    xRelease: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, i32) -> i32>,
-    xRollbackTo: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, i32) -> i32>,
-    xShadowName: Option<unsafe extern "C-unwind" fn(*const i8) -> i32>,
-    xIntegrity: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3_vtab,
-            *const i8,
-            *const i8,
-            i32,
-            *mut *mut i8,
-        ) -> i32,
-    >,
+struct Column {
+    zCnName: *mut i8,
+    __slate_bits_0: __slate_bits::__SlateBits78U0,
+    affinity: i8,
+    szEst: u8,
+    hName: u8,
+    iDflt: u16,
+    colFlags: u16,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct sqlite3_index_constraint {
-    iColumn: i32,
-    op: u8,
-    usable: u8,
-    iTermOffset: i32,
+struct CollSeq {
+    zName: *mut i8,
+    enc: u8,
+    pUser: *mut (),
+    xCmp: Option<unsafe extern "C-unwind" fn(*mut (), i32, *const (), i32, *const ()) -> i32>,
+    xDel: Option<unsafe extern "C-unwind" fn(*mut ())>,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct sqlite3_index_orderby {
-    iColumn: i32,
-    desc: u8,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct sqlite3_index_constraint_usage {
-    argvIndex: i32,
-    omit: u8,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct sqlite3_mutex_methods {
-    xMutexInit: Option<unsafe extern "C-unwind" fn() -> i32>,
-    xMutexEnd: Option<unsafe extern "C-unwind" fn() -> i32>,
-    xMutexAlloc: Option<unsafe extern "C-unwind" fn(i32) -> *mut sqlite3_mutex>,
-    xMutexFree: Option<unsafe extern "C-unwind" fn(*mut sqlite3_mutex)>,
-    xMutexEnter: Option<unsafe extern "C-unwind" fn(*mut sqlite3_mutex)>,
-    xMutexTry: Option<unsafe extern "C-unwind" fn(*mut sqlite3_mutex) -> i32>,
-    xMutexLeave: Option<unsafe extern "C-unwind" fn(*mut sqlite3_mutex)>,
-    xMutexHeld: Option<unsafe extern "C-unwind" fn(*mut sqlite3_mutex) -> i32>,
-    xMutexNotheld: Option<unsafe extern "C-unwind" fn(*mut sqlite3_mutex) -> i32>,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct sqlite3_str {
+struct VTable {
     db: *mut sqlite3,
-    zText: *mut i8,
-    nAlloc: u32,
-    mxAlloc: u32,
-    nChar: u32,
-    accError: u8,
-    printfFlags: u8,
+    pMod: *mut Module,
+    pVtab: *mut sqlite3_vtab,
+    nRef: i32,
+    bConstraint: u8,
+    bAllSchemas: u8,
+    eVtabRisk: u8,
+    iSavepoint: i32,
+    pNext: *mut VTable,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct sqlite3_pcache {}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct sqlite3_pcache_page {
-    pBuf: *mut (),
-    pExtra: *mut (),
+struct Table {
+    zName: *mut i8,
+    aCol: *mut Column,
+    pIndex: *mut Index,
+    zColAff: *mut i8,
+    pCheck: *mut ExprList,
+    tnum: u32,
+    nTabRef: u32,
+    tabFlags: u32,
+    iPKey: i16,
+    nCol: i16,
+    nNVCol: i16,
+    nRowLogEst: i16,
+    szTabRow: i16,
+    keyConf: u8,
+    eTabType: u8,
+    u: __SlateRecord181,
+    pTrigger: *mut Trigger,
+    pSchema: *mut Schema,
+    aHx: [u8; 16],
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct sqlite3_pcache_methods2 {
-    iVersion: i32,
-    pArg: *mut (),
-    xInit: Option<unsafe extern "C-unwind" fn(*mut ()) -> i32>,
-    xShutdown: Option<unsafe extern "C-unwind" fn(*mut ())>,
-    xCreate: Option<unsafe extern "C-unwind" fn(i32, i32, i32) -> *mut sqlite3_pcache>,
-    xCachesize: Option<unsafe extern "C-unwind" fn(*mut sqlite3_pcache, i32)>,
-    xPagecount: Option<unsafe extern "C-unwind" fn(*mut sqlite3_pcache) -> i32>,
-    xFetch: Option<
-        unsafe extern "C-unwind" fn(*mut sqlite3_pcache, u32, i32) -> *mut sqlite3_pcache_page,
-    >,
-    xUnpin: Option<unsafe extern "C-unwind" fn(*mut sqlite3_pcache, *mut sqlite3_pcache_page, i32)>,
-    xRekey: Option<
-        unsafe extern "C-unwind" fn(*mut sqlite3_pcache, *mut sqlite3_pcache_page, u32, u32),
-    >,
-    xTruncate: Option<unsafe extern "C-unwind" fn(*mut sqlite3_pcache, u32)>,
-    xDestroy: Option<unsafe extern "C-unwind" fn(*mut sqlite3_pcache)>,
-    xShrink: Option<unsafe extern "C-unwind" fn(*mut sqlite3_pcache)>,
+struct FKey {
+    pFrom: *mut Table,
+    pNextFrom: *mut FKey,
+    zTo: *mut i8,
+    pNextTo: *mut FKey,
+    pPrevTo: *mut FKey,
+    nCol: i32,
+    isDeferred: u8,
+    aAction: [u8; 2],
+    apTrigger: [*mut Trigger; 2],
+    aCol: [sColMap; 0],
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct Hash {
-    htsize: u32,
-    count: u32,
-    first: *mut HashElem,
-    ht: *mut _ht,
+struct KeyInfo {
+    nRef: u32,
+    enc: u8,
+    nKeyField: u16,
+    nAllField: u16,
+    db: *mut sqlite3,
+    aSortFlags: *mut u8,
+    aColl: [*mut CollSeq; 0],
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct HashElem {
-    next: *mut HashElem,
-    prev: *mut HashElem,
-    data: *mut (),
-    pKey: *const i8,
-    h: u32,
+struct Index {
+    zName: *mut i8,
+    aiColumn: *mut i16,
+    aiRowLogEst: *mut i16,
+    pTable: *mut Table,
+    zColAff: *mut i8,
+    pNext: *mut Index,
+    pSchema: *mut Schema,
+    aSortOrder: *mut u8,
+    azColl: *mut *const i8,
+    pPartIdxWhere: *mut Expr,
+    aColExpr: *mut ExprList,
+    tnum: u32,
+    szIdxRow: i16,
+    nKeyCol: u16,
+    nColumn: u16,
+    onError: u8,
+    __slate_bits_0: __slate_bits::__SlateBits104U0,
+    colNotIdxed: u64,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct _ht {
-    count: u32,
-    chain: *mut HashElem,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct BusyHandler {
-    xBusyHandler: Option<unsafe extern "C-unwind" fn(*mut (), i32) -> i32>,
-    pBusyArg: *mut (),
-    nBusy: i32,
+struct Token {
+    z: *const i8,
+    n: u32,
 }
 
 #[repr(C)]
@@ -490,94 +735,6 @@ struct AggInfo {
     aFunc: *mut AggInfo_func,
     nFunc: i32,
     selId: u32,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct AutoincInfo {
-    pNext: *mut AutoincInfo,
-    pTab: *mut Table,
-    iDb: i32,
-    regCtr: i32,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct CollSeq {
-    zName: *mut i8,
-    enc: u8,
-    pUser: *mut (),
-    xCmp: Option<unsafe extern "C-unwind" fn(*mut (), i32, *const (), i32, *const ()) -> i32>,
-    xDel: Option<unsafe extern "C-unwind" fn(*mut ())>,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Column {
-    zCnName: *mut i8,
-    __slate_bits_0: __slate_bits::__SlateBits78U0,
-    affinity: i8,
-    szEst: u8,
-    hName: u8,
-    iDflt: u16,
-    colFlags: u16,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Cte {
-    zName: *mut i8,
-    pCols: *mut ExprList,
-    pSelect: *mut Select,
-    zCteErr: *const i8,
-    pUse: *mut CteUse,
-    eM10d: u8,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct CteUse {
-    nUse: i32,
-    addrM9e: i32,
-    regRtn: i32,
-    iCur: i32,
-    nRowEst: i16,
-    eM10d: u8,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Db {
-    zDbSName: *mut i8,
-    pBt: *mut Btree,
-    safety_level: u8,
-    bSyncSet: u8,
-    pSchema: *mut Schema,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct DbClientData {
-    pNext: *mut DbClientData,
-    pData: *mut (),
-    xDestructor: Option<unsafe extern "C-unwind" fn(*mut ())>,
-    zName: [i8; 0],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Schema {
-    schema_cookie: i32,
-    iGeneration: i32,
-    tblHash: Hash,
-    idxHash: Hash,
-    trigHash: Hash,
-    fkeyHash: Hash,
-    pSeqTab: *mut Table,
-    file_format: u8,
-    enc: u8,
-    schemaFlags: u16,
-    cache_size: i32,
 }
 
 #[repr(C)]
@@ -610,56 +767,6 @@ struct ExprList {
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct FKey {
-    pFrom: *mut Table,
-    pNextFrom: *mut FKey,
-    zTo: *mut i8,
-    pNextTo: *mut FKey,
-    pPrevTo: *mut FKey,
-    nCol: i32,
-    isDeferred: u8,
-    aAction: [u8; 2],
-    apTrigger: [*mut Trigger; 2],
-    aCol: [sColMap; 0],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct FpDecode {
-    n: i32,
-    iDP: i32,
-    z: *mut i8,
-    zBuf: [i8; 21],
-    sign: i8,
-    isSpecial: i8,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct FuncDestructor {
-    nRef: i32,
-    xDestroy: Option<unsafe extern "C-unwind" fn(*mut ())>,
-    pUserData: *mut (),
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct FuncDef {
-    nArg: i16,
-    funcFlags: u32,
-    pUserData: *mut (),
-    pNext: *mut FuncDef,
-    xSFunc: Option<unsafe extern "C-unwind" fn(*mut sqlite3_context, i32, *mut *mut sqlite3_value)>,
-    xFinalize: Option<unsafe extern "C-unwind" fn(*mut sqlite3_context)>,
-    xValue: Option<unsafe extern "C-unwind" fn(*mut sqlite3_context)>,
-    xInverse:
-        Option<unsafe extern "C-unwind" fn(*mut sqlite3_context, i32, *mut *mut sqlite3_value)>,
-    zName: *const i8,
-    u: __SlateRecord180,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
 struct IdList {
     nId: i32,
     a: [IdList_item; 0],
@@ -667,25 +774,98 @@ struct IdList {
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct Index {
+struct Subquery {
+    pSelect: *mut Select,
+    addrFillSub: i32,
+    regReturn: i32,
+    regResult: i32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct SrcItem {
     zName: *mut i8,
-    aiColumn: *mut i16,
-    aiRowLogEst: *mut i16,
-    pTable: *mut Table,
-    zColAff: *mut i8,
-    pNext: *mut Index,
-    pSchema: *mut Schema,
-    aSortOrder: *mut u8,
-    azColl: *mut *const i8,
-    pPartIdxWhere: *mut Expr,
-    aColExpr: *mut ExprList,
-    tnum: u32,
-    szIdxRow: i16,
-    nKeyCol: u16,
-    nColumn: u16,
-    onError: u8,
-    __slate_bits_0: __slate_bits::__SlateBits104U0,
-    colNotIdxed: u64,
+    zAlias: *mut i8,
+    pSTab: *mut Table,
+    fg: __SlateRecord199,
+    iCursor: i32,
+    colUsed: u64,
+    u1: __SlateRecord200,
+    u2: __SlateRecord201,
+    u3: __SlateRecord202,
+    u4: __SlateRecord203,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct SrcList {
+    nSrc: i32,
+    nAlloc: u32,
+    a: [SrcItem; 0],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Upsert {
+    pUpsertTarget: *mut ExprList,
+    pUpsertTargetWhere: *mut Expr,
+    pUpsertSet: *mut ExprList,
+    pUpsertWhere: *mut Expr,
+    pNextUpsert: *mut Upsert,
+    isDoUpdate: u8,
+    isDup: u8,
+    pToFree: *mut (),
+    pUpsertIdx: *mut Index,
+    pUpsertSrc: *mut SrcList,
+    regData: i32,
+    iDataCur: i32,
+    iIdxCur: i32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct RenameToken {}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Select {
+    op: u8,
+    nSelectRow: i16,
+    selFlags: u32,
+    iLimit: i32,
+    iOffset: i32,
+    selId: u32,
+    pEList: *mut ExprList,
+    pSrc: *mut SrcList,
+    pWhere: *mut Expr,
+    pGroupBy: *mut ExprList,
+    pHaving: *mut Expr,
+    pOrderBy: *mut ExprList,
+    pPrior: *mut Select,
+    pNext: *mut Select,
+    pLimit: *mut Expr,
+    pWith: *mut With,
+    pWin: *mut Window,
+    pWinDefn: *mut Window,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct AutoincInfo {
+    pNext: *mut AutoincInfo,
+    pTab: *mut Table,
+    iDb: i32,
+    regCtr: i32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct TriggerPrg {
+    pTrigger: *mut Trigger,
+    pNext: *mut TriggerPrg,
+    pProgram: *mut SubProgram,
+    orconf: i32,
+    aColmask: [u32; 2],
 }
 
 #[repr(C)]
@@ -698,54 +878,15 @@ struct IndexedExpr {
     bMaybeNullRow: u8,
     aff: u8,
     pIENext: *mut IndexedExpr,
+    zIdxName: *const i8,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct KeyInfo {
-    nRef: u32,
-    enc: u8,
-    nKeyField: u16,
-    nAllField: u16,
-    db: *mut sqlite3,
-    aSortFlags: *mut u8,
-    aColl: [*mut CollSeq; 0],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Lookaside {
-    bDisable: u32,
-    sz: u16,
-    szTrue: u16,
-    bMalloced: u8,
-    nSlot: u32,
-    anStat: [u32; 3],
-    pInit: *mut LookasideSlot,
-    pFree: *mut LookasideSlot,
-    pSmallInit: *mut LookasideSlot,
-    pSmallFree: *mut LookasideSlot,
-    pMiddle: *mut (),
-    pStart: *mut (),
-    pEnd: *mut (),
-    pTrueEnd: *mut (),
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct LookasideSlot {
-    pNext: *mut LookasideSlot,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Module {
-    pModule: *const sqlite3_module,
-    zName: *const i8,
-    nRefModule: i32,
-    pAux: *mut (),
-    xDestroy: Option<unsafe extern "C-unwind" fn(*mut ())>,
-    pEpoTab: *mut Table,
+struct ParseCleanup {
+    pNext: *mut ParseCleanup,
+    pPtr: *mut (),
+    xCleanup: Option<unsafe extern "C-unwind" fn(*mut sqlite3, *mut ())>,
 }
 
 #[repr(C)]
@@ -821,144 +962,6 @@ struct Parse {
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct ParseCleanup {
-    pNext: *mut ParseCleanup,
-    pPtr: *mut (),
-    xCleanup: Option<unsafe extern "C-unwind" fn(*mut sqlite3, *mut ())>,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct PrintfArguments {
-    nArg: i32,
-    nUsed: i32,
-    apArg: *mut *mut sqlite3_value,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct RCStr {
-    nRCRef: u64,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct RenameToken {}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Returning {
-    pParse: *mut Parse,
-    pReturnEL: *mut ExprList,
-    retTrig: Trigger,
-    retTStep: TriggerStep,
-    iRetCur: i32,
-    nRetCol: i32,
-    iRetReg: i32,
-    zName: [i8; 40],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Savepoint {
-    zName: *mut i8,
-    nDeferredCons: i64,
-    nDeferredImmCons: i64,
-    pNext: *mut Savepoint,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Select {
-    op: u8,
-    nSelectRow: i16,
-    selFlags: u32,
-    iLimit: i32,
-    iOffset: i32,
-    selId: u32,
-    pEList: *mut ExprList,
-    pSrc: *mut SrcList,
-    pWhere: *mut Expr,
-    pGroupBy: *mut ExprList,
-    pHaving: *mut Expr,
-    pOrderBy: *mut ExprList,
-    pPrior: *mut Select,
-    pNext: *mut Select,
-    pLimit: *mut Expr,
-    pWith: *mut With,
-    pWin: *mut Window,
-    pWinDefn: *mut Window,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Subquery {
-    pSelect: *mut Select,
-    addrFillSub: i32,
-    regReturn: i32,
-    regResult: i32,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct SrcItem {
-    zName: *mut i8,
-    zAlias: *mut i8,
-    pSTab: *mut Table,
-    fg: __SlateRecord199,
-    iCursor: i32,
-    colUsed: u64,
-    u1: __SlateRecord200,
-    u2: __SlateRecord201,
-    u3: __SlateRecord202,
-    u4: __SlateRecord203,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct SrcList {
-    nSrc: i32,
-    nAlloc: u32,
-    a: [SrcItem; 0],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Table {
-    zName: *mut i8,
-    aCol: *mut Column,
-    pIndex: *mut Index,
-    zColAff: *mut i8,
-    pCheck: *mut ExprList,
-    tnum: u32,
-    nTabRef: u32,
-    tabFlags: u32,
-    iPKey: i16,
-    nCol: i16,
-    nNVCol: i16,
-    nRowLogEst: i16,
-    szTabRow: i16,
-    keyConf: u8,
-    eTabType: u8,
-    u: __SlateRecord181,
-    pTrigger: *mut Trigger,
-    pSchema: *mut Schema,
-    aHx: [u8; 16],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct TableLock {}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Token {
-    z: *const i8,
-    n: u32,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
 struct Trigger {
     zName: *mut i8,
     table: *mut i8,
@@ -975,13 +978,7 @@ struct Trigger {
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct TriggerPrg {
-    pTrigger: *mut Trigger,
-    pNext: *mut TriggerPrg,
-    pProgram: *mut SubProgram,
-    orconf: i32,
-    aColmask: [u32; 2],
-}
+struct TableLock {}
 
 #[repr(C)]
 #[derive(Clone, Copy)]
@@ -1002,39 +999,134 @@ struct TriggerStep {
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct Upsert {
-    pUpsertTarget: *mut ExprList,
-    pUpsertTargetWhere: *mut Expr,
-    pUpsertSet: *mut ExprList,
-    pUpsertWhere: *mut Expr,
-    pNextUpsert: *mut Upsert,
-    isDoUpdate: u8,
-    isDup: u8,
-    pToFree: *mut (),
-    pUpsertIdx: *mut Index,
-    pUpsertSrc: *mut SrcList,
-    regData: i32,
-    iDataCur: i32,
-    iIdxCur: i32,
+struct Returning {
+    pParse: *mut Parse,
+    pReturnEL: *mut ExprList,
+    retTrig: Trigger,
+    retTStep: TriggerStep,
+    iRetCur: i32,
+    nRetCol: i32,
+    iRetReg: i32,
+    zName: [i8; 40],
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct VTable {
+struct sqlite3_str {
     db: *mut sqlite3,
-    pMod: *mut Module,
-    pVtab: *mut sqlite3_vtab,
-    nRef: i32,
-    bConstraint: u8,
-    bAllSchemas: u8,
-    eVtabRisk: u8,
-    iSavepoint: i32,
-    pNext: *mut VTable,
+    zText: *mut i8,
+    nAlloc: u32,
+    mxAlloc: u32,
+    nChar: u32,
+    accError: u8,
+    printfFlags: u8,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct RCStr {
+    nRCRef: u64,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Sqlite3Config {
+    bMemstat: i32,
+    bCoreMutex: u8,
+    bFullMutex: u8,
+    bOpenUri: u8,
+    bUseCis: u8,
+    bSmallMalloc: u8,
+    bExtraSchemaChecks: u8,
+    mxStrlen: i32,
+    neverCorrupt: i32,
+    szLookaside: i32,
+    nLookaside: i32,
+    nStmtSpill: i32,
+    m: sqlite3_mem_methods,
+    mutex: sqlite3_mutex_methods,
+    pcache2: sqlite3_pcache_methods2,
+    pHeap: *mut (),
+    nHeap: i32,
+    mnReq: i32,
+    mxReq: i32,
+    szMmap: i64,
+    mxMmap: i64,
+    pPage: *mut (),
+    szPage: i32,
+    nPage: i32,
+    mxParserStack: i32,
+    sharedCacheEnabled: i32,
+    szPma: u32,
+    isInit: i32,
+    inProgress: i32,
+    isMutexInit: i32,
+    isMallocInit: i32,
+    isPCacheInit: i32,
+    nRefInitMutex: i32,
+    pInitMutex: *mut sqlite3_mutex,
+    xLog: Option<unsafe extern "C-unwind" fn(*mut (), i32, *const i8)>,
+    pLogArg: *mut (),
+    mxMemdbSize: i64,
+    xTestCallback: Option<unsafe extern "C-unwind" fn(i32) -> i32>,
+    bLocaltimeFault: i32,
+    xAltLocaltime: Option<unsafe extern "C-unwind" fn(*const (), *mut ()) -> i32>,
+    iOnceResetThreshold: i32,
+    szSorterRef: u32,
+    iPrngSeed: u32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Cte {
+    zName: *mut i8,
+    pCols: *mut ExprList,
+    pSelect: *mut Select,
+    zCteErr: *const i8,
+    pUse: *mut CteUse,
+    eM10d: u8,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
 struct VtabCtx {}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct With {
+    nCte: i32,
+    bView: i32,
+    pOuter: *mut With,
+    a: [Cte; 0],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct CteUse {
+    nUse: i32,
+    addrM9e: i32,
+    regRtn: i32,
+    iCur: i32,
+    nRowEst: i16,
+    eM10d: u8,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Btree {}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Vdbe {}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct DbClientData {
+    pNext: *mut DbClientData,
+    pData: *mut (),
+    xDestructor: Option<unsafe extern "C-unwind" fn(*mut ())>,
+    zName: [i8; 0],
+}
 
 #[repr(C)]
 #[derive(Clone, Copy)]
@@ -1071,54 +1163,10 @@ struct Window {
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct With {
-    nCte: i32,
-    bView: i32,
-    pOuter: *mut With,
-    a: [Cte; 0],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Btree {}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Vdbe {}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct SubProgram {
-    aOp: *mut VdbeOp,
-    nOp: i32,
-    nMem: i32,
-    nCsr: i32,
-    aOnce: *mut u8,
-    token: *mut (),
-    pNext: *mut SubProgram,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct SubrtnSig {
-    selId: i32,
-    bComplete: u8,
-    zAff: *mut i8,
-    iTable: i32,
-    iAddr: i32,
-    regReturn: i32,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct VdbeOp {
-    opcode: u8,
-    p4type: i8,
-    p5: u16,
-    p1: i32,
-    p2: i32,
-    p3: i32,
-    p4: p4union,
+struct PrintfArguments {
+    nArg: i32,
+    nUsed: i32,
+    apArg: *mut *mut sqlite3_value,
 }
 
 #[repr(C)]
@@ -1365,114 +1413,60 @@ struct __SlateRecord207 {
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct Sqlite3Config {
-    bMemstat: i32,
-    bCoreMutex: u8,
-    bFullMutex: u8,
-    bOpenUri: u8,
-    bUseCis: u8,
-    bSmallMalloc: u8,
-    bExtraSchemaChecks: u8,
-    mxStrlen: i32,
-    neverCorrupt: i32,
-    szLookaside: i32,
-    nLookaside: i32,
-    nStmtSpill: i32,
-    m: sqlite3_mem_methods,
-    mutex: sqlite3_mutex_methods,
-    pcache2: sqlite3_pcache_methods2,
-    pHeap: *mut (),
-    nHeap: i32,
-    mnReq: i32,
-    mxReq: i32,
-    szMmap: i64,
-    mxMmap: i64,
-    pPage: *mut (),
-    szPage: i32,
-    nPage: i32,
-    mxParserStack: i32,
-    sharedCacheEnabled: i32,
-    szPma: u32,
-    isInit: i32,
-    inProgress: i32,
-    isMutexInit: i32,
-    isMallocInit: i32,
-    isPCacheInit: i32,
-    nRefInitMutex: i32,
-    pInitMutex: *mut sqlite3_mutex,
-    xLog: Option<unsafe extern "C-unwind" fn(*mut (), i32, *const i8)>,
-    pLogArg: *mut (),
-    mxMemdbSize: i64,
-    xTestCallback: Option<unsafe extern "C-unwind" fn(i32) -> i32>,
-    bLocaltimeFault: i32,
-    xAltLocaltime: Option<unsafe extern "C-unwind" fn(*const (), *mut ()) -> i32>,
-    iOnceResetThreshold: i32,
-    szSorterRef: u32,
-    iPrngSeed: u32,
+struct FpDecode {
+    n: i32,
+    iDP: i32,
+    z: *mut i8,
+    zBuf: [i8; 21],
+    sign: i8,
+    isSpecial: i8,
 }
 
-// /*
-// ** The "printf" code that follows dates from the 1980's.  It is in
-// ** the public domain.
-// **
-// **************************************************************************
-// **
-// ** This file contains code for a set of "printf"-like routines.  These
-// ** routines format strings much like the printf() from the standard C
-// ** library, though the implementation here has enhancements to support
-// ** SQLite.
-// */
-// /*
-// ** Conversion types fall into various categories as defined by the
-// ** following enumeration.
-// */
-// /* non-decimal integer types.  %x %o */
-// /* Floating point.  %f */
-// /* Exponentional notation. %e and %E */
-// /* Floating or exponential, depending on exponent. %g */
-// /* Return number of characters processed so far. %n */
-// /* Strings. %s */
-// /* Dynamically allocated strings. %z */
-// /* Percent symbol. %% */
-// /* Characters. %c */
-// /* The rest are extensions, not normally found in printf() */
-// /* Strings with '\'' doubled.  %q */
-// /* Strings with '\'' doubled and enclosed in '',
-//                             NULL pointers replaced by SQL NULL.  %Q */
-// /* a pointer to a Token structure */
-// /* a pointer to a SrcItem */
-// /* The %p conversion */
-// /* %w -> Strings with '\"' doubled */
-// /* %r -> 1st, 2nd, 3rd, 4th, etc.  English only */
-// /* %d or %u, but not %x, %o */
-// /* %j -> JSON string literal w/o "..." */
-// /* %J -> JSON string literal with "..." */
-// /* Any unrecognized conversion type */
-// /*
-// ** An "etByte" is an 8-bit unsigned value.
-// */
-// /*
-// ** Each builtin conversion character (ex: the 'd' in "%d") is described
-// ** by an instance of the following structure
-// */
-// /* Information about each format field */
+// Conversion types fall into various categories as defined by the
+// following enumeration.
+// non-decimal integer types.  %x %o
+// Floating point.  %f
+// Exponentional notation. %e and %E
+// Floating or exponential, depending on exponent. %g
+// Return number of characters processed so far. %n
+// Strings. %s
+// Dynamically allocated strings. %z
+// Percent symbol. %%
+// Characters. %c
+// The rest are extensions, not normally found in printf()
+// Strings with '\'' doubled.  %q
+// Strings with '\'' doubled and enclosed in '',
+// NULL pointers replaced by SQL NULL.  %Q
+// a pointer to a Token structure
+// a pointer to a SrcItem
+// The %p conversion
+// %w -> Strings with '\"' doubled
+// %r -> 1st, 2nd, 3rd, 4th, etc.  English only
+// %d or %u, but not %x, %o
+// %j -> JSON string literal w/o "..."
+// %J -> JSON string literal with "..."
+// Any unrecognized conversion type
+/// An "etByte" is an 8-bit unsigned value.
+/// Each builtin conversion character (ex: the 'd' in "%d") is described
+/// by an instance of the following structure
 #[repr(C)]
 #[derive(Clone, Copy)]
 struct et_info {
+    /// The format field code letter
     fmttype: i8,
-    // /* The format field code letter */
+    /// The base for radix conversion
     base: u8,
-    // /* The base for radix conversion */
+    /// One or more of FLAG_ constants below
     flags: u8,
-    // /* One or more of FLAG_ constants below */
+    /// Conversion paradigm
     r#type: u8,
-    // /* Conversion paradigm */
+    /// Offset into aDigits[] of the digits string
     charset: u8,
-    // /* Offset into aDigits[] of the digits string */
+    /// Offset into aPrefix[] of the prefix string
     prefix: u8,
-    // /* Offset into aPrefix[] of the prefix string */
+    /// Next with same hash, or 0 for end of chain
     iNxt: i8,
-    // /* Next with same hash, or 0 for end of chain */
+    // Information about each format field
 }
 
 #[repr(C, align(16))]
@@ -1635,19 +1629,14 @@ mod __slate_bits {
     }
 }
 
-// /*
-// ** Allowed values for et_info.flags
-// */
-// /* True if the value to convert is signed */
-// /* Allow infinite precision */
-// /*
-// ** The table is searched by hash.  In the case of %C where C is the character
-// ** and that character has ASCII value j, then the hash is j%25.
-// **
-// ** The order of the entries in fmtinfo[] and the hash chain was entered
-// ** manually, but based on the output of the following TCL script:
-// */
-// /*****  Beginning of script ******/
+// Allowed values for et_info.flags
+// True if the value to convert is signed
+// Allow infinite precision
+/// The table is searched by hash.  In the case of %C where C is the character
+/// and that character has ASCII value j, then the hash is j%25.
+///
+/// The order of the entries in fmtinfo[] and the hash chain was entered
+/// manually, but based on the output of the following TCL script:
 static mut aDigits: __SlateAlign16<[i8; 33]> = __SlateAlign16([
     48 as i8, 49 as i8, 50 as i8, 51 as i8, 52 as i8, 53 as i8, 54 as i8, 55 as i8, 56 as i8,
     57 as i8, 65 as i8, 66 as i8, 67 as i8, 68 as i8, 69 as i8, 70 as i8, 48 as i8, 49 as i8,
@@ -1664,6 +1653,36 @@ static mut aPrefix: [i8; 7] = [
     45 as i8, 120 as i8, 48 as i8, 0 as i8, 88 as i8, 48 as i8, 0 as i8,
 ];
 
+///  0
+///  1
+///  2
+///  3
+///  4
+/// Hash: 6
+///  5
+///  6
+///  7
+/// Hash: 12
+///  8
+///  9
+/// 10
+/// 11
+/// 12
+/// 13
+/// 14
+/// 15
+/// 16
+/// Hash: 13
+/// 17
+/// 18
+/// Hash: 19
+/// 19
+/// 20
+/// 21
+/// 22
+/// 23
+/// Hash: 24
+/// 24
 static mut fmtinfo: __SlateAlign16<[et_info; 25]> = __SlateAlign16([
     et_info {
         fmttype: (100 as i32) as i8,
@@ -1892,213 +1911,108 @@ static mut fmtinfo: __SlateAlign16<[et_info; 25]> = __SlateAlign16([
     },
 ]);
 
-// /* Accumulate results here */
-// /* Format string */
-// /* arguments */
-static mut zOrd: [i8; 9] = [
-    116 as i8, 104 as i8, 115 as i8, 116 as i8, 110 as i8, 100 as i8, 114 as i8, 100 as i8, 0 as i8,
-];
-
-// /*
-// ** Print into memory obtained from sqlite3_malloc()().  Omit the internal
-// ** %-conversion extensions.
-// */
+// Additional Notes:
+//
+// %S    Takes a pointer to SrcItem.  Shows name or database.name
+// %!S   Like %S but prefer the zName over the zAlias
+/// Set the StrAccum object to an error mode.
 #[unsafe(no_mangle)]
-unsafe extern "C-unwind" fn sqlite3_mprintf(mut zFormat: *const i8, mut __va_args: ...) -> *mut i8 {
-    let mut ap: core::ffi::VaList<'_> = unsafe { std::mem::zeroed() };
-    let mut z: *mut i8 = unsafe { std::mem::zeroed() };
-    if (unsafe { sqlite3_initialize() }) != (0 as i32) {
-        return std::ptr::null_mut::<i8>();
-    }
-    ap = __va_args.clone();
-    z = sqlite3_vmprintf(zFormat, ap.clone());
-    {}
-    return z;
-}
-
-// /*
-// ** Print into memory obtained from sqlite3_malloc().  Omit the internal
-// ** %-conversion extensions.
-// */
-#[unsafe(no_mangle)]
-#[unsafe(link_section = ".text.slate_distinct.printf.sqlite3_vmprintf")]
-extern "C-unwind" fn sqlite3_vmprintf(
-    mut zFormat: *const i8,
-    mut ap: core::ffi::VaList<'_>,
-) -> *mut i8 {
-    let mut z: *mut i8 = unsafe { std::mem::zeroed() };
-    let mut zBase: __SlateAlign16<[i8; 70]> = __SlateAlign16([0 as i8; 70]);
-    let mut acc: sqlite3_str = unsafe { std::mem::zeroed() };
-    if (unsafe { sqlite3_initialize() }) != (0 as i32) {
-        return std::ptr::null_mut::<i8>();
-    }
-    sqlite3StrAccumInit(
-        std::ptr::addr_of_mut!(acc),
-        std::ptr::null_mut::<sqlite3>(),
-        zBase.0.as_mut_ptr() as *mut i8,
-        ((70 as u64) as u32) as i32,
-        1000000000 as i32,
-    );
-    sqlite3_str_vappendf(std::ptr::addr_of_mut!(acc), zFormat, ap.clone());
-    z = sqlite3StrAccumFinish(std::ptr::addr_of_mut!(acc));
-    return z;
-}
-
-#[unsafe(no_mangle)]
-unsafe extern "C-unwind" fn sqlite3_snprintf(
-    mut n: i32,
-    mut zBuf: *mut i8,
-    mut zFormat: *const i8,
-    mut __va_args: ...
-) -> *mut i8 {
-    let mut acc: sqlite3_str = unsafe { std::mem::zeroed() };
-    let mut ap: core::ffi::VaList<'_> = unsafe { std::mem::zeroed() };
-    if n <= (0 as i32) {
-        return zBuf;
-    }
-    sqlite3StrAccumInit(
-        std::ptr::addr_of_mut!(acc),
-        std::ptr::null_mut::<sqlite3>(),
-        zBuf,
-        n,
-        0 as i32,
-    );
-    ap = __va_args.clone();
-    sqlite3_str_vappendf(std::ptr::addr_of_mut!(acc), zFormat, ap.clone());
-    {}
+extern "C-unwind" fn sqlite3StrAccumSetError(mut p: *mut sqlite3_str, mut eError: u8) {
+    0 as i32;
     unsafe {
-        *unsafe { zBuf.offset(acc.nChar as isize) } = (0 as i32) as i8;
+        (*p).accError = eError;
     }
-    return zBuf;
-}
-
-// /*
-// ** sqlite3_snprintf() works like snprintf() except that it ignores the
-// ** current locale settings.  This is important for SQLite because we
-// ** are not able to use a "," as the decimal point in place of "." as
-// ** specified by some locales.
-// **
-// ** Oops:  The first two arguments of sqlite3_snprintf() are backwards
-// ** from the snprintf() standard.  Unfortunately, it is too late to change
-// ** this without breaking compatibility, so we just have to live with the
-// ** mistake.
-// **
-// ** sqlite3_vsnprintf() is the varargs version.
-// */
-#[unsafe(no_mangle)]
-#[unsafe(link_section = ".text.slate_distinct.printf.sqlite3_vsnprintf")]
-extern "C-unwind" fn sqlite3_vsnprintf(
-    mut n: i32,
-    mut zBuf: *mut i8,
-    mut zFormat: *const i8,
-    mut ap: core::ffi::VaList<'_>,
-) -> *mut i8 {
-    let mut acc: sqlite3_str = unsafe { std::mem::zeroed() };
-    if n <= (0 as i32) {
-        return zBuf;
-    }
-    sqlite3StrAccumInit(
-        std::ptr::addr_of_mut!(acc),
-        std::ptr::null_mut::<sqlite3>(),
-        zBuf,
-        n,
-        0 as i32,
-    );
-    sqlite3_str_vappendf(std::ptr::addr_of_mut!(acc), zFormat, ap.clone());
-    unsafe {
-        *unsafe { zBuf.offset(acc.nChar as isize) } = (0 as i32) as i8;
-    }
-    return zBuf;
-}
-
-// /* Allocate and initialize a new dynamic string object */
-#[unsafe(no_mangle)]
-#[unsafe(link_section = ".text.slate_distinct.printf.sqlite3_str_new")]
-extern "C-unwind" fn sqlite3_str_new(mut db: *mut sqlite3) -> *mut sqlite3_str {
-    let mut p: *mut sqlite3_str = (unsafe { sqlite3_malloc64(32 as u64) }) as *mut sqlite3_str;
-    if p != std::ptr::null_mut::<sqlite3_str>() {
-        sqlite3StrAccumInit(
-            p,
-            std::ptr::null_mut::<sqlite3>(),
-            std::ptr::null_mut::<i8>(),
-            0 as i32,
-            if db != std::ptr::null_mut::<sqlite3>() {
-                unsafe {
-                    *unsafe {
-                        unsafe { (*db).aLimit.as_mut_ptr() as *mut i32 }.offset((0 as i32) as isize)
-                    }
-                }
-            } else {
-                1000000000 as i32
-            },
-        );
-    } else {
-        p = (unsafe { std::ptr::addr_of!(sqlite3OomStr) }) as *mut sqlite3_str;
-    }
-    return p;
-}
-
-// /* Finalize a string created using sqlite3_str_new().
-// */
-#[unsafe(no_mangle)]
-#[unsafe(link_section = ".text.slate_distinct.printf.sqlite3_str_finish")]
-extern "C-unwind" fn sqlite3_str_finish(mut p: *mut sqlite3_str) -> *mut i8 {
-    let mut z: *mut i8 = unsafe { std::mem::zeroed() };
-    if p != std::ptr::null_mut::<sqlite3_str>()
-        && p != ((unsafe { std::ptr::addr_of!(sqlite3OomStr) }) as *mut sqlite3_str)
-    {
-        z = sqlite3StrAccumFinish(p);
-        unsafe { sqlite3_free(p as *mut ()) };
-    } else {
-        z = std::ptr::null_mut::<i8>();
-    }
-    return z;
-}
-
-// /*
-// ** Destroy a dynamically allocate sqlite3_str object and all
-// ** of its content, all in one call.
-// */
-#[unsafe(no_mangle)]
-#[unsafe(link_section = ".text.slate_distinct.printf.sqlite3_str_free")]
-extern "C-unwind" fn sqlite3_str_free(mut p: *mut sqlite3_str) {
-    if p != std::ptr::null_mut::<sqlite3_str>()
-        && p != ((unsafe { std::ptr::addr_of!(sqlite3OomStr) }) as *mut sqlite3_str)
-    {
+    if (unsafe { (*p).mxAlloc }) != (0 as u32) {
         sqlite3_str_reset(p);
-        unsafe { sqlite3_free(p as *mut ()) };
+    }
+    if ((eError as u32) as i32) == (18 as i32) {
+        unsafe { sqlite3ErrorToParser(unsafe { (*p).db }, (eError as u32) as i32) };
     }
 }
 
-// /*
-// ** variable-argument wrapper around sqlite3_str_vappendf(). The bFlags argument
-// ** can contain the bit SQLITE_PRINTF_INTERNAL enable internal formats.
-// */
-#[unsafe(no_mangle)]
-#[unsafe(link_section = ".text.slate_distinct.printf.sqlite3_str_appendf")]
-unsafe extern "C-unwind" fn sqlite3_str_appendf(
-    mut p: *mut sqlite3_str,
-    mut zFormat: *const i8,
-    mut __va_args: ...
-) {
-    let mut ap: core::ffi::VaList<'_> = unsafe { std::mem::zeroed() };
-    ap = __va_args.clone();
-    sqlite3_str_vappendf(p, zFormat, ap.clone());
-    {}
+/// Extra argument values from a PrintfArguments object
+fn getIntArg(mut p: *mut PrintfArguments) -> i64 {
+    if (unsafe { (*p).nArg }) <= unsafe { (*p).nUsed } {
+        return (0 as i32) as i64;
+    }
+    let __v1001: *mut PrintfArguments = p;
+    let __v1002: i32 = unsafe { (*__v1001).nUsed };
+    let __v1003: i32 = __v1002 + (1 as i32);
+    unsafe {
+        (*__v1001).nUsed = __v1003;
+    }
+    return unsafe {
+        sqlite3_value_int64(unsafe { *unsafe { unsafe { (*p).apArg }.offset(__v1002 as isize) } })
+    };
 }
 
-// /*
-// ** On machines with a small stack size, you can redefine the
-// ** SQLITE_PRINT_BUF_SIZE to be something smaller, if desired.
-// */
-// /* Size of the output buffer */
-// /*
-// ** Hard limit on the precision of floating-point conversions.
-// */
-// /* Forward reference */
-// /*
-// ** Render a string given by "fmt" into the StrAccum object.
-// */
+fn getDoubleArg(mut p: *mut PrintfArguments) -> f64 {
+    if (unsafe { (*p).nArg }) <= unsafe { (*p).nUsed } {
+        return 0.0f64;
+    }
+    let __v1004: *mut PrintfArguments = p;
+    let __v1005: i32 = unsafe { (*__v1004).nUsed };
+    let __v1006: i32 = __v1005 + (1 as i32);
+    unsafe {
+        (*__v1004).nUsed = __v1006;
+    }
+    return unsafe {
+        sqlite3_value_double(unsafe { *unsafe { unsafe { (*p).apArg }.offset(__v1005 as isize) } })
+    };
+}
+
+fn getTextArg(mut p: *mut PrintfArguments) -> *mut i8 {
+    if (unsafe { (*p).nArg }) <= unsafe { (*p).nUsed } {
+        return std::ptr::null_mut::<i8>();
+    }
+    let __v1007: *mut PrintfArguments = p;
+    let __v1008: i32 = unsafe { (*__v1007).nUsed };
+    let __v1009: i32 = __v1008 + (1 as i32);
+    unsafe {
+        (*__v1007).nUsed = __v1009;
+    }
+    return (unsafe {
+        sqlite3_value_text(unsafe { *unsafe { unsafe { (*p).apArg }.offset(__v1008 as isize) } })
+    }) as *mut i8;
+}
+
+/// Allocate memory for a temporary buffer needed for printf rendering.
+///
+/// If the requested size of the temp buffer is larger than the size
+/// of the output buffer in pAccum, then cause an SQLITE_TOOBIG error.
+/// Do the size check before the memory allocation to prevent rogue
+/// SQL from requesting large allocations using the precision or width
+/// field of the printf() function.
+fn printfTempBuf(mut pAccum: *mut sqlite3_str, mut n: i64) -> *mut i8 {
+    let mut z: *mut i8 = unsafe { std::mem::zeroed() };
+    if (unsafe { (*pAccum).accError }) != (0 as u8) {
+        return std::ptr::null_mut::<i8>();
+    }
+    if n > (((unsafe { (*pAccum).nAlloc }) as u64) as i64)
+        && n > (((unsafe { (*pAccum).mxAlloc }) as u64) as i64)
+    {
+        sqlite3StrAccumSetError(pAccum, ((18 as i32) as i8) as u8);
+        return std::ptr::null_mut::<i8>();
+    }
+    z = (unsafe { sqlite3_malloc(n as i32) }) as *mut i8;
+    if z == std::ptr::null_mut::<i8>() {
+        sqlite3StrAccumSetError(pAccum, ((7 as i32) as i8) as u8);
+    }
+    return z;
+}
+
+// On machines with a small stack size, you can redefine the
+// SQLITE_PRINT_BUF_SIZE to be something smaller, if desired.
+// Size of the output buffer
+// Hard limit on the precision of floating-point conversions.
+/// Render a string given by "fmt" into the StrAccum object.
+/// End of function
+///
+/// # Arguments
+///
+/// * `pAccum` - Accumulate results here
+/// * `fmt` - Format string
+/// * `ap` - arguments
 #[unsafe(no_mangle)]
 #[unsafe(link_section = ".text.slate_distinct.printf.sqlite3_str_vappendf")]
 extern "C-unwind" fn sqlite3_str_vappendf(
@@ -2116,6 +2030,12 @@ extern "C-unwind" fn sqlite3_str_vappendf(
         std::ptr::addr_of_mut!(__slate_storage_744) as *mut *const i8;
     let mut __slate_storage_970: std::mem::MaybeUninit<i64> = std::mem::MaybeUninit::uninit();
     let __slate_slot_970: *mut i64 = std::ptr::addr_of_mut!(__slate_storage_970) as *mut i64;
+    // The text of the conversion is pointed to by "bufpt" and is
+    // "length" characters long.  The field width is "width".  Do
+    // the output.  Both length and width are in bytes, not characters,
+    // at this point.  If the "!" flag was present on string conversions
+    // indicating that width and precision should be expressed in characters,
+    // then the values have been translated prior to reaching this point.
     let mut __slate_storage_969: std::mem::MaybeUninit<i64> = std::mem::MaybeUninit::uninit();
     let __slate_slot_969: *mut i64 = std::ptr::addr_of_mut!(__slate_storage_969) as *mut i64;
     let mut __slate_storage_487: std::mem::MaybeUninit<*mut Select> =
@@ -2126,9 +2046,11 @@ extern "C-unwind" fn sqlite3_str_vappendf(
         std::mem::MaybeUninit::uninit();
     let __slate_slot_486: *mut *mut SrcItem =
         std::ptr::addr_of_mut!(__slate_storage_486) as *mut *mut SrcItem;
+    // %#T means an Expr pointer that uses Expr.u.zToken
     let mut __slate_storage_484: std::mem::MaybeUninit<*mut Expr> = std::mem::MaybeUninit::uninit();
     let __slate_slot_484: *mut *mut Expr =
         std::ptr::addr_of_mut!(__slate_storage_484) as *mut *mut Expr;
+    // %T means a Token pointer
     let mut __slate_storage_485: std::mem::MaybeUninit<*mut Token> =
         std::mem::MaybeUninit::uninit();
     let __slate_slot_485: *mut *mut Token =
@@ -2230,6 +2152,10 @@ extern "C-unwind" fn sqlite3_str_vappendf(
     let __slate_slot_926: *mut i64 = std::ptr::addr_of_mut!(__slate_storage_926) as *mut i64;
     let mut __slate_storage_483: std::mem::MaybeUninit<i64> = std::mem::MaybeUninit::uninit();
     let __slate_slot_483: *mut i64 = std::ptr::addr_of_mut!(__slate_storage_483) as *mut i64;
+    // For %#q, do unistr()-style backslash escapes for
+    // all control characters, and for backslash itself.
+    // For %#Q, do the same but only if there is at least
+    // one control character.
     let mut __slate_storage_482: std::mem::MaybeUninit<i64> = std::mem::MaybeUninit::uninit();
     let __slate_slot_482: *mut i64 = std::ptr::addr_of_mut!(__slate_storage_482) as *mut i64;
     let mut __slate_storage_913: std::mem::MaybeUninit<i8> = std::mem::MaybeUninit::uninit();
@@ -2335,6 +2261,7 @@ extern "C-unwind" fn sqlite3_str_vappendf(
     let __slate_slot_892: *mut i64 = std::ptr::addr_of_mut!(__slate_storage_892) as *mut i64;
     let mut __slate_storage_891: std::mem::MaybeUninit<i64> = std::mem::MaybeUninit::uninit();
     let __slate_slot_891: *mut i64 = std::ptr::addr_of_mut!(__slate_storage_891) as *mut i64;
+    // Adjust width to account for extra bytes in UTF-8 characters
     let mut __slate_storage_463: std::mem::MaybeUninit<i64> = std::mem::MaybeUninit::uninit();
     let __slate_slot_463: *mut i64 = std::ptr::addr_of_mut!(__slate_storage_463) as *mut i64;
     let mut __slate_storage_884: std::mem::MaybeUninit<i64> = std::mem::MaybeUninit::uninit();
@@ -2353,6 +2280,8 @@ extern "C-unwind" fn sqlite3_str_vappendf(
     let mut __slate_storage_885: std::mem::MaybeUninit<*mut u8> = std::mem::MaybeUninit::uninit();
     let __slate_slot_885: *mut *mut u8 =
         std::ptr::addr_of_mut!(__slate_storage_885) as *mut *mut u8;
+    // Set length to the number of bytes needed in order to display
+    // precision characters
     let mut __slate_storage_462: std::mem::MaybeUninit<*mut u8> = std::mem::MaybeUninit::uninit();
     let __slate_slot_462: *mut *mut u8 =
         std::ptr::addr_of_mut!(__slate_storage_462) as *mut *mut u8;
@@ -2577,7 +2506,7 @@ extern "C-unwind" fn sqlite3_str_vappendf(
         std::ptr::addr_of_mut!(__slate_storage_806) as *mut *mut i8;
     let mut __slate_storage_805: std::mem::MaybeUninit<*mut i8> = std::mem::MaybeUninit::uninit();
     let __slate_slot_805: *mut *mut i8 =
-        std::ptr::addr_of_mut!(__slate_storage_805) as *mut *mut i8;
+        std::ptr::addr_of_mut!(__slate_storage_805) as *mut *mut i8; // Size needed to hold the output
     let mut __slate_storage_454: std::mem::MaybeUninit<i64> = std::mem::MaybeUninit::uninit();
     let __slate_slot_454: *mut i64 = std::ptr::addr_of_mut!(__slate_storage_454) as *mut i64;
     let mut __slate_storage_453: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
@@ -2637,7 +2566,7 @@ extern "C-unwind" fn sqlite3_str_vappendf(
     let mut __slate_storage_448: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
     let __slate_slot_448: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_448) as *mut i32;
     let mut __slate_storage_447: std::mem::MaybeUninit<i64> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_447: *mut i64 = std::ptr::addr_of_mut!(__slate_storage_447) as *mut i64;
+    let __slate_slot_447: *mut i64 = std::ptr::addr_of_mut!(__slate_storage_447) as *mut i64; // Number of "," to insert
     let mut __slate_storage_446: std::mem::MaybeUninit<i64> = std::mem::MaybeUninit::uninit();
     let __slate_slot_446: *mut i64 = std::ptr::addr_of_mut!(__slate_storage_446) as *mut i64;
     let mut __slate_storage_787: std::mem::MaybeUninit<*mut i8> = std::mem::MaybeUninit::uninit();
@@ -2771,110 +2700,82 @@ extern "C-unwind" fn sqlite3_str_vappendf(
         std::ptr::addr_of_mut!(__slate_storage_747) as *mut *const i8;
     let mut __slate_storage_746: std::mem::MaybeUninit<*const i8> = std::mem::MaybeUninit::uninit();
     let __slate_slot_746: *mut *const i8 =
-        std::ptr::addr_of_mut!(__slate_storage_746) as *mut *const i8;
+        std::ptr::addr_of_mut!(__slate_storage_746) as *mut *const i8; // Conversion buffer
     let mut __slate_storage_436: std::mem::MaybeUninit<__SlateAlign16<[i8; 70]>> =
         std::mem::MaybeUninit::uninit();
     let __slate_slot_436: *mut [i8; 70] =
-        std::ptr::addr_of_mut!(__slate_storage_436) as *mut [i8; 70];
+        std::ptr::addr_of_mut!(__slate_storage_436) as *mut [i8; 70]; // Arguments for SQLITE_PRINTF_SQLFUNC
     let mut __slate_storage_435: std::mem::MaybeUninit<*mut PrintfArguments> =
         std::mem::MaybeUninit::uninit();
     let __slate_slot_435: *mut *mut PrintfArguments =
-        std::ptr::addr_of_mut!(__slate_storage_435) as *mut *mut PrintfArguments;
+        std::ptr::addr_of_mut!(__slate_storage_435) as *mut *mut PrintfArguments; // True if trailing zeros should be removed
     let mut __slate_storage_434: std::mem::MaybeUninit<u8> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_434: *mut u8 = std::ptr::addr_of_mut!(__slate_storage_434) as *mut u8;
+    let __slate_slot_434: *mut u8 = std::ptr::addr_of_mut!(__slate_storage_434) as *mut u8; // True if decimal point should be shown
     let mut __slate_storage_433: std::mem::MaybeUninit<u8> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_433: *mut u8 = std::ptr::addr_of_mut!(__slate_storage_433) as *mut u8;
+    let __slate_slot_433: *mut u8 = std::ptr::addr_of_mut!(__slate_storage_433) as *mut u8; // exponent of real numbers
     let mut __slate_storage_432: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
     let __slate_slot_432: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_432) as *mut i32;
     let mut __slate_storage_431: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_431: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_431) as *mut i32;
+    let __slate_slot_431: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_431) as *mut i32; // Malloced memory used by some conversion
     let mut __slate_storage_430: std::mem::MaybeUninit<*mut i8> = std::mem::MaybeUninit::uninit();
     let __slate_slot_430: *mut *mut i8 =
-        std::ptr::addr_of_mut!(__slate_storage_430) as *mut *mut i8;
+        std::ptr::addr_of_mut!(__slate_storage_430) as *mut *mut i8; // Size of the rendering buffer
     let mut __slate_storage_429: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_429: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_429) as *mut i32;
+    let __slate_slot_429: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_429) as *mut i32; // Rendering buffer
     let mut __slate_storage_428: std::mem::MaybeUninit<*mut i8> = std::mem::MaybeUninit::uninit();
     let __slate_slot_428: *mut *mut i8 =
-        std::ptr::addr_of_mut!(__slate_storage_428) as *mut *mut i8;
+        std::ptr::addr_of_mut!(__slate_storage_428) as *mut *mut i8; // Pointer to the appropriate info structure
     let mut __slate_storage_427: std::mem::MaybeUninit<*const et_info> =
         std::mem::MaybeUninit::uninit();
     let __slate_slot_427: *mut *const et_info =
-        std::ptr::addr_of_mut!(__slate_storage_427) as *mut *const et_info;
+        std::ptr::addr_of_mut!(__slate_storage_427) as *mut *const et_info; // Value for real types
     let mut __slate_storage_426: std::mem::MaybeUninit<f64> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_426: *mut f64 = std::ptr::addr_of_mut!(__slate_storage_426) as *mut f64;
+    let __slate_slot_426: *mut f64 = std::ptr::addr_of_mut!(__slate_storage_426) as *mut f64; // Value for integer types
     let mut __slate_storage_425: std::mem::MaybeUninit<u64> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_425: *mut u64 = std::ptr::addr_of_mut!(__slate_storage_425) as *mut u64;
+    let __slate_slot_425: *mut u64 = std::ptr::addr_of_mut!(__slate_storage_425) as *mut u64; // Prefix character.  "+" or "-" or " " or '\0'.
     let mut __slate_storage_424: std::mem::MaybeUninit<i8> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_424: *mut i8 = std::ptr::addr_of_mut!(__slate_storage_424) as *mut i8;
+    let __slate_slot_424: *mut i8 = std::ptr::addr_of_mut!(__slate_storage_424) as *mut i8; // True for SQLITE_PRINTF_SQLFUNC
     let mut __slate_storage_423: std::mem::MaybeUninit<u8> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_423: *mut u8 = std::ptr::addr_of_mut!(__slate_storage_423) as *mut u8;
+    let __slate_slot_423: *mut u8 = std::ptr::addr_of_mut!(__slate_storage_423) as *mut u8; // Conversion paradigm
     let mut __slate_storage_422: std::mem::MaybeUninit<u8> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_422: *mut u8 = std::ptr::addr_of_mut!(__slate_storage_422) as *mut u8;
+    let __slate_slot_422: *mut u8 = std::ptr::addr_of_mut!(__slate_storage_422) as *mut u8; // Thousands separator for %d and %u
     let mut __slate_storage_421: std::mem::MaybeUninit<u8> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_421: *mut u8 = std::ptr::addr_of_mut!(__slate_storage_421) as *mut u8;
+    let __slate_slot_421: *mut u8 = std::ptr::addr_of_mut!(__slate_storage_421) as *mut u8; // Loop termination flag
     let mut __slate_storage_420: std::mem::MaybeUninit<u8> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_420: *mut u8 = std::ptr::addr_of_mut!(__slate_storage_420) as *mut u8;
+    let __slate_slot_420: *mut u8 = std::ptr::addr_of_mut!(__slate_storage_420) as *mut u8; // 1 for the "l" flag, 2 for "ll", 0 by default
     let mut __slate_storage_419: std::mem::MaybeUninit<u8> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_419: *mut u8 = std::ptr::addr_of_mut!(__slate_storage_419) as *mut u8;
+    let __slate_slot_419: *mut u8 = std::ptr::addr_of_mut!(__slate_storage_419) as *mut u8; // True if field width constant starts with zero
     let mut __slate_storage_418: std::mem::MaybeUninit<u8> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_418: *mut u8 = std::ptr::addr_of_mut!(__slate_storage_418) as *mut u8;
+    let __slate_slot_418: *mut u8 = std::ptr::addr_of_mut!(__slate_storage_418) as *mut u8; // True if "!" flag is present
     let mut __slate_storage_417: std::mem::MaybeUninit<u8> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_417: *mut u8 = std::ptr::addr_of_mut!(__slate_storage_417) as *mut u8;
+    let __slate_slot_417: *mut u8 = std::ptr::addr_of_mut!(__slate_storage_417) as *mut u8; // True if "#" flag is present
     let mut __slate_storage_416: std::mem::MaybeUninit<u8> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_416: *mut u8 = std::ptr::addr_of_mut!(__slate_storage_416) as *mut u8;
+    let __slate_slot_416: *mut u8 = std::ptr::addr_of_mut!(__slate_storage_416) as *mut u8; // '+' or ' ' or 0 for prefix
     let mut __slate_storage_415: std::mem::MaybeUninit<u8> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_415: *mut u8 = std::ptr::addr_of_mut!(__slate_storage_415) as *mut u8;
+    let __slate_slot_415: *mut u8 = std::ptr::addr_of_mut!(__slate_storage_415) as *mut u8; // True if "-" flag is present
     let mut __slate_storage_414: std::mem::MaybeUninit<u8> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_414: *mut u8 = std::ptr::addr_of_mut!(__slate_storage_414) as *mut u8;
+    let __slate_slot_414: *mut u8 = std::ptr::addr_of_mut!(__slate_storage_414) as *mut u8; // Width of the current field
     let mut __slate_storage_413: std::mem::MaybeUninit<i64> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_413: *mut i64 = std::ptr::addr_of_mut!(__slate_storage_413) as *mut i64;
+    let __slate_slot_413: *mut i64 = std::ptr::addr_of_mut!(__slate_storage_413) as *mut i64; // A general purpose loop counter
     let mut __slate_storage_412: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_412: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_412) as *mut i32;
+    let __slate_slot_412: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_412) as *mut i32; // Length of the field
     let mut __slate_storage_411: std::mem::MaybeUninit<i64> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_411: *mut i64 = std::ptr::addr_of_mut!(__slate_storage_411) as *mut i64;
+    let __slate_slot_411: *mut i64 = std::ptr::addr_of_mut!(__slate_storage_411) as *mut i64; // Precision of the current field
     let mut __slate_storage_410: std::mem::MaybeUninit<i64> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_410: *mut i64 = std::ptr::addr_of_mut!(__slate_storage_410) as *mut i64;
+    let __slate_slot_410: *mut i64 = std::ptr::addr_of_mut!(__slate_storage_410) as *mut i64; // Pointer to the conversion buffer
     let mut __slate_storage_409: std::mem::MaybeUninit<*mut i8> = std::mem::MaybeUninit::uninit();
     let __slate_slot_409: *mut *mut i8 =
-        std::ptr::addr_of_mut!(__slate_storage_409) as *mut *mut i8;
+        std::ptr::addr_of_mut!(__slate_storage_409) as *mut *mut i8; // Next character in the format string
     let mut __slate_storage_408: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
     let __slate_slot_408: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_408) as *mut i32;
     unsafe {
         '__join_1: {
-            // /* Next character in the format string */
-            // /* Pointer to the conversion buffer */
-            // /* Precision of the current field */
-            // /* Length of the field */
-            // /* A general purpose loop counter */
-            // /* Width of the current field */
-            // /* True if "-" flag is present */
-            // /* '+' or ' ' or 0 for prefix */
-            // /* True if "#" flag is present */
-            // /* True if "!" flag is present */
-            // /* True if field width constant starts with zero */
-            // /* 1 for the "l" flag, 2 for "ll", 0 by default */
-            // /* Loop termination flag */
-            // /* Thousands separator for %d and %u */
-            // /* Conversion paradigm */
             std::ptr::write(__slate_slot_422, ((19 as i32) as i8) as u8);
-            // /* True for SQLITE_PRINTF_SQLFUNC */
-            // /* Prefix character.  "+" or "-" or " " or '\0'. */
-            // /* Value for integer types */
-            // /* Value for real types */
-            // /* Pointer to the appropriate info structure */
-            // /* Rendering buffer */
-            // /* Size of the rendering buffer */
-            // /* Malloced memory used by some conversion */
             std::ptr::write(__slate_slot_430, std::ptr::null_mut::<i8>());
-            // /* exponent of real numbers */
-            // /* True if decimal point should be shown */
-            // /* True if trailing zeros should be removed */
-            // /* Arguments for SQLITE_PRINTF_SQLFUNC */
             std::ptr::write(__slate_slot_435, std::ptr::null_mut::<PrintfArguments>());
-            // /* Conversion buffer */
-            // /* pAccum never starts out with an empty buffer that was obtained from
-            //   ** malloc().  This precondition is required by the mprintf("%z...")
-            //   ** optimization. */
+            // pAccum never starts out with an empty buffer that was obtained from
+            // malloc().  This precondition is required by the mprintf("%z...")
+            // optimization.
             0 as i32;
             *__slate_slot_409 = std::ptr::null_mut::<i8>();
             if (((unsafe { (*pAccum).printfFlags }) as u32) as i32) & (2 as i32) != (0 as i32) {
@@ -2885,7 +2786,7 @@ extern "C-unwind" fn sqlite3_str_vappendf(
             }
         }
         '__join_0: {
-            '__join_405: {
+            '__join_404: {
                 '__loop_1: loop {
                     std::ptr::write(__slate_slot_743, (unsafe { *fmt }) as i32);
                     *__slate_slot_408 = *__slate_slot_743;
@@ -2918,9 +2819,9 @@ extern "C-unwind" fn sqlite3_str_vappendf(
                         std::ptr::write(__slate_slot_748, (unsafe { *(*__slate_slot_747) }) as i32);
                         *__slate_slot_408 = *__slate_slot_748;
                         if *__slate_slot_748 == (0 as i32) {
-                            break '__join_405;
+                            break '__join_404;
                         } else {
-                            // /* Find out what flags are present */
+                            // Find out what flags are present
                             *__slate_slot_418 = ((0 as i32) as i8) as u8;
                             *__slate_slot_417 = ((0 as i32) as i8) as u8;
                             *__slate_slot_416 = ((0 as i32) as i8) as u8;
@@ -2932,41 +2833,41 @@ extern "C-unwind" fn sqlite3_str_vappendf(
                             *__slate_slot_419 = ((0 as i32) as i8) as u8;
                             *__slate_slot_410 = -(1 as i32) as i64;
                             loop {
-                                '__join_364: {
+                                '__join_363: {
                                     let __t1: i32 = *__slate_slot_408;
                                     if __t1 == (45 as i32) {
                                         *__slate_slot_414 = ((1 as i32) as i8) as u8;
-                                        break '__join_364;
+                                        break '__join_363;
                                     } else {
                                         if __t1 == (43 as i32) {
                                             *__slate_slot_415 = ((43 as i32) as i8) as u8;
-                                            break '__join_364;
+                                            break '__join_363;
                                         } else {
                                             if __t1 == (32 as i32) {
                                                 *__slate_slot_415 = ((32 as i32) as i8) as u8;
-                                                break '__join_364;
+                                                break '__join_363;
                                             } else {
                                                 if __t1 == (35 as i32) {
                                                     *__slate_slot_416 = ((1 as i32) as i8) as u8;
-                                                    break '__join_364;
+                                                    break '__join_363;
                                                 } else {
                                                     if __t1 == (33 as i32) {
                                                         *__slate_slot_417 =
                                                             ((1 as i32) as i8) as u8;
-                                                        break '__join_364;
+                                                        break '__join_363;
                                                     } else {
                                                         if __t1 == (48 as i32) {
                                                             *__slate_slot_418 =
                                                                 ((1 as i32) as i8) as u8;
-                                                            break '__join_364;
+                                                            break '__join_363;
                                                         } else {
                                                             if __t1 == (44 as i32) {
                                                                 *__slate_slot_421 =
                                                                     ((44 as i32) as i8) as u8;
-                                                                break '__join_364;
+                                                                break '__join_363;
                                                             } else {
                                                                 if __t1 == (108 as i32) {
-                                                                    '__join_392: {
+                                                                    '__join_391: {
                                                                         *__slate_slot_419 =
                                                                             ((1 as i32) as i8)
                                                                                 as u8;
@@ -3014,7 +2915,7 @@ extern "C-unwind" fn sqlite3_str_vappendf(
                                                                     }
                                                                     *__slate_slot_420 =
                                                                         ((1 as i32) as i8) as u8;
-                                                                    break '__join_364;
+                                                                    break '__join_363;
                                                                 } else {
                                                                     if __t1 == (49 as i32) {
                                                                     } else {
@@ -3057,9 +2958,9 @@ std::ptr::write(__slate_slot_760, unsafe { (*__slate_slot_759).offset((1 as i32)
 fmt = *__slate_slot_760;
 *__slate_slot_408 = (unsafe { *(*__slate_slot_760) }) as i32;
 *__slate_slot_420 = ((1 as i32) as i8) as u8;
-break '__join_364;
+break '__join_363;
 } else {
-break '__join_364;
+break '__join_363;
 }
 } else {
 if __t1 == (46 as i32) {
@@ -3101,14 +3002,14 @@ if *__slate_slot_408 == (108 as i32) {
 std::ptr::write(__slate_slot_767, fmt);
 std::ptr::write(__slate_slot_768, unsafe { (*__slate_slot_767).offset(-((1 as i32) as isize)) });
 fmt = *__slate_slot_768;
-break '__join_364;
+break '__join_363;
 } else {
 *__slate_slot_420 = ((1 as i32) as i8) as u8;
-break '__join_364;
+break '__join_363;
 }
 } else {
 *__slate_slot_420 = ((1 as i32) as i8) as u8;
-break '__join_364;
+break '__join_363;
 }
 }
 }
@@ -3189,8 +3090,9 @@ break '__join_364;
                                     break;
                                 }
                             }
-                            // /* Fetch the info entry for the field */
-                            // /* Fast hash-table lookup */
+                            // Fetch the info entry for the field
+                            //
+                            // Fast hash-table lookup
                             0 as i32;
                             *__slate_slot_412 =
                                 ((*__slate_slot_408 as u32) % ((25 as i32) as u32)) as i32;
@@ -3241,30 +3143,28 @@ break '__join_364;
                                 *__slate_slot_422 = ((19 as i32) as i8) as u8;
                             }
                             '__join_2: {
-                                '__join_11: {
-                                    '__join_351: {
-                                        '__join_352: {
-                                            '__join_300: {
-                                                '__join_153: {
-                                                    '__join_175: {
-                                                        '__join_148: {
-                                                            // /*
-                                                            //     ** At this point, variables are initialized as follows:
-                                                            //     **
-                                                            //     **   flag_alternateform          TRUE if a '#' is present.
-                                                            //     **   flag_altform2               TRUE if a '!' is present.
-                                                            //     **   flag_prefix                 '+' or ' ' or zero
-                                                            //     **   flag_leftjustify            TRUE if a '-' is present or if the
-                                                            //     **                               field width was negative.
-                                                            //     **   flag_zeropad                TRUE if the width began with 0.
-                                                            //     **   flag_long                   1 for "l", 2 for "ll"
-                                                            //     **   width                       The specified field width.  This is
-                                                            //     **                               always non-negative.  Zero is the default.
-                                                            //     **   precision                   The specified precision.  The default
-                                                            //     **                               is -1.
-                                                            //     **   xtype                       The class of the conversion.
-                                                            //     **   infop                       Pointer to the appropriate info struct.
-                                                            //     */
+                                '__join_10: {
+                                    '__join_350: {
+                                        '__join_351: {
+                                            '__join_299: {
+                                                '__join_152: {
+                                                    '__join_174: {
+                                                        '__join_147: {
+                                                            // At this point, variables are initialized as follows:
+                                                            //
+                                                            //   flag_alternateform          TRUE if a '#' is present.
+                                                            //   flag_altform2               TRUE if a '!' is present.
+                                                            //   flag_prefix                 '+' or ' ' or zero
+                                                            //   flag_leftjustify            TRUE if a '-' is present or if the
+                                                            //                               field width was negative.
+                                                            //   flag_zeropad                TRUE if the width began with 0.
+                                                            //   flag_long                   1 for "l", 2 for "ll"
+                                                            //   width                       The specified field width.  This is
+                                                            //                               always non-negative.  Zero is the default.
+                                                            //   precision                   The specified precision.  The default
+                                                            //                               is -1.
+                                                            //   xtype                       The class of the conversion.
+                                                            //   infop                       Pointer to the appropriate info struct.
                                                             0 as i32;
                                                             0 as i32;
                                                             let __t0: i32 =
@@ -3283,32 +3183,32 @@ break '__join_364;
                                                                 })
                                                                     as i8)
                                                                     as u8;
-                                                                // /* no break */
+                                                                // no break
                                                                 {}
-                                                                break '__join_352;
+                                                                break '__join_351;
                                                             } else {
                                                                 if __t0 == (15 as i32) {
-                                                                    break '__join_352;
+                                                                    break '__join_351;
                                                                 } else {
                                                                     if __t0 == (0 as i32) {
-                                                                        break '__join_352;
+                                                                        break '__join_351;
                                                                     } else {
                                                                         if __t0 == (16 as i32) {
-                                                                            break '__join_351;
+                                                                            break '__join_350;
                                                                         } else {
                                                                             if __t0 == (1 as i32) {
-                                                                                break '__join_300;
+                                                                                break '__join_299;
                                                                             } else {
                                                                                 if __t0
                                                                                     == (2 as i32)
                                                                                 {
-                                                                                    break '__join_300;
+                                                                                    break '__join_299;
                                                                                 } else {
                                                                                     if __t0
                                                                                         == (3
                                                                                             as i32)
                                                                                     {
-                                                                                        break '__join_300;
+                                                                                        break '__join_299;
                                                                                     } else {
                                                                                         if __t0 == (4 as i32) {
 if !(*__slate_slot_423 != (0 as u8)) {
@@ -3318,7 +3218,7 @@ unsafe {
 }
 *__slate_slot_413 = (0 as i32) as i64;
 *__slate_slot_411 = (0 as i32) as i64;
-break '__join_11;
+break '__join_10;
 } else {
 if __t0 == (7 as i32) {
 unsafe {
@@ -3326,10 +3226,10 @@ unsafe {
 }
 *__slate_slot_409 = (*__slate_slot_436).as_mut_ptr() as *mut i8;
 *__slate_slot_411 = (1 as i32) as i64;
-break '__join_11;
+break '__join_10;
 } else {
 if __t0 == (8 as i32) {
-'__join_185: {
+'__join_184: {
 if *__slate_slot_423 != (0 as u8) {
 *__slate_slot_409 = getTextArg(*__slate_slot_435);
 *__slate_slot_411 = (1 as i32) as i64;
@@ -3355,7 +3255,7 @@ unsafe {
 *unsafe { ((*__slate_slot_436).as_mut_ptr() as *mut i8).offset(*__slate_slot_870 as isize) } = unsafe { *(*__slate_slot_868) };
 }
 } else {
-break '__join_185;
+break '__join_184;
 }
 }
 }
@@ -3369,7 +3269,7 @@ std::ptr::write(__slate_slot_459, unsafe { ap.next_arg::<u32>() });
 *__slate_slot_411 = (unsafe { sqlite3AppendOneUtf8Character((*__slate_slot_436).as_mut_ptr() as *mut i8, *__slate_slot_459) }) as i64;
 }
 }
-'__join_176: {
+'__join_175: {
 if *__slate_slot_410 > ((1 as i32) as i64) {
 std::ptr::write(__slate_slot_460, (1 as i32) as i64);
 std::ptr::write(__slate_slot_872, *__slate_slot_413);
@@ -3390,7 +3290,7 @@ if *__slate_slot_460 > *__slate_slot_410 - ((1 as i32) as i64) {
 }
 *__slate_slot_461 = *__slate_slot_411 * *__slate_slot_460;
 if sqlite3StrAccumEnlargeIfNeeded(pAccum, *__slate_slot_461) != (0 as i32) {
-break '__join_176;
+break '__join_175;
 } else {
 sqlite3_str_append(pAccum, (unsafe { unsafe { (*pAccum).zText }.offset(((((unsafe { (*pAccum).nChar }) as u64) as i64) - *__slate_slot_461) as isize) }) as *const i8, *__slate_slot_461 as i32);
 std::ptr::write(__slate_slot_876, *__slate_slot_410);
@@ -3401,26 +3301,26 @@ std::ptr::write(__slate_slot_879, *__slate_slot_878 * ((2 as i32) as i64));
 *__slate_slot_460 = *__slate_slot_879;
 }
 } else {
-break '__join_176;
+break '__join_175;
 }
 }
 }
 }
 *__slate_slot_409 = (*__slate_slot_436).as_mut_ptr() as *mut i8;
 *__slate_slot_417 = ((1 as i32) as i8) as u8;
-break '__join_153;
+break '__join_152;
 } else {
 if __t0 == (5 as i32) {
-break '__join_175;
+break '__join_174;
 } else {
 if __t0 == (6 as i32) {
-break '__join_175;
+break '__join_174;
 } else {
 if __t0 == (17 as i32) {
-break '__join_148;
+break '__join_147;
 } else {
 if __t0 == (18 as i32) {
-break '__join_148;
+break '__join_147;
 } else {
 if __t0 == (9 as i32) {
 } else {
@@ -3432,16 +3332,14 @@ if __t0 == (11 as i32) {
 if (((unsafe { (*pAccum).printfFlags }) as u32) as i32) & (1 as i32) == (0 as i32) {
 return;
 } else {
-'__join_30: {
+'__join_29: {
 if *__slate_slot_416 != (0 as u8) {
-// /* %#T means an Expr pointer that uses Expr.u.zToken */
 std::ptr::write(__slate_slot_484, unsafe { ap.next_arg::<*mut Expr>() });
 if *__slate_slot_484 != std::ptr::null_mut::<Expr>() && !((unsafe { (*(*__slate_slot_484)).flags }) & ((2048 as i32) as u32) != ((0 as i32) as u32)) {
 sqlite3_str_appendall(pAccum, (unsafe { (*(*__slate_slot_484)).u.zToken }) as *const i8);
 sqlite3RecordErrorOffsetOfExpr(unsafe { (*pAccum).db }, *__slate_slot_484 as *const Expr);
 }
 } else {
-// /* %T means a Token pointer */
 std::ptr::write(__slate_slot_485, unsafe { ap.next_arg::<*mut Token>() });
 0 as i32;
 if *__slate_slot_485 != std::ptr::null_mut::<Token>() && (unsafe { (*(*__slate_slot_485)).n }) != (0 as u32) {
@@ -3452,7 +3350,7 @@ sqlite3RecordErrorByteOffset(unsafe { (*pAccum).db }, unsafe { (*(*__slate_slot_
 }
 *__slate_slot_413 = (0 as i32) as i64;
 *__slate_slot_411 = (0 as i32) as i64;
-break '__join_11;
+break '__join_10;
 }
 } else {
 if __t0 == (12 as i32) {
@@ -3473,9 +3371,9 @@ sqlite3_str_appendall(pAccum, (unsafe { (*(*__slate_slot_486)).zName }) as *cons
 } else {
 if (unsafe { (*(*__slate_slot_486)).zAlias }) != std::ptr::null_mut::<i8>() {
 sqlite3_str_appendall(pAccum, (unsafe { (*(*__slate_slot_486)).zAlias }) as *const i8);
-// /* Because of tag-20240424-1 */
 } else {
 if ((unsafe { (*(*__slate_slot_486)).fg.__slate_bits_0.__get_isSubquery() }) as i32) != (0 as i32) {
+// Because of tag-20240424-1
 std::ptr::write(__slate_slot_487, unsafe { (*unsafe { (*(*__slate_slot_486)).u4.pSubq }).pSelect });
 0 as i32;
 if (unsafe { (*(*__slate_slot_487)).selFlags }) & ((2048 as i32) as u32) != (0 as u32) {
@@ -3494,7 +3392,7 @@ unsafe { sqlite3_str_appendf(pAccum, (b"(subquery-%u)\0".as_ptr() as *mut i8) as
 }
 *__slate_slot_413 = (0 as i32) as i64;
 *__slate_slot_411 = (0 as i32) as i64;
-break '__join_11;
+break '__join_10;
 }
 } else {
 break '__loop_1;
@@ -3517,6 +3415,7 @@ break '__loop_1;
                                                                     }
                                                                 }
                                                             }
+                                                            // %w: Escape " characters
                                                             std::ptr::write(
                                                                 __slate_slot_478,
                                                                 0 as i32,
@@ -3562,11 +3461,10 @@ break '__loop_1;
                                                                 *__slate_slot_481 =
                                                                     (39 as i32) as i8;
                                                             }
-                                                            // /* For %q, %Q, and %w, the precision is the number of bytes (or
-                                                            //         ** characters if the ! flags is present) to use from the input.
-                                                            //         ** Because of the extra quoting characters inserted, the number
-                                                            //         ** of output characters may be larger than the precision.
-                                                            //         */
+                                                            // For %q, %Q, and %w, the precision is the number of bytes (or
+                                                            // characters if the ! flags is present) to use from the input.
+                                                            // Because of the extra quoting characters inserted, the number
+                                                            // of output characters may be larger than the precision.
                                                             *__slate_slot_476 = *__slate_slot_410;
                                                             *__slate_slot_477 = (0 as i32) as i64;
                                                             *__slate_slot_474 = (0 as i32) as i64;
@@ -3609,7 +3507,7 @@ break '__loop_1;
                                                                         *__slate_slot_477 =
                                                                             *__slate_slot_919;
                                                                     }
-                                                                    '__join_81: {
+                                                                    '__join_80: {
                                                                         if *__slate_slot_417
                                                                             != (0 as u8)
                                                                             && (*__slate_slot_479
@@ -3631,7 +3529,7 @@ break '__loop_1;
                                                                                     std::ptr::write(__slate_slot_921, *__slate_slot_920 + ((1 as i32) as i64));
                                                                                     *__slate_slot_474 = *__slate_slot_921;
                                                                                 } else {
-                                                                                    break '__join_81;
+                                                                                    break '__join_80;
                                                                                 }
                                                                             }
                                                                         }
@@ -3663,10 +3561,6 @@ break '__loop_1;
                                                                 }
                                                             }
                                                             if *__slate_slot_416 != (0 as u8) {
-                                                                // /* For %#q, do unistr()-style backslash escapes for
-                                                                //           ** all control characters, and for backslash itself.
-                                                                //           ** For %#Q, do the same but only if there is at least
-                                                                //           ** one control character. */
                                                                 std::ptr::write(
                                                                     __slate_slot_482,
                                                                     (0 as i32) as i64,
@@ -3853,7 +3747,7 @@ break '__loop_1;
                                                                     }
                                                                 }
                                                             }
-                                                            '__join_41: {
+                                                            '__join_40: {
                                                                 *__slate_slot_476 =
                                                                     *__slate_slot_474;
                                                                 if *__slate_slot_416 != (0 as u8) {
@@ -3954,7 +3848,7 @@ unsafe {
                                                                             *__slate_slot_474 =
                                                                                 *__slate_slot_940;
                                                                         } else {
-                                                                            break '__join_41;
+                                                                            break '__join_40;
                                                                         }
                                                                     }
                                                                 } else {
@@ -4010,7 +3904,7 @@ unsafe {
                                                                             *__slate_slot_474 =
                                                                                 *__slate_slot_959;
                                                                         } else {
-                                                                            break '__join_41;
+                                                                            break '__join_40;
                                                                         }
                                                                     }
                                                                 }
@@ -4066,14 +3960,18 @@ unsafe {
                                                                 } = (0 as i32) as i8;
                                                             }
                                                             *__slate_slot_411 = *__slate_slot_475;
-                                                            break '__join_153;
+                                                            break '__join_152;
                                                         }
-                                                        if *__slate_slot_423 != (0 as u8) {
-                                                            *__slate_slot_464 =
-                                                                getTextArg(*__slate_slot_435);
-                                                        } else {
-                                                            *__slate_slot_464 =
-                                                                unsafe { ap.next_arg::<*mut i8>() };
+                                                        '__join_144: {
+                                                            // %J: Generate a JSON string literal
+                                                            if *__slate_slot_423 != (0 as u8) {
+                                                                *__slate_slot_464 =
+                                                                    getTextArg(*__slate_slot_435);
+                                                            } else {
+                                                                *__slate_slot_464 = unsafe {
+                                                                    ap.next_arg::<*mut i8>()
+                                                                };
+                                                            }
                                                         }
                                                         *__slate_slot_468 =
                                                             sqlite3_str_length(pAccum) as i64;
@@ -4101,7 +3999,7 @@ unsafe {
                                                                     1 as i32,
                                                                 );
                                                             }
-                                                            '__join_131: {
+                                                            '__join_130: {
                                                                 *__slate_slot_467 =
                                                                     *__slate_slot_410;
                                                                 {}
@@ -4114,7 +4012,7 @@ unsafe {
                                                                     if *__slate_slot_417
                                                                         != (0 as u8)
                                                                     {
-                                                                        // /* Convert precision from code-points to bytes */
+                                                                        // Convert precision from code-points to bytes
                                                                         *__slate_slot_465 =
                                                                             (0 as i32) as i64;
                                                                         loop {
@@ -4163,7 +4061,7 @@ unsafe {
                                                                                     std::ptr::write(__slate_slot_900, *__slate_slot_899 + ((1 as i32) as i64));
                                                                                     *__slate_slot_467 = *__slate_slot_900;
                                                                                 } else {
-                                                                                    break '__join_131;
+                                                                                    break '__join_130;
                                                                                 }
                                                                             }
                                                                         }
@@ -4172,7 +4070,7 @@ unsafe {
                                                             }
                                                             *__slate_slot_466 = (0 as i32) as i64;
                                                             *__slate_slot_465 = (0 as i32) as i64;
-                                                            '__loop_120: loop {
+                                                            '__loop_119: loop {
                                                                 if *__slate_slot_465
                                                                     < *__slate_slot_467
                                                                 {
@@ -4198,10 +4096,12 @@ unsafe {
                                                                             as i32)
                                                                             == (92 as i32)
                                                                     {
-                                                                        if *__slate_slot_466
-                                                                            < *__slate_slot_465
-                                                                        {
-                                                                            sqlite3StrAppend64(pAccum, (unsafe { (*__slate_slot_464).offset(*__slate_slot_466 as isize) }) as *const i8, *__slate_slot_465 - *__slate_slot_466);
+                                                                        '__join_126: {
+                                                                            if *__slate_slot_466
+                                                                                < *__slate_slot_465
+                                                                            {
+                                                                                sqlite3StrAppend64(pAccum, (unsafe { (*__slate_slot_464).offset(*__slate_slot_466 as isize) }) as *const i8, *__slate_slot_465 - *__slate_slot_466);
+                                                                            }
                                                                         }
                                                                         *__slate_slot_466 =
                                                                             *__slate_slot_465
@@ -4212,7 +4112,7 @@ unsafe {
                                                                             as i32)
                                                                             == (0 as i32)
                                                                         {
-                                                                            break '__loop_120;
+                                                                            break '__loop_119;
                                                                         } else {
                                                                             sqlite3_str_appendchar(
                                                                                 pAccum,
@@ -4286,7 +4186,7 @@ sqlite3_str_appendchar(pAccum, 1 as i32, unsafe { *unsafe { unsafe { std::ptr::a
                                                             *__slate_slot_904 = false as bool;
                                                         }
                                                         if *__slate_slot_904 {
-                                                            '__join_103: {
+                                                            '__join_102: {
                                                                 std::ptr::write(
                                                                     __slate_slot_470,
                                                                     (sqlite3_str_length(pAccum)
@@ -4338,7 +4238,7 @@ sqlite3_str_appendchar(pAccum, 1 as i32, unsafe { *unsafe { unsafe { std::ptr::a
                                                                             *__slate_slot_465 =
                                                                                 *__slate_slot_906;
                                                                         } else {
-                                                                            break '__join_103;
+                                                                            break '__join_102;
                                                                         }
                                                                     }
                                                                 }
@@ -4450,9 +4350,9 @@ sqlite3_str_appendchar(pAccum, 1 as i32, unsafe { *unsafe { unsafe { std::ptr::a
                                                                     as i32)
                                                                     == (0 as i32)
                                                             {
-                                                                // /* Special optimization for sqlite3_mprintf("%z..."):
-                                                                //             ** Extend an existing memory allocation rather than creating
-                                                                //             ** a new one. */
+                                                                // Special optimization for sqlite3_mprintf("%z..."):
+                                                                // Extend an existing memory allocation rather than creating
+                                                                // a new one.
                                                                 0 as i32;
                                                                 unsafe {
                                                                     (*pAccum).zText =
@@ -4507,7 +4407,7 @@ sqlite3_str_appendchar(pAccum, 1 as i32, unsafe { *unsafe { unsafe { std::ptr::a
                                                                 }
                                                                 *__slate_slot_411 =
                                                                     (0 as i32) as i64;
-                                                                break '__join_11;
+                                                                break '__join_10;
                                                             } else {
                                                                 *__slate_slot_430 =
                                                                     *__slate_slot_409;
@@ -4516,8 +4416,6 @@ sqlite3_str_appendchar(pAccum, 1 as i32, unsafe { *unsafe { unsafe { std::ptr::a
                                                     }
                                                     if *__slate_slot_410 >= ((0 as i32) as i64) {
                                                         if *__slate_slot_417 != (0 as u8) {
-                                                            // /* Set length to the number of bytes needed in order to display
-                                                            //             ** precision characters */
                                                             std::ptr::write(
                                                                 __slate_slot_462,
                                                                 *__slate_slot_409 as *mut u8,
@@ -4546,7 +4444,7 @@ sqlite3_str_appendchar(pAccum, 1 as i32, unsafe { *unsafe { unsafe { std::ptr::a
                                                                         }
                                                                     }) != (0 as u8)
                                                                 {
-                                                                    '__join_156: {
+                                                                    '__join_155: {
                                                                         std::ptr::write(
                                                                             __slate_slot_885,
                                                                             *__slate_slot_462,
@@ -4583,7 +4481,7 @@ sqlite3_str_appendchar(pAccum, 1 as i32, unsafe { *unsafe { unsafe { std::ptr::a
                                                                                     std::ptr::write(__slate_slot_888, unsafe { (*__slate_slot_887).offset((1 as i32) as isize) });
                                                                                     *__slate_slot_462 = *__slate_slot_888;
                                                                                 } else {
-                                                                                    break '__join_156;
+                                                                                    break '__join_155;
                                                                                 }
                                                                             }
                                                                         }
@@ -4627,7 +4525,7 @@ sqlite3_str_appendchar(pAccum, 1 as i32, unsafe { *unsafe { unsafe { std::ptr::a
                                                                     *__slate_slot_411 =
                                                                         *__slate_slot_890;
                                                                 } else {
-                                                                    break '__join_153;
+                                                                    break '__join_152;
                                                                 }
                                                             }
                                                         }
@@ -4641,7 +4539,6 @@ sqlite3_str_appendchar(pAccum, 1 as i32, unsafe { *unsafe { unsafe { std::ptr::a
                                                 if *__slate_slot_417 != (0 as u8)
                                                     && *__slate_slot_413 > ((0 as i32) as i64)
                                                 {
-                                                    // /* Adjust width to account for extra bytes in UTF-8 characters */
                                                     std::ptr::write(
                                                         __slate_slot_463,
                                                         *__slate_slot_411 - ((1 as i32) as i64),
@@ -4683,23 +4580,22 @@ sqlite3_str_appendchar(pAccum, 1 as i32, unsafe { *unsafe { unsafe { std::ptr::a
                                                                     *__slate_slot_894;
                                                             }
                                                         } else {
-                                                            break '__join_11;
+                                                            break '__join_10;
                                                         }
                                                     }
                                                 } else {
-                                                    break '__join_11;
+                                                    break '__join_10;
                                                 }
                                             }
-                                            // /* Size needed to hold the output */
                                             if *__slate_slot_423 != (0 as u8) {
                                                 *__slate_slot_426 = getDoubleArg(*__slate_slot_435);
                                             } else {
                                                 *__slate_slot_426 = unsafe { ap.next_arg::<f64>() };
                                             }
-                                            // /* Set default precision */
                                             if *__slate_slot_410 < ((0 as i32) as i64) {
                                                 *__slate_slot_410 = (6 as i32) as i64;
                                             }
+                                            // Set default precision
                                             if *__slate_slot_410 > ((100000000 as i32) as i64) {
                                                 *__slate_slot_410 = (100000000 as i32) as i64;
                                             }
@@ -4708,11 +4604,8 @@ sqlite3_str_appendchar(pAccum, 1 as i32, unsafe { *unsafe { unsafe { std::ptr::a
                                             } else {
                                                 if ((*__slate_slot_422 as u32) as i32) == (3 as i32)
                                                 {
-                                                    '__join_288: {
-                                                        if *__slate_slot_410 == ((0 as i32) as i64)
-                                                        {
-                                                            *__slate_slot_410 = (1 as i32) as i64;
-                                                        }
+                                                    if *__slate_slot_410 == ((0 as i32) as i64) {
+                                                        *__slate_slot_410 = (1 as i32) as i64;
                                                     }
                                                     *__slate_slot_452 = *__slate_slot_410 as i32;
                                                 } else {
@@ -4741,12 +4634,12 @@ sqlite3_str_appendchar(pAccum, 1 as i32, unsafe { *unsafe { unsafe { std::ptr::a
                                                         *__slate_slot_409 =
                                                             b"null\0".as_ptr() as *mut i8;
                                                         *__slate_slot_411 = (4 as i32) as i64;
-                                                        break '__join_11;
+                                                        break '__join_10;
                                                     } else {
                                                         *__slate_slot_409 =
                                                             b"NaN\0".as_ptr() as *mut i8;
                                                         *__slate_slot_411 = (3 as i32) as i64;
-                                                        break '__join_11;
+                                                        break '__join_10;
                                                     }
                                                 } else {
                                                     if *__slate_slot_418 != (0 as u8) {
@@ -4776,7 +4669,7 @@ sqlite3_str_appendchar(pAccum, 1 as i32, unsafe { *unsafe { unsafe { std::ptr::a
                                                         if ((*__slate_slot_451).sign as i32)
                                                             == (45 as i32)
                                                         {
-                                                            // /* no-op */
+                                                            // no-op
                                                         } else {
                                                             if *__slate_slot_415 != (0 as u8) {
                                                                 unsafe {
@@ -4810,7 +4703,7 @@ sqlite3_str_appendchar(pAccum, 1 as i32, unsafe { *unsafe { unsafe { std::ptr::a
                                                             strlen(*__slate_slot_409 as *const i8)
                                                         })
                                                             as i64;
-                                                        break '__join_11;
+                                                        break '__join_10;
                                                     }
                                                 }
                                             }
@@ -4821,12 +4714,11 @@ sqlite3_str_appendchar(pAccum, 1 as i32, unsafe { *unsafe { unsafe { std::ptr::a
                                                         == (1 as i32)
                                                     && (*__slate_slot_451).iDP <= *__slate_slot_452
                                                 {
-                                                    // /* Suppress the minus sign if all of the following are true:
-                                                    //             **   *  The value displayed is zero
-                                                    //             **   *  The '#' flag is used
-                                                    //             **   *  The '+' flag is not used, and
-                                                    //             **   *  The format is %f
-                                                    //             */
+                                                    // Suppress the minus sign if all of the following are true:
+                                                    // *  The value displayed is zero
+                                                    // *  The '#' flag is used
+                                                    // *  The '+' flag is not used, and
+                                                    // *  The format is %f
                                                     *__slate_slot_424 = (0 as i32) as i8;
                                                 } else {
                                                     *__slate_slot_424 = (45 as i32) as i8;
@@ -4836,10 +4728,8 @@ sqlite3_str_appendchar(pAccum, 1 as i32, unsafe { *unsafe { unsafe { std::ptr::a
                                             }
                                             *__slate_slot_431 =
                                                 (*__slate_slot_451).iDP - (1 as i32);
-                                            // /*
-                                            //         ** If the field type is etGENERIC, then convert to either etEXP
-                                            //         ** or etFLOAT, as appropriate.
-                                            //         */
+                                            // If the field type is etGENERIC, then convert to either etEXP
+                                            // or etFLOAT, as appropriate.
                                             if ((*__slate_slot_422 as u32) as i32) == (3 as i32) {
                                                 0 as i32;
                                                 std::ptr::write(
@@ -4908,9 +4798,9 @@ sqlite3_str_appendchar(pAccum, 1 as i32, unsafe { *unsafe { unsafe { std::ptr::a
                                                         as i32)
                                                         == (0 as i32)
                                                 {
-                                                    // /* Unable to allocate space in pAccum, perhaps because it
-                                                    //             ** is coming from sqlite3_snprintf() or similar.  We'll have
-                                                    //             ** to render into temporary space and the memcpy() it over. */
+                                                    // Unable to allocate space in pAccum, perhaps because it
+                                                    // is coming from sqlite3_snprintf() or similar.  We'll have
+                                                    // to render into temporary space and the memcpy() it over.
                                                     *__slate_slot_409 = (unsafe {
                                                         sqlite3_malloc(*__slate_slot_454 as i32)
                                                     })
@@ -4936,7 +4826,7 @@ sqlite3_str_appendchar(pAccum, 1 as i32, unsafe { *unsafe { unsafe { std::ptr::a
                                                     {
                                                         *__slate_slot_411 = (0 as i32) as i64;
                                                         *__slate_slot_413 = (0 as i32) as i64;
-                                                        break '__join_11;
+                                                        break '__join_10;
                                                     } else {
                                                         *__slate_slot_409 = unsafe {
                                                             unsafe { (*pAccum).zText }.offset(
@@ -4963,7 +4853,7 @@ sqlite3_str_appendchar(pAccum, 1 as i32, unsafe { *unsafe { unsafe { std::ptr::a
                                                     | ((*__slate_slot_417 as u32) as i32))
                                                     as i8)
                                                     as u8;
-                                            // /* The sign in front of the number */
+                                            // The sign in front of the number
                                             if *__slate_slot_424 != (0 as i8) {
                                                 std::ptr::write(
                                                     __slate_slot_811,
@@ -4977,8 +4867,8 @@ sqlite3_str_appendchar(pAccum, 1 as i32, unsafe { *unsafe { unsafe { std::ptr::a
                                                     *(*__slate_slot_811) = *__slate_slot_424;
                                                 }
                                             }
-                                            '__join_233: {
-                                                // /* Digits prior to the decimal point */
+                                            '__join_232: {
+                                                // Digits prior to the decimal point
                                                 *__slate_slot_453 = 0 as i32;
                                                 0 as i32;
                                                 if *__slate_slot_432 < (0 as i32) {
@@ -5081,7 +4971,7 @@ sqlite3_str_appendchar(pAccum, 1 as i32, unsafe { *unsafe { unsafe { std::ptr::a
                                                                 *__slate_slot_432 =
                                                                     *__slate_slot_816;
                                                             } else {
-                                                                break '__join_233;
+                                                                break '__join_232;
                                                             }
                                                         }
                                                     } else {
@@ -5148,7 +5038,7 @@ sqlite3_str_appendchar(pAccum, 1 as i32, unsafe { *unsafe { unsafe { std::ptr::a
                                                     }
                                                 }
                                             }
-                                            // /* The decimal point */
+                                            // The decimal point
                                             if *__slate_slot_433 != (0 as u8) {
                                                 std::ptr::write(
                                                     __slate_slot_830,
@@ -5162,8 +5052,8 @@ sqlite3_str_appendchar(pAccum, 1 as i32, unsafe { *unsafe { unsafe { std::ptr::a
                                                     *(*__slate_slot_830) = (46 as i32) as i8;
                                                 }
                                             }
-                                            // /* "0" digits after the decimal point but before the first
-                                            //         ** significant digit of the number */
+                                            // "0" digits after the decimal point but before the first
+                                            // significant digit of the number
                                             if *__slate_slot_432 < -(1 as i32)
                                                 && *__slate_slot_410 > ((0 as i32) as i64)
                                             {
@@ -5200,7 +5090,7 @@ sqlite3_str_appendchar(pAccum, 1 as i32, unsafe { *unsafe { unsafe { std::ptr::a
                                                 );
                                                 *__slate_slot_410 = *__slate_slot_835;
                                             }
-                                            // /* Significant digits after the decimal point */
+                                            // Significant digits after the decimal point
                                             if *__slate_slot_410 > ((0 as i32) as i64) {
                                                 std::ptr::write(
                                                     __slate_slot_456,
@@ -5263,7 +5153,7 @@ sqlite3_str_appendchar(pAccum, 1 as i32, unsafe { *unsafe { unsafe { std::ptr::a
                                                     *__slate_slot_409 = *__slate_slot_841;
                                                 }
                                             }
-                                            // /* Remove trailing zeros and the "." if no digits follow the "." */
+                                            // Remove trailing zeros and the "." if no digits follow the "."
                                             if *__slate_slot_434 != (0 as u8)
                                                 && *__slate_slot_433 != (0 as u8)
                                             {
@@ -5333,7 +5223,7 @@ sqlite3_str_appendchar(pAccum, 1 as i32, unsafe { *unsafe { unsafe { std::ptr::a
                                                     }
                                                 }
                                             }
-                                            // /* Add the "eNNN" suffix */
+                                            // Add the "eNNN" suffix
                                             if ((*__slate_slot_422 as u32) as i32) == (2 as i32) {
                                                 *__slate_slot_431 =
                                                     (*__slate_slot_451).iDP - (1 as i32);
@@ -5392,7 +5282,6 @@ sqlite3_str_appendchar(pAccum, 1 as i32, unsafe { *unsafe { unsafe { std::ptr::a
                                                     }
                                                 }
                                                 if *__slate_slot_431 >= (100 as i32) {
-                                                    // /* 100's digit */
                                                     std::ptr::write(
                                                         __slate_slot_854,
                                                         *__slate_slot_409,
@@ -5408,6 +5297,7 @@ sqlite3_str_appendchar(pAccum, 1 as i32, unsafe { *unsafe { unsafe { std::ptr::a
                                                             + (48 as i32))
                                                             as i8;
                                                     }
+                                                    // 100's digit
                                                     std::ptr::write(
                                                         __slate_slot_856,
                                                         *__slate_slot_431,
@@ -5418,7 +5308,6 @@ sqlite3_str_appendchar(pAccum, 1 as i32, unsafe { *unsafe { unsafe { std::ptr::a
                                                     );
                                                     *__slate_slot_431 = *__slate_slot_857;
                                                 }
-                                                // /* 10's digit */
                                                 std::ptr::write(
                                                     __slate_slot_858,
                                                     *__slate_slot_409,
@@ -5433,7 +5322,7 @@ sqlite3_str_appendchar(pAccum, 1 as i32, unsafe { *unsafe { unsafe { std::ptr::a
                                                         + (48 as i32))
                                                         as i8;
                                                 }
-                                                // /* 1's digit */
+                                                // 10's digit
                                                 std::ptr::write(
                                                     __slate_slot_860,
                                                     *__slate_slot_409,
@@ -5448,6 +5337,7 @@ sqlite3_str_appendchar(pAccum, 1 as i32, unsafe { *unsafe { unsafe { std::ptr::a
                                                         + (48 as i32))
                                                         as i8;
                                                 }
+                                                // 1's digit
                                             }
                                             *__slate_slot_411 = (unsafe {
                                                 (*__slate_slot_409)
@@ -5456,98 +5346,90 @@ sqlite3_str_appendchar(pAccum, 1 as i32, unsafe { *unsafe { unsafe { std::ptr::a
                                                 as i64;
                                             0 as i32;
                                             if *__slate_slot_411 < *__slate_slot_413 {
-                                                '__join_200: {
-                                                    std::ptr::write(
-                                                        __slate_slot_457,
-                                                        *__slate_slot_413 - *__slate_slot_411,
-                                                    );
-                                                    if *__slate_slot_414 != (0 as u8) {
+                                                std::ptr::write(
+                                                    __slate_slot_457,
+                                                    *__slate_slot_413 - *__slate_slot_411,
+                                                );
+                                                if *__slate_slot_414 != (0 as u8) {
+                                                    unsafe {
+                                                        memset(
+                                                            *__slate_slot_409 as *mut (),
+                                                            32 as i32,
+                                                            *__slate_slot_457 as u64,
+                                                        )
+                                                    };
+                                                } else {
+                                                    if !(*__slate_slot_418 != (0 as u8)) {
+                                                        unsafe {
+                                                            memmove(
+                                                                (unsafe {
+                                                                    (*__slate_slot_428).offset(
+                                                                        *__slate_slot_457 as isize,
+                                                                    )
+                                                                })
+                                                                    as *mut (),
+                                                                *__slate_slot_428 as *const (),
+                                                                *__slate_slot_411 as u64,
+                                                            )
+                                                        };
                                                         unsafe {
                                                             memset(
-                                                                *__slate_slot_409 as *mut (),
+                                                                *__slate_slot_428 as *mut (),
                                                                 32 as i32,
                                                                 *__slate_slot_457 as u64,
                                                             )
                                                         };
                                                     } else {
-                                                        if !(*__slate_slot_418 != (0 as u8)) {
-                                                            unsafe {
-                                                                memmove(
-                                                                    (unsafe {
+                                                        std::ptr::write(
+                                                            __slate_slot_458,
+                                                            ((*__slate_slot_424 as i32)
+                                                                != (0 as i32))
+                                                                as i32,
+                                                        );
+                                                        unsafe {
+                                                            memmove(
+                                                                (unsafe {
+                                                                    unsafe {
                                                                         (*__slate_slot_428).offset(
                                                                             *__slate_slot_457
                                                                                 as isize,
                                                                         )
-                                                                    })
-                                                                        as *mut (),
-                                                                    *__slate_slot_428 as *const (),
-                                                                    *__slate_slot_411 as u64,
-                                                                )
-                                                            };
-                                                            unsafe {
-                                                                memset(
-                                                                    *__slate_slot_428 as *mut (),
-                                                                    32 as i32,
-                                                                    *__slate_slot_457 as u64,
-                                                                )
-                                                            };
-                                                        } else {
-                                                            std::ptr::write(
-                                                                __slate_slot_458,
-                                                                ((*__slate_slot_424 as i32)
-                                                                    != (0 as i32))
-                                                                    as i32,
-                                                            );
-                                                            unsafe {
-                                                                memmove(
-                                                                    (unsafe {
-                                                                        unsafe {
-                                                                            (*__slate_slot_428)
-                                                                                .offset(
-                                                                                *__slate_slot_457
-                                                                                    as isize,
-                                                                            )
-                                                                        }
-                                                                        .offset(
-                                                                            *__slate_slot_458
-                                                                                as isize,
-                                                                        )
-                                                                    })
-                                                                        as *mut (),
-                                                                    (unsafe {
-                                                                        (*__slate_slot_428).offset(
-                                                                            *__slate_slot_458
-                                                                                as isize,
-                                                                        )
-                                                                    })
-                                                                        as *const (),
-                                                                    (*__slate_slot_411
-                                                                        - (*__slate_slot_458
-                                                                            as i64))
-                                                                        as u64,
-                                                                )
-                                                            };
-                                                            unsafe {
-                                                                memset(
-                                                                    (unsafe {
-                                                                        (*__slate_slot_428).offset(
-                                                                            *__slate_slot_458
-                                                                                as isize,
-                                                                        )
-                                                                    })
-                                                                        as *mut (),
-                                                                    48 as i32,
-                                                                    *__slate_slot_457 as u64,
-                                                                )
-                                                            };
-                                                        }
+                                                                    }
+                                                                    .offset(
+                                                                        *__slate_slot_458 as isize,
+                                                                    )
+                                                                })
+                                                                    as *mut (),
+                                                                (unsafe {
+                                                                    (*__slate_slot_428).offset(
+                                                                        *__slate_slot_458 as isize,
+                                                                    )
+                                                                })
+                                                                    as *const (),
+                                                                (*__slate_slot_411
+                                                                    - (*__slate_slot_458 as i64))
+                                                                    as u64,
+                                                            )
+                                                        };
+                                                        unsafe {
+                                                            memset(
+                                                                (unsafe {
+                                                                    (*__slate_slot_428).offset(
+                                                                        *__slate_slot_458 as isize,
+                                                                    )
+                                                                })
+                                                                    as *mut (),
+                                                                48 as i32,
+                                                                *__slate_slot_457 as u64,
+                                                            )
+                                                        };
                                                     }
                                                 }
                                                 *__slate_slot_411 = *__slate_slot_413;
                                             }
                                             if *__slate_slot_430 == std::ptr::null_mut::<i8>() {
-                                                // /* The result is being rendered directory into pAccum.  This
-                                                //           ** is the common and fast case */
+                                                // The result is being rendered directory into pAccum.  This
+                                                // is the common and fast case
                                                 0 as i32;
                                                 std::ptr::write(__slate_slot_862, pAccum);
                                                 std::ptr::write(__slate_slot_863, unsafe {
@@ -5572,10 +5454,10 @@ sqlite3_str_appendchar(pAccum, 1 as i32, unsafe { *unsafe { unsafe { std::ptr::a
                                                 }
                                                 break '__join_2;
                                             } else {
-                                                // /* We were unable to render directly into pAccum because we
-                                                //           ** couldn't allocate sufficient memory.  We need to memcpy()
-                                                //           ** the rendering (or some prefix thereof) into the output
-                                                //           ** buffer. */
+                                                // We were unable to render directly into pAccum because we
+                                                // couldn't allocate sufficient memory.  We need to memcpy()
+                                                // the rendering (or some prefix thereof) into the output
+                                                // buffer.
                                                 unsafe {
                                                     *unsafe {
                                                         (*__slate_slot_409)
@@ -5583,11 +5465,11 @@ sqlite3_str_appendchar(pAccum, 1 as i32, unsafe { *unsafe { unsafe { std::ptr::a
                                                     } = (0 as i32) as i8;
                                                 }
                                                 *__slate_slot_409 = *__slate_slot_430;
-                                                break '__join_11;
+                                                break '__join_10;
                                             }
                                         }
                                         *__slate_slot_421 = ((0 as i32) as i8) as u8;
-                                        // /* no break */
+                                        // no break
                                         {}
                                     }
                                     if (((unsafe { (*(*__slate_slot_427)).flags }) as u32) as i32)
@@ -5758,8 +5640,8 @@ sqlite3_str_appendchar(pAccum, 1 as i32, unsafe { *unsafe { unsafe { std::ptr::a
                                     std::ptr::write(__slate_slot_444, unsafe {
                                         (*(*__slate_slot_427)).base
                                     });
-                                    // /* Convert to ascii */
                                     loop {
+                                        // Convert to ascii
                                         std::ptr::write(__slate_slot_784, *__slate_slot_409);
                                         std::ptr::write(__slate_slot_785, unsafe {
                                             (*__slate_slot_784).offset(-((1 as i32) as isize))
@@ -5792,8 +5674,8 @@ sqlite3_str_appendchar(pAccum, 1 as i32, unsafe { *unsafe { unsafe { std::ptr::a
                                         .offset_from(*__slate_slot_409 as *mut i8)
                                     })
                                         as i64;
-                                    // /* zero pad */
                                     if *__slate_slot_410 > *__slate_slot_411 {
+                                        // zero pad
                                         std::ptr::write(
                                             __slate_slot_445,
                                             *__slate_slot_410 - *__slate_slot_411,
@@ -5813,9 +5695,8 @@ sqlite3_str_appendchar(pAccum, 1 as i32, unsafe { *unsafe { unsafe { std::ptr::a
                                         };
                                         *__slate_slot_411 = *__slate_slot_410;
                                     }
-                                    '__join_307: {
+                                    '__join_306: {
                                         if *__slate_slot_421 != (0 as u8) {
-                                            // /* Number of "," to insert */
                                             std::ptr::write(
                                                 __slate_slot_446,
                                                 (*__slate_slot_411 - ((1 as i32) as i64))
@@ -5897,12 +5778,11 @@ sqlite3_str_appendchar(pAccum, 1 as i32, unsafe { *unsafe { unsafe { std::ptr::a
                                                     );
                                                     *__slate_slot_448 = *__slate_slot_791;
                                                 } else {
-                                                    break '__join_307;
+                                                    break '__join_306;
                                                 }
                                             }
                                         }
                                     }
-                                    // /* Add sign */
                                     if *__slate_slot_424 != (0 as i8) {
                                         std::ptr::write(__slate_slot_798, *__slate_slot_409);
                                         std::ptr::write(__slate_slot_799, unsafe {
@@ -5913,12 +5793,13 @@ sqlite3_str_appendchar(pAccum, 1 as i32, unsafe { *unsafe { unsafe { std::ptr::a
                                             *(*__slate_slot_799) = *__slate_slot_424;
                                         }
                                     }
-                                    '__join_301: {
-                                        // /* Add "0" or "0x" */
+                                    '__join_300: {
+                                        // Add sign
                                         if *__slate_slot_416 != (0 as u8)
                                             && (unsafe { (*(*__slate_slot_427)).prefix })
                                                 != (0 as u8)
                                         {
+                                            // Add "0" or "0x"
                                             *__slate_slot_449 = unsafe {
                                                 unsafe { std::ptr::addr_of!(aPrefix) as *const i8 }
                                                     .offset(
@@ -5956,7 +5837,7 @@ sqlite3_str_appendchar(pAccum, 1 as i32, unsafe { *unsafe { unsafe { std::ptr::a
                                                     });
                                                     *__slate_slot_449 = *__slate_slot_802;
                                                 } else {
-                                                    break '__join_301;
+                                                    break '__join_300;
                                                 }
                                             }
                                         }
@@ -5970,14 +5851,7 @@ sqlite3_str_appendchar(pAccum, 1 as i32, unsafe { *unsafe { unsafe { std::ptr::a
                                     })
                                         as i64;
                                 }
-                                // /*
-                                //     ** The text of the conversion is pointed to by "bufpt" and is
-                                //     ** "length" characters long.  The field width is "width".  Do
-                                //     ** the output.  Both length and width are in bytes, not characters,
-                                //     ** at this point.  If the "!" flag was present on string conversions
-                                //     ** indicating that width and precision should be expressed in characters,
-                                //     ** then the values have been translated prior to reaching this point.
-                                //     */
+                                // End switch over the format type
                                 std::ptr::write(__slate_slot_969, *__slate_slot_413);
                                 std::ptr::write(
                                     __slate_slot_970,
@@ -6020,7 +5894,6 @@ sqlite3_str_appendchar(pAccum, 1 as i32, unsafe { *unsafe { unsafe { std::ptr::a
                                     };
                                     *__slate_slot_430 = std::ptr::null_mut::<i8>();
                                 }
-                                // /* End for loop over the format string */
                             }
                             std::ptr::write(__slate_slot_744, fmt);
                             std::ptr::write(__slate_slot_745, unsafe {
@@ -6037,413 +5910,79 @@ sqlite3_str_appendchar(pAccum, 1 as i32, unsafe { *unsafe { unsafe { std::ptr::a
             }
             sqlite3_str_append(pAccum, (b"%\0".as_ptr() as *mut i8) as *const i8, 1 as i32);
         }
-        // /* End of function */
+        // End for loop over the format string
     }
-    // /* %j: JSON string literal w/o "..." */
-    // /* %J: Generate a JSON string literal */
-    // /* %q: Escape ' characters */
-    // /* %Q: Escape ' and enclose in '...' */
-    // /* %w: Escape " characters */
-    // /* End switch over the format type */
+    // %j: JSON string literal w/o "..."
+    // %q: Escape ' characters
+    // %Q: Escape ' and enclose in '...'
 }
 
-// /*
-// ** Append N bytes of text from z to the StrAccum object.  Increase the
-// ** size of the memory allocation for StrAccum if necessary.
-// */
-#[unsafe(no_mangle)]
-#[unsafe(link_section = ".text.slate_distinct.printf.sqlite3_str_append")]
-extern "C-unwind" fn sqlite3_str_append(mut p: *mut sqlite3_str, mut z: *const i8, mut N: i32) {
-    0 as i32;
-    0 as i32;
-    0 as i32;
-    0 as i32;
-    if unsafe { (*p).nChar }.wrapping_add(N as u32) >= unsafe { (*p).nAlloc } {
-        enlargeAndAppend(p, z, N);
-    } else {
-        if N != (0 as i32) {
-            0 as i32;
-            let __v971: *mut sqlite3_str = p;
-            let __v972: u32 = unsafe { (*__v971).nChar };
-            let __v973: u32 = __v972.wrapping_add(N as u32);
-            unsafe {
-                (*__v971).nChar = __v973;
-            }
-            unsafe {
-                memcpy(
-                    (unsafe {
-                        unsafe { (*p).zText }
-                            .offset(unsafe { (*p).nChar }.wrapping_sub(N as u32) as isize)
-                    }) as *mut (),
-                    z as *const (),
-                    (N as i64) as u64,
-                )
-            };
-        }
-    }
-}
+static mut zOrd: [i8; 9] = [
+    116 as i8, 104 as i8, 115 as i8, 116 as i8, 110 as i8, 100 as i8, 114 as i8, 100 as i8, 0 as i8,
+];
 
-// /*
-// ** Append the complete text of zero-terminated string z[] to the p string.
-// */
+/// The z string points to the first character of a token that is
+/// associated with an error.  If db does not already have an error
+/// byte offset recorded, try to compute the error byte offset for
+/// z and set the error byte offset in db.
 #[unsafe(no_mangle)]
-#[unsafe(link_section = ".text.slate_distinct.printf.sqlite3_str_appendall")]
-extern "C-unwind" fn sqlite3_str_appendall(mut p: *mut sqlite3_str, mut z: *const i8) {
-    sqlite3_str_append(p, z, unsafe { sqlite3Strlen30(z) });
-}
-
-// /*
-// ** Append N copies of character c to the given string buffer.
-// */
-#[unsafe(no_mangle)]
-#[unsafe(link_section = ".text.slate_distinct.printf.sqlite3_str_appendchar")]
-extern "C-unwind" fn sqlite3_str_appendchar(mut p: *mut sqlite3_str, mut N: i32, mut c: i8) {
-    {}
-    let __v974: bool;
-    if (((unsafe { (*p).nChar }) as u64) as i64) + (N as i64)
-        >= (((unsafe { (*p).nAlloc }) as u64) as i64)
-    {
-        let __v975: i32 = sqlite3StrAccumEnlarge(p, N as i64);
-        N = __v975;
-        __v974 = __v975 <= (0 as i32);
-    } else {
-        __v974 = false as bool;
-    }
-    if __v974 {
+extern "C-unwind" fn sqlite3RecordErrorByteOffset(mut db: *mut sqlite3, mut z: *const i8) {
+    let mut pParse: *const Parse = unsafe { std::mem::zeroed() };
+    let mut zText: *const i8 = unsafe { std::mem::zeroed() };
+    let mut zEnd: *const i8 = unsafe { std::mem::zeroed() };
+    0 as i32;
+    if db == std::ptr::null_mut::<sqlite3>() {
         return;
     }
-    '__slate_break_741: loop {
-        let __v976: i32 = N;
-        let __v977: i32 = __v976 - (1 as i32);
-        N = __v977;
-        if !(__v976 > (0 as i32)) {
-            break;
-        }
-        let __v978: *mut sqlite3_str = p;
-        let __v979: u32 = unsafe { (*__v978).nChar };
-        let __v980: u32 = __v979.wrapping_add((1 as i32) as u32);
+    if (unsafe { (*db).errByteOffset }) != -(2 as i32) {
+        return;
+    }
+    pParse = (unsafe { (*db).pParse }) as *const Parse;
+    if pParse == std::ptr::null::<Parse>() {
+        return;
+    }
+    zText = unsafe { (*pParse).zTail };
+    if zText == std::ptr::null::<i8>() {
+        return;
+    }
+    zEnd = unsafe { zText.offset((unsafe { strlen(zText) }) as isize) };
+    if (z as u64) >= (zText as u64) && (z as u64) < (zEnd as u64) {
         unsafe {
-            (*__v978).nChar = __v980;
-        }
-        unsafe {
-            *unsafe { unsafe { (*p).zText }.offset(__v979 as isize) } = c;
+            (*db).errByteOffset = ((unsafe { z.offset_from(zText as *const i8) }) as i64) as i32;
         }
     }
 }
 
-// /*
-// ** Reset an StrAccum string.  Reclaim all malloced memory.
-// */
+/// If pExpr has a byte offset for the start of a token, record that as
+/// as the error offset.
 #[unsafe(no_mangle)]
-#[unsafe(link_section = ".text.slate_distinct.printf.sqlite3_str_reset")]
-extern "C-unwind" fn sqlite3_str_reset(mut p: *mut sqlite3_str) {
-    if (((unsafe { (*p).printfFlags }) as u32) as i32) & (4 as i32) != (0 as i32) {
-        unsafe { sqlite3DbFree(unsafe { (*p).db }, (unsafe { (*p).zText }) as *mut ()) };
-        let __v981: *mut sqlite3_str = p;
-        let __v982: u8 = unsafe { (*__v981).printfFlags };
-        let __v983: u8 = ((((__v982 as u32) as i32) & !(4 as i32)) as i8) as u8;
-        unsafe {
-            (*__v981).printfFlags = __v983;
-        }
-    } else {
-        if p == ((unsafe { std::ptr::addr_of!(sqlite3OomStr) }) as *mut sqlite3_str) {
-            return;
-        }
-    }
-    unsafe {
-        (*p).nAlloc = (0 as i32) as u32;
-    }
-    unsafe {
-        (*p).nChar = (0 as i32) as u32;
-    }
-    unsafe {
-        (*p).zText = std::ptr::null_mut::<i8>();
-    }
-}
-
-// /* Truncate the text of the string to be no more than N bytes. */
-#[unsafe(no_mangle)]
-#[unsafe(link_section = ".text.slate_distinct.printf.sqlite3_str_truncate")]
-extern "C-unwind" fn sqlite3_str_truncate(mut p: *mut sqlite3_str, mut N: i32) {
-    if p != std::ptr::null_mut::<sqlite3_str>()
-        && N >= (0 as i32)
-        && (N as u32) < unsafe { (*p).nChar }
+extern "C-unwind" fn sqlite3RecordErrorOffsetOfExpr(mut db: *mut sqlite3, mut pExpr: *const Expr) {
+    '__slate_break_740: while pExpr != std::ptr::null::<Expr>()
+        && ((unsafe { (*pExpr).flags }) & (((1 as i32) | (2 as i32)) as u32) != ((0 as i32) as u32)
+            || (unsafe { (*pExpr).w.iOfst }) <= (0 as i32))
     {
-        unsafe {
-            (*p).nChar = N as u32;
-        }
-        unsafe {
-            *unsafe { unsafe { (*p).zText }.offset((unsafe { (*p).nChar }) as isize) } =
-                (0 as i32) as i8;
-        }
+        pExpr = (unsafe { (*pExpr).pLeft }) as *const Expr;
     }
-}
-
-// /* Return any error code associated with p */
-#[unsafe(no_mangle)]
-#[unsafe(link_section = ".text.slate_distinct.printf.sqlite3_str_errcode")]
-extern "C-unwind" fn sqlite3_str_errcode(mut p: *mut sqlite3_str) -> i32 {
-    return if p != std::ptr::null_mut::<sqlite3_str>() {
-        ((unsafe { (*p).accError }) as u32) as i32
-    } else {
-        7 as i32
-    };
-}
-
-// /* Return the current length of p in bytes */
-#[unsafe(no_mangle)]
-#[unsafe(link_section = ".text.slate_distinct.printf.sqlite3_str_length")]
-extern "C-unwind" fn sqlite3_str_length(mut p: *mut sqlite3_str) -> i32 {
-    return (if p != std::ptr::null_mut::<sqlite3_str>() {
-        unsafe { (*p).nChar }
-    } else {
-        (0 as i32) as u32
-    }) as i32;
-}
-
-// /* Return the current value for p */
-#[unsafe(no_mangle)]
-#[unsafe(link_section = ".text.slate_distinct.printf.sqlite3_str_value")]
-extern "C-unwind" fn sqlite3_str_value(mut p: *mut sqlite3_str) -> *mut i8 {
-    if p == std::ptr::null_mut::<sqlite3_str>() || (unsafe { (*p).nChar }) == ((0 as i32) as u32) {
-        return std::ptr::null_mut::<i8>();
+    if pExpr == std::ptr::null::<Expr>() {
+        return;
+    }
+    if (unsafe { (*pExpr).flags }) & ((1073741824 as i32) as u32) != ((0 as i32) as u32) {
+        return;
     }
     unsafe {
-        *unsafe { unsafe { (*p).zText }.offset((unsafe { (*p).nChar }) as isize) } =
-            (0 as i32) as i8;
-    }
-    return unsafe { (*p).zText };
-}
-
-// /*
-// ** Format and write a message to the log if logging is enabled.
-// */
-#[unsafe(no_mangle)]
-unsafe extern "C-unwind" fn sqlite3_log(
-    mut iErrCode: i32,
-    mut zFormat: *const i8,
-    mut __va_args: ...
-) {
-    // /* Vararg list */
-    let mut ap: core::ffi::VaList<'_> = unsafe { std::mem::zeroed() };
-    if (unsafe { sqlite3Config.xLog }) != None {
-        ap = __va_args.clone();
-        renderLogMsg(iErrCode, zFormat, ap.clone());
-        {}
+        (*db).errByteOffset = unsafe { (*pExpr).w.iOfst };
     }
 }
 
-// /*
-// ** Print into memory obtained from sqliteMalloc().  Use the internal
-// ** %-conversion extensions.
-// */
-#[unsafe(no_mangle)]
-unsafe extern "C-unwind" fn sqlite3MPrintf(
-    mut db: *mut sqlite3,
-    mut zFormat: *const i8,
-    mut __va_args: ...
-) -> *mut i8 {
-    let mut ap: core::ffi::VaList<'_> = unsafe { std::mem::zeroed() };
-    let mut z: *mut i8 = unsafe { std::mem::zeroed() };
-    ap = __va_args.clone();
-    z = sqlite3VMPrintf(db, zFormat, ap.clone());
-    {}
-    return z;
-}
-
-// /*
-// ** Print into memory obtained from sqliteMalloc().  Use the internal
-// ** %-conversion extensions.
-// */
-#[unsafe(no_mangle)]
-extern "C-unwind" fn sqlite3VMPrintf(
-    mut db: *mut sqlite3,
-    mut zFormat: *const i8,
-    mut ap: core::ffi::VaList<'_>,
-) -> *mut i8 {
-    let mut z: *mut i8 = unsafe { std::mem::zeroed() };
-    let mut zBase: __SlateAlign16<[i8; 70]> = __SlateAlign16([0 as i8; 70]);
-    let mut acc: sqlite3_str = unsafe { std::mem::zeroed() };
-    0 as i32;
-    sqlite3StrAccumInit(
-        std::ptr::addr_of_mut!(acc),
-        db,
-        zBase.0.as_mut_ptr() as *mut i8,
-        ((70 as u64) as u32) as i32,
-        unsafe {
-            *unsafe { unsafe { (*db).aLimit.as_mut_ptr() as *mut i32 }.offset((0 as i32) as isize) }
-        },
-    );
-    acc.printfFlags = ((1 as i32) as i8) as u8;
-    sqlite3_str_vappendf(std::ptr::addr_of_mut!(acc), zFormat, ap.clone());
-    z = sqlite3StrAccumFinish(std::ptr::addr_of_mut!(acc));
-    if ((acc.accError as u32) as i32) == (7 as i32) {
-        unsafe { sqlite3OomFault(db) };
-    }
-    return z;
-}
-
-// /*****************************************************************************
-// ** Reference counted string/blob storage
-// *****************************************************************************/
-// /*
-// ** Increase the reference count of the string by one.
-// **
-// ** The input parameter is returned.
-// */
-#[unsafe(no_mangle)]
-extern "C-unwind" fn sqlite3RCStrRef(mut z: *mut i8) -> *mut i8 {
-    let mut p: *mut RCStr = z as *mut RCStr;
-    0 as i32;
-    let __v984: *mut RCStr = p;
-    let __v985: *mut RCStr = unsafe { __v984.offset(-((1 as i32) as isize)) };
-    p = __v985;
-    let __v986: *mut RCStr = p;
-    let __v987: u64 = unsafe { (*__v986).nRCRef };
-    let __v988: u64 = __v987.wrapping_add(((1 as i32) as i64) as u64);
-    unsafe {
-        (*__v986).nRCRef = __v988;
-    }
-    return z;
-}
-
-// /*
-// ** Decrease the reference count by one.  Free the string when the
-// ** reference count reaches zero.
-// */
-#[unsafe(no_mangle)]
-#[unsafe(link_section = ".text.slate_distinct.printf.sqlite3RCStrUnref")]
-extern "C-unwind" fn sqlite3RCStrUnref(mut z: *mut ()) {
-    let mut p: *mut RCStr = z as *mut RCStr;
-    0 as i32;
-    let __v989: *mut RCStr = p;
-    let __v990: *mut RCStr = unsafe { __v989.offset(-((1 as i32) as isize)) };
-    p = __v990;
-    0 as i32;
-    if (unsafe { (*p).nRCRef }) >= (((2 as i32) as i64) as u64) {
-        let __v991: *mut RCStr = p;
-        let __v992: u64 = unsafe { (*__v991).nRCRef };
-        let __v993: u64 = __v992.wrapping_sub(((1 as i32) as i64) as u64);
-        unsafe {
-            (*__v991).nRCRef = __v993;
-        }
-    } else {
-        unsafe { sqlite3_free(p as *mut ()) };
-    }
-}
-
-// /*
-// ** Create a new string that is capable of holding N bytes of text, not counting
-// ** the zero byte at the end.  The string is uninitialized.
-// **
-// ** The reference count is initially 1.  Call sqlite3RCStrUnref() to free the
-// ** newly allocated string.
-// **
-// ** This routine returns 0 on an OOM.
-// */
-#[unsafe(no_mangle)]
-extern "C-unwind" fn sqlite3RCStrNew(mut N: u64) -> *mut i8 {
-    let mut p: *mut RCStr = (unsafe {
-        sqlite3_malloc64(
-            N.wrapping_add(8 as u64)
-                .wrapping_add(((1 as i32) as i64) as u64),
-        )
-    }) as *mut RCStr;
-    if p == std::ptr::null_mut::<RCStr>() {
-        return std::ptr::null_mut::<i8>();
-    }
-    unsafe {
-        (*p).nRCRef = ((1 as i32) as i64) as u64;
-    }
-    return (unsafe { p.offset((1 as i32) as isize) }) as *mut i8;
-}
-
-// /*
-// ** Change the size of the string so that it is able to hold N bytes.
-// ** The string might be reallocated, so return the new allocation.
-// */
-#[unsafe(no_mangle)]
-extern "C-unwind" fn sqlite3RCStrResize(mut z: *mut i8, mut N: u64) -> *mut i8 {
-    let mut p: *mut RCStr = z as *mut RCStr;
-    let mut pNew: *mut RCStr = unsafe { std::mem::zeroed() };
-    0 as i32;
-    let __v994: *mut RCStr = p;
-    let __v995: *mut RCStr = unsafe { __v994.offset(-((1 as i32) as isize)) };
-    p = __v995;
-    0 as i32;
-    pNew = (unsafe {
-        sqlite3_realloc64(
-            p as *mut (),
-            N.wrapping_add(8 as u64)
-                .wrapping_add(((1 as i32) as i64) as u64),
-        )
-    }) as *mut RCStr;
-    if pNew == std::ptr::null_mut::<RCStr>() {
-        unsafe { sqlite3_free(p as *mut ()) };
-        return std::ptr::null_mut::<i8>();
-    } else {
-        return (unsafe { pNew.offset((1 as i32) as isize) }) as *mut i8;
-    }
-    return unsafe { std::mem::zeroed() };
-}
-
-// /*
-// ** Initialize a string accumulator.
-// **
-// ** p:     The accumulator to be initialized.
-// ** db:    Pointer to a database connection.  May be NULL.  Lookaside
-// **        memory is used if not NULL. db->mallocFailed is set appropriately
-// **        when not NULL.
-// ** zBase: An initial buffer.  May be NULL in which case the initial buffer
-// **        is malloced.
-// ** n:     Size of zBase in bytes.  If total space requirements never exceed
-// **        n then no memory allocations ever occur.
-// ** mx:    Maximum number of bytes to accumulate.  If mx==0 then no memory
-// **        allocations will ever occur.
-// */
-#[unsafe(no_mangle)]
-extern "C-unwind" fn sqlite3StrAccumInit(
-    mut p: *mut sqlite3_str,
-    mut db: *mut sqlite3,
-    mut zBase: *mut i8,
-    mut n: i32,
-    mut mx: i32,
-) {
-    unsafe {
-        (*p).zText = zBase;
-    }
-    unsafe {
-        (*p).db = db;
-    }
-    unsafe {
-        (*p).nAlloc = n as u32;
-    }
-    unsafe {
-        (*p).mxAlloc = mx as u32;
-    }
-    unsafe {
-        (*p).nChar = (0 as i32) as u32;
-    }
-    unsafe {
-        (*p).accError = ((0 as i32) as i8) as u8;
-    }
-    unsafe {
-        (*p).printfFlags = ((0 as i32) as i8) as u8;
-    }
-}
-
-// /*
-// ** Enlarge the memory allocation on a StrAccum object so that it is
-// ** able to accept at least N more bytes of text.
-// **
-// ** Return the number of bytes of text that StrAccum is able to accept
-// ** after the attempted enlargement.  The value returned might be zero.
-// */
+/// Enlarge the memory allocation on a StrAccum object so that it is
+/// able to accept at least N more bytes of text.
+///
+/// Return the number of bytes of text that StrAccum is able to accept
+/// after the attempted enlargement.  The value returned might be zero.
 #[unsafe(no_mangle)]
 extern "C-unwind" fn sqlite3StrAccumEnlarge(mut p: *mut sqlite3_str, mut N: i64) -> i32 {
     let mut zNew: *mut i8 = unsafe { std::mem::zeroed() };
-    // /* Only called if really needed */
-    0 as i32;
+    0 as i32; // Only called if really needed
     if (unsafe { (*p).accError }) != (0 as u8) {
         {}
         {}
@@ -6465,8 +6004,8 @@ extern "C-unwind" fn sqlite3StrAccumEnlarge(mut p: *mut sqlite3_str, mut N: i64)
         if szNew + (((unsafe { (*p).nChar }) as u64) as i64)
             <= (((unsafe { (*p).mxAlloc }) as u64) as i64)
         {
-            // /* Force exponential buffer size growth as long as it does not overflow,
-            //       ** to avoid having to call this routine too often */
+            // Force exponential buffer size growth as long as it does not overflow,
+            // to avoid having to call this routine too often
             let __v996: i64 = szNew;
             let __v997: i64 = __v996 + (((unsafe { (*p).nChar }) as u64) as i64);
             szNew = __v997;
@@ -6536,232 +6075,39 @@ extern "C-unwind" fn sqlite3StrAccumEnlargeIfNeeded(mut p: *mut sqlite3_str, mut
     return ((unsafe { (*p).accError }) as u32) as i32;
 }
 
+/// Append N copies of character c to the given string buffer.
 #[unsafe(no_mangle)]
-extern "C-unwind" fn sqlite3StrAccumFinish(mut p: *mut sqlite3_str) -> *mut i8 {
-    if (unsafe { (*p).zText }) != std::ptr::null_mut::<i8>() {
-        unsafe {
-            *unsafe { unsafe { (*p).zText }.offset((unsafe { (*p).nChar }) as isize) } =
-                (0 as i32) as i8;
-        }
-        if (unsafe { (*p).mxAlloc }) > ((0 as i32) as u32)
-            && !((((unsafe { (*p).printfFlags }) as u32) as i32) & (4 as i32) != (0 as i32))
-        {
-            return strAccumFinishRealloc(p);
-        }
-    }
-    return unsafe { (*p).zText };
-}
-
-// /*  0 */
-// /*  1 */
-// /*  2 */
-// /*  3 */
-// /*  4 */
-// /* Hash: 6 */
-// /*  5 */
-// /*  6 */
-// /*  7 */
-// /* Hash: 12 */
-// /*  8 */
-// /*  9 */
-// /* 10 */
-// /* 11 */
-// /* 12 */
-// /* 13 */
-// /* 14 */
-// /* 15 */
-// /* 16 */
-// /* Hash: 13 */
-// /* 17 */
-// /* 18 */
-// /* Hash: 19 */
-// /* 19 */
-// /* 20 */
-// /* 21 */
-// /* 22 */
-// /* 23 */
-// /* Hash: 24 */
-// /* 24 */
-// /* Additional Notes:
-// **
-// **    %S    Takes a pointer to SrcItem.  Shows name or database.name
-// **    %!S   Like %S but prefer the zName over the zAlias
-// */
-// /*
-// ** Set the StrAccum object to an error mode.
-// */
-#[unsafe(no_mangle)]
-extern "C-unwind" fn sqlite3StrAccumSetError(mut p: *mut sqlite3_str, mut eError: u8) {
-    0 as i32;
-    unsafe {
-        (*p).accError = eError;
-    }
-    if (unsafe { (*p).mxAlloc }) != (0 as u32) {
-        sqlite3_str_reset(p);
-    }
-    if ((eError as u32) as i32) == (18 as i32) {
-        unsafe { sqlite3ErrorToParser(unsafe { (*p).db }, (eError as u32) as i32) };
-    }
-}
-
-// /*
-// ** The z string points to the first character of a token that is
-// ** associated with an error.  If db does not already have an error
-// ** byte offset recorded, try to compute the error byte offset for
-// ** z and set the error byte offset in db.
-// */
-#[unsafe(no_mangle)]
-extern "C-unwind" fn sqlite3RecordErrorByteOffset(mut db: *mut sqlite3, mut z: *const i8) {
-    let mut pParse: *const Parse = unsafe { std::mem::zeroed() };
-    let mut zText: *const i8 = unsafe { std::mem::zeroed() };
-    let mut zEnd: *const i8 = unsafe { std::mem::zeroed() };
-    0 as i32;
-    if db == std::ptr::null_mut::<sqlite3>() {
-        return;
-    }
-    if (unsafe { (*db).errByteOffset }) != -(2 as i32) {
-        return;
-    }
-    pParse = (unsafe { (*db).pParse }) as *const Parse;
-    if pParse == std::ptr::null::<Parse>() {
-        return;
-    }
-    zText = unsafe { (*pParse).zTail };
-    if zText == std::ptr::null::<i8>() {
-        return;
-    }
-    zEnd = unsafe { zText.offset((unsafe { strlen(zText) }) as isize) };
-    if (z as u64) >= (zText as u64) && (z as u64) < (zEnd as u64) {
-        unsafe {
-            (*db).errByteOffset = ((unsafe { z.offset_from(zText as *const i8) }) as i64) as i32;
-        }
-    }
-}
-
-// /*
-// ** If pExpr has a byte offset for the start of a token, record that as
-// ** as the error offset.
-// */
-#[unsafe(no_mangle)]
-extern "C-unwind" fn sqlite3RecordErrorOffsetOfExpr(mut db: *mut sqlite3, mut pExpr: *const Expr) {
-    '__slate_break_740: while pExpr != std::ptr::null::<Expr>()
-        && ((unsafe { (*pExpr).flags }) & (((1 as i32) | (2 as i32)) as u32) != ((0 as i32) as u32)
-            || (unsafe { (*pExpr).w.iOfst }) <= (0 as i32))
+#[unsafe(link_section = ".text.slate_distinct.printf.sqlite3_str_appendchar")]
+extern "C-unwind" fn sqlite3_str_appendchar(mut p: *mut sqlite3_str, mut N: i32, mut c: i8) {
+    {}
+    let __v974: bool;
+    if (((unsafe { (*p).nChar }) as u64) as i64) + (N as i64)
+        >= (((unsafe { (*p).nAlloc }) as u64) as i64)
     {
-        pExpr = (unsafe { (*pExpr).pLeft }) as *const Expr;
-    }
-    if pExpr == std::ptr::null::<Expr>() {
-        return;
-    }
-    if (unsafe { (*pExpr).flags }) & ((1073741824 as i32) as u32) != ((0 as i32) as u32) {
-        return;
-    }
-    unsafe {
-        (*db).errByteOffset = unsafe { (*pExpr).w.iOfst };
-    }
-}
-
-// /*
-// ** Extra argument values from a PrintfArguments object
-// */
-fn getIntArg(mut p: *mut PrintfArguments) -> i64 {
-    if (unsafe { (*p).nArg }) <= unsafe { (*p).nUsed } {
-        return (0 as i32) as i64;
-    }
-    let __v1001: *mut PrintfArguments = p;
-    let __v1002: i32 = unsafe { (*__v1001).nUsed };
-    let __v1003: i32 = __v1002 + (1 as i32);
-    unsafe {
-        (*__v1001).nUsed = __v1003;
-    }
-    return unsafe {
-        sqlite3_value_int64(unsafe { *unsafe { unsafe { (*p).apArg }.offset(__v1002 as isize) } })
-    };
-}
-
-fn getDoubleArg(mut p: *mut PrintfArguments) -> f64 {
-    if (unsafe { (*p).nArg }) <= unsafe { (*p).nUsed } {
-        return 0.0f64;
-    }
-    let __v1004: *mut PrintfArguments = p;
-    let __v1005: i32 = unsafe { (*__v1004).nUsed };
-    let __v1006: i32 = __v1005 + (1 as i32);
-    unsafe {
-        (*__v1004).nUsed = __v1006;
-    }
-    return unsafe {
-        sqlite3_value_double(unsafe { *unsafe { unsafe { (*p).apArg }.offset(__v1005 as isize) } })
-    };
-}
-
-fn getTextArg(mut p: *mut PrintfArguments) -> *mut i8 {
-    if (unsafe { (*p).nArg }) <= unsafe { (*p).nUsed } {
-        return std::ptr::null_mut::<i8>();
-    }
-    let __v1007: *mut PrintfArguments = p;
-    let __v1008: i32 = unsafe { (*__v1007).nUsed };
-    let __v1009: i32 = __v1008 + (1 as i32);
-    unsafe {
-        (*__v1007).nUsed = __v1009;
-    }
-    return (unsafe {
-        sqlite3_value_text(unsafe { *unsafe { unsafe { (*p).apArg }.offset(__v1008 as isize) } })
-    }) as *mut i8;
-}
-
-// /*
-// ** Allocate memory for a temporary buffer needed for printf rendering.
-// **
-// ** If the requested size of the temp buffer is larger than the size
-// ** of the output buffer in pAccum, then cause an SQLITE_TOOBIG error.
-// ** Do the size check before the memory allocation to prevent rogue
-// ** SQL from requesting large allocations using the precision or width
-// ** field of the printf() function.
-// */
-fn printfTempBuf(mut pAccum: *mut sqlite3_str, mut n: i64) -> *mut i8 {
-    let mut z: *mut i8 = unsafe { std::mem::zeroed() };
-    if (unsafe { (*pAccum).accError }) != (0 as u8) {
-        return std::ptr::null_mut::<i8>();
-    }
-    if n > (((unsafe { (*pAccum).nAlloc }) as u64) as i64)
-        && n > (((unsafe { (*pAccum).mxAlloc }) as u64) as i64)
-    {
-        sqlite3StrAccumSetError(pAccum, ((18 as i32) as i8) as u8);
-        return std::ptr::null_mut::<i8>();
-    }
-    z = (unsafe { sqlite3_malloc(n as i32) }) as *mut i8;
-    if z == std::ptr::null_mut::<i8>() {
-        sqlite3StrAccumSetError(pAccum, ((7 as i32) as i8) as u8);
-    }
-    return z;
-}
-
-fn sqlite3StrAppend64(mut p: *mut sqlite3_str, mut z: *const i8, mut N: i64) {
-    0 as i32;
-    0 as i32;
-    0 as i32;
-    0 as i32;
-    if (((unsafe { (*p).nChar }) as u64) as i64) + N >= (((unsafe { (*p).nAlloc }) as u64) as i64) {
-        enlargeAndAppend(p, z, N as i32);
+        let __v975: i32 = sqlite3StrAccumEnlarge(p, N as i64);
+        N = __v975;
+        __v974 = __v975 <= (0 as i32);
     } else {
-        if N != (0 as i64) {
-            0 as i32;
-            let __v1010: *mut sqlite3_str = p;
-            let __v1011: u32 = unsafe { (*__v1010).nChar };
-            let __v1012: u32 = ((((__v1011 as u64) as i64) + N) as i32) as u32;
-            unsafe {
-                (*__v1010).nChar = __v1012;
-            }
-            unsafe {
-                memcpy(
-                    (unsafe {
-                        unsafe { (*p).zText }
-                            .offset(((((unsafe { (*p).nChar }) as u64) as i64) - N) as isize)
-                    }) as *mut (),
-                    z as *const (),
-                    N as u64,
-                )
-            };
+        __v974 = false as bool;
+    }
+    if __v974 {
+        return;
+    }
+    '__slate_break_741: loop {
+        let __v976: i32 = N;
+        let __v977: i32 = __v976 - (1 as i32);
+        N = __v977;
+        if !(__v976 > (0 as i32)) {
+            break;
+        }
+        let __v978: *mut sqlite3_str = p;
+        let __v979: u32 = unsafe { (*__v978).nChar };
+        let __v980: u32 = __v979.wrapping_add((1 as i32) as u32);
+        unsafe {
+            (*__v978).nChar = __v980;
+        }
+        unsafe {
+            *unsafe { unsafe { (*p).zText }.offset(__v979 as isize) } = c;
         }
     }
 }
@@ -6798,14 +6144,12 @@ fn sqlite3StrAppendchar64(mut p: *mut sqlite3_str, mut N: i64, mut c: i8) {
     }
 }
 
-// /*
-// ** The StrAccum "p" is not large enough to accept N new bytes of z[].
-// ** So enlarge if first, then do the append.
-// **
-// ** This is a helper routine to sqlite3_str_append() that does special-case
-// ** work (enlarging the buffer) using tail recursion, so that the
-// ** sqlite3_str_append() routine can use fast calling semantics.
-// */
+/// The StrAccum "p" is not large enough to accept N new bytes of z[].
+/// So enlarge if first, then do the append.
+///
+/// This is a helper routine to sqlite3_str_append() that does special-case
+/// work (enlarging the buffer) using tail recursion, so that the
+/// sqlite3_str_append() routine can use fast calling semantics.
 fn enlargeAndAppend(mut p: *mut sqlite3_str, mut z: *const i8, mut N: i32) {
     N = sqlite3StrAccumEnlarge(p, N as i64);
     0 as i32;
@@ -6827,11 +6171,81 @@ fn enlargeAndAppend(mut p: *mut sqlite3_str, mut z: *const i8, mut N: i32) {
     }
 }
 
-// /*
-// ** Finish off a string by making sure it is zero-terminated.
-// ** Return a pointer to the resulting string.  Return a NULL
-// ** pointer if any kind of error was encountered.
-// */
+/// Append N bytes of text from z to the StrAccum object.  Increase the
+/// size of the memory allocation for StrAccum if necessary.
+#[unsafe(no_mangle)]
+#[unsafe(link_section = ".text.slate_distinct.printf.sqlite3_str_append")]
+extern "C-unwind" fn sqlite3_str_append(mut p: *mut sqlite3_str, mut z: *const i8, mut N: i32) {
+    0 as i32;
+    0 as i32;
+    0 as i32;
+    0 as i32;
+    if unsafe { (*p).nChar }.wrapping_add(N as u32) >= unsafe { (*p).nAlloc } {
+        enlargeAndAppend(p, z, N);
+    } else {
+        if N != (0 as i32) {
+            0 as i32;
+            let __v971: *mut sqlite3_str = p;
+            let __v972: u32 = unsafe { (*__v971).nChar };
+            let __v973: u32 = __v972.wrapping_add(N as u32);
+            unsafe {
+                (*__v971).nChar = __v973;
+            }
+            unsafe {
+                memcpy(
+                    (unsafe {
+                        unsafe { (*p).zText }
+                            .offset(unsafe { (*p).nChar }.wrapping_sub(N as u32) as isize)
+                    }) as *mut (),
+                    z as *const (),
+                    (N as i64) as u64,
+                )
+            };
+        }
+    }
+}
+
+/// Forward reference
+fn sqlite3StrAppend64(mut p: *mut sqlite3_str, mut z: *const i8, mut N: i64) {
+    0 as i32;
+    0 as i32;
+    0 as i32;
+    0 as i32;
+    if (((unsafe { (*p).nChar }) as u64) as i64) + N >= (((unsafe { (*p).nAlloc }) as u64) as i64) {
+        enlargeAndAppend(p, z, N as i32);
+    } else {
+        if N != (0 as i64) {
+            0 as i32;
+            let __v1010: *mut sqlite3_str = p;
+            let __v1011: u32 = unsafe { (*__v1010).nChar };
+            let __v1012: u32 = ((((__v1011 as u64) as i64) + N) as i32) as u32;
+            unsafe {
+                (*__v1010).nChar = __v1012;
+            }
+            unsafe {
+                memcpy(
+                    (unsafe {
+                        unsafe { (*p).zText }
+                            .offset(((((unsafe { (*p).nChar }) as u64) as i64) - N) as isize)
+                    }) as *mut (),
+                    z as *const (),
+                    N as u64,
+                )
+            };
+        }
+    }
+}
+
+/// Append the complete text of zero-terminated string z[] to the p string.
+#[unsafe(no_mangle)]
+#[unsafe(link_section = ".text.slate_distinct.printf.sqlite3_str_appendall")]
+extern "C-unwind" fn sqlite3_str_appendall(mut p: *mut sqlite3_str, mut z: *const i8) {
+    sqlite3_str_append(p, z, unsafe { sqlite3Strlen30(z) });
+}
+
+/// Finish off a string by making sure it is zero-terminated.
+/// Return a pointer to the resulting string.  Return a NULL
+/// pointer if any kind of error was encountered.
 fn strAccumFinishRealloc(mut p: *mut sqlite3_str) -> *mut i8 {
     let mut zText: *mut i8 = unsafe { std::mem::zeroed() };
     0 as i32;
@@ -6864,26 +6278,372 @@ fn strAccumFinishRealloc(mut p: *mut sqlite3_str) -> *mut i8 {
     return zText;
 }
 
-// /* Maximum size of an sqlite3_log() message. */
-// /*
-// ** This is the routine that actually formats the sqlite3_log() message.
-// ** We house it in a separate routine from sqlite3_log() to avoid using
-// ** stack space on small-stack systems when logging is disabled.
-// **
-// ** sqlite3_log() must render into a static buffer.  It cannot dynamically
-// ** allocate memory because it might be called while the memory allocator
-// ** mutex is held.
-// **
-// ** sqlite3_str_vappendf() might ask for *temporary* memory allocations for
-// ** certain format characters (%q) or for very large precisions or widths.
-// ** Care must be taken that any sqlite3_log() calls that occur while the
-// ** memory mutex is held do not use these mechanisms.
-// */
-fn renderLogMsg(mut iErrCode: i32, mut zFormat: *const i8, mut ap: core::ffi::VaList<'_>) {
-    // /* String accumulator */
+#[unsafe(no_mangle)]
+extern "C-unwind" fn sqlite3StrAccumFinish(mut p: *mut sqlite3_str) -> *mut i8 {
+    if (unsafe { (*p).zText }) != std::ptr::null_mut::<i8>() {
+        unsafe {
+            *unsafe { unsafe { (*p).zText }.offset((unsafe { (*p).nChar }) as isize) } =
+                (0 as i32) as i8;
+        }
+        if (unsafe { (*p).mxAlloc }) > ((0 as i32) as u32)
+            && !((((unsafe { (*p).printfFlags }) as u32) as i32) & (4 as i32) != (0 as i32))
+        {
+            return strAccumFinishRealloc(p);
+        }
+    }
+    return unsafe { (*p).zText };
+}
+
+/// Finalize a string created using sqlite3_str_new().
+#[unsafe(no_mangle)]
+#[unsafe(link_section = ".text.slate_distinct.printf.sqlite3_str_finish")]
+extern "C-unwind" fn sqlite3_str_finish(mut p: *mut sqlite3_str) -> *mut i8 {
+    let mut z: *mut i8 = unsafe { std::mem::zeroed() };
+    if p != std::ptr::null_mut::<sqlite3_str>()
+        && p != ((unsafe { std::ptr::addr_of!(sqlite3OomStr) }) as *mut sqlite3_str)
+    {
+        z = sqlite3StrAccumFinish(p);
+        unsafe { sqlite3_free(p as *mut ()) };
+    } else {
+        z = std::ptr::null_mut::<i8>();
+    }
+    return z;
+}
+
+/// Return any error code associated with p
+#[unsafe(no_mangle)]
+#[unsafe(link_section = ".text.slate_distinct.printf.sqlite3_str_errcode")]
+extern "C-unwind" fn sqlite3_str_errcode(mut p: *mut sqlite3_str) -> i32 {
+    return if p != std::ptr::null_mut::<sqlite3_str>() {
+        ((unsafe { (*p).accError }) as u32) as i32
+    } else {
+        7 as i32
+    };
+}
+
+/// Return the current length of p in bytes
+#[unsafe(no_mangle)]
+#[unsafe(link_section = ".text.slate_distinct.printf.sqlite3_str_length")]
+extern "C-unwind" fn sqlite3_str_length(mut p: *mut sqlite3_str) -> i32 {
+    return (if p != std::ptr::null_mut::<sqlite3_str>() {
+        unsafe { (*p).nChar }
+    } else {
+        (0 as i32) as u32
+    }) as i32;
+}
+
+/// Truncate the text of the string to be no more than N bytes.
+#[unsafe(no_mangle)]
+#[unsafe(link_section = ".text.slate_distinct.printf.sqlite3_str_truncate")]
+extern "C-unwind" fn sqlite3_str_truncate(mut p: *mut sqlite3_str, mut N: i32) {
+    if p != std::ptr::null_mut::<sqlite3_str>()
+        && N >= (0 as i32)
+        && (N as u32) < unsafe { (*p).nChar }
+    {
+        unsafe {
+            (*p).nChar = N as u32;
+        }
+        unsafe {
+            *unsafe { unsafe { (*p).zText }.offset((unsafe { (*p).nChar }) as isize) } =
+                (0 as i32) as i8;
+        }
+    }
+}
+
+/// Return the current value for p
+#[unsafe(no_mangle)]
+#[unsafe(link_section = ".text.slate_distinct.printf.sqlite3_str_value")]
+extern "C-unwind" fn sqlite3_str_value(mut p: *mut sqlite3_str) -> *mut i8 {
+    if p == std::ptr::null_mut::<sqlite3_str>() || (unsafe { (*p).nChar }) == ((0 as i32) as u32) {
+        return std::ptr::null_mut::<i8>();
+    }
+    unsafe {
+        *unsafe { unsafe { (*p).zText }.offset((unsafe { (*p).nChar }) as isize) } =
+            (0 as i32) as i8;
+    }
+    return unsafe { (*p).zText };
+}
+
+/// Reset an StrAccum string.  Reclaim all malloced memory.
+#[unsafe(no_mangle)]
+#[unsafe(link_section = ".text.slate_distinct.printf.sqlite3_str_reset")]
+extern "C-unwind" fn sqlite3_str_reset(mut p: *mut sqlite3_str) {
+    if (((unsafe { (*p).printfFlags }) as u32) as i32) & (4 as i32) != (0 as i32) {
+        unsafe { sqlite3DbFree(unsafe { (*p).db }, (unsafe { (*p).zText }) as *mut ()) };
+        let __v981: *mut sqlite3_str = p;
+        let __v982: u8 = unsafe { (*__v981).printfFlags };
+        let __v983: u8 = ((((__v982 as u32) as i32) & !(4 as i32)) as i8) as u8;
+        unsafe {
+            (*__v981).printfFlags = __v983;
+        }
+    } else {
+        if p == ((unsafe { std::ptr::addr_of!(sqlite3OomStr) }) as *mut sqlite3_str) {
+            return;
+        }
+    }
+    unsafe {
+        (*p).nAlloc = (0 as i32) as u32;
+    }
+    unsafe {
+        (*p).nChar = (0 as i32) as u32;
+    }
+    unsafe {
+        (*p).zText = std::ptr::null_mut::<i8>();
+    }
+}
+
+/// Destroy a dynamically allocate sqlite3_str object and all
+/// of its content, all in one call.
+#[unsafe(no_mangle)]
+#[unsafe(link_section = ".text.slate_distinct.printf.sqlite3_str_free")]
+extern "C-unwind" fn sqlite3_str_free(mut p: *mut sqlite3_str) {
+    if p != std::ptr::null_mut::<sqlite3_str>()
+        && p != ((unsafe { std::ptr::addr_of!(sqlite3OomStr) }) as *mut sqlite3_str)
+    {
+        sqlite3_str_reset(p);
+        unsafe { sqlite3_free(p as *mut ()) };
+    }
+}
+
+/// Initialize a string accumulator.
+///
+/// p:     The accumulator to be initialized.
+/// db:    Pointer to a database connection.  May be NULL.  Lookaside
+///        memory is used if not NULL. db->mallocFailed is set appropriately
+///        when not NULL.
+/// zBase: An initial buffer.  May be NULL in which case the initial buffer
+///        is malloced.
+/// n:     Size of zBase in bytes.  If total space requirements never exceed
+///        n then no memory allocations ever occur.
+/// mx:    Maximum number of bytes to accumulate.  If mx==0 then no memory
+///        allocations will ever occur.
+#[unsafe(no_mangle)]
+extern "C-unwind" fn sqlite3StrAccumInit(
+    mut p: *mut sqlite3_str,
+    mut db: *mut sqlite3,
+    mut zBase: *mut i8,
+    mut n: i32,
+    mut mx: i32,
+) {
+    unsafe {
+        (*p).zText = zBase;
+    }
+    unsafe {
+        (*p).db = db;
+    }
+    unsafe {
+        (*p).nAlloc = n as u32;
+    }
+    unsafe {
+        (*p).mxAlloc = mx as u32;
+    }
+    unsafe {
+        (*p).nChar = (0 as i32) as u32;
+    }
+    unsafe {
+        (*p).accError = ((0 as i32) as i8) as u8;
+    }
+    unsafe {
+        (*p).printfFlags = ((0 as i32) as i8) as u8;
+    }
+}
+
+/// Allocate and initialize a new dynamic string object
+#[unsafe(no_mangle)]
+#[unsafe(link_section = ".text.slate_distinct.printf.sqlite3_str_new")]
+extern "C-unwind" fn sqlite3_str_new(mut db: *mut sqlite3) -> *mut sqlite3_str {
+    let mut p: *mut sqlite3_str = (unsafe { sqlite3_malloc64(32 as u64) }) as *mut sqlite3_str;
+    if p != std::ptr::null_mut::<sqlite3_str>() {
+        sqlite3StrAccumInit(
+            p,
+            std::ptr::null_mut::<sqlite3>(),
+            std::ptr::null_mut::<i8>(),
+            0 as i32,
+            if db != std::ptr::null_mut::<sqlite3>() {
+                unsafe {
+                    *unsafe {
+                        unsafe { (*db).aLimit.as_mut_ptr() as *mut i32 }.offset((0 as i32) as isize)
+                    }
+                }
+            } else {
+                1000000000 as i32
+            },
+        );
+    } else {
+        p = (unsafe { std::ptr::addr_of!(sqlite3OomStr) }) as *mut sqlite3_str;
+    }
+    return p;
+}
+
+/// Print into memory obtained from sqliteMalloc().  Use the internal
+/// %-conversion extensions.
+#[unsafe(no_mangle)]
+extern "C-unwind" fn sqlite3VMPrintf(
+    mut db: *mut sqlite3,
+    mut zFormat: *const i8,
+    mut ap: core::ffi::VaList<'_>,
+) -> *mut i8 {
+    let mut z: *mut i8 = unsafe { std::mem::zeroed() };
+    let mut zBase: __SlateAlign16<[i8; 70]> = __SlateAlign16([0 as i8; 70]);
     let mut acc: sqlite3_str = unsafe { std::mem::zeroed() };
-    // /* Complete log message */
-    let mut zMsg: __SlateAlign16<[i8; 700]> = __SlateAlign16([0 as i8; 700]);
+    0 as i32;
+    sqlite3StrAccumInit(
+        std::ptr::addr_of_mut!(acc),
+        db,
+        zBase.0.as_mut_ptr() as *mut i8,
+        ((70 as u64) as u32) as i32,
+        unsafe {
+            *unsafe { unsafe { (*db).aLimit.as_mut_ptr() as *mut i32 }.offset((0 as i32) as isize) }
+        },
+    );
+    acc.printfFlags = ((1 as i32) as i8) as u8;
+    sqlite3_str_vappendf(std::ptr::addr_of_mut!(acc), zFormat, ap.clone());
+    z = sqlite3StrAccumFinish(std::ptr::addr_of_mut!(acc));
+    if ((acc.accError as u32) as i32) == (7 as i32) {
+        unsafe { sqlite3OomFault(db) };
+    }
+    return z;
+}
+
+/// Print into memory obtained from sqliteMalloc().  Use the internal
+/// %-conversion extensions.
+#[unsafe(no_mangle)]
+unsafe extern "C-unwind" fn sqlite3MPrintf(
+    mut db: *mut sqlite3,
+    mut zFormat: *const i8,
+    mut __va_args: ...
+) -> *mut i8 {
+    let mut ap: core::ffi::VaList<'_> = unsafe { std::mem::zeroed() };
+    let mut z: *mut i8 = unsafe { std::mem::zeroed() };
+    ap = __va_args.clone();
+    z = sqlite3VMPrintf(db, zFormat, ap.clone());
+    {}
+    return z;
+}
+
+/// Print into memory obtained from sqlite3_malloc().  Omit the internal
+/// %-conversion extensions.
+#[unsafe(no_mangle)]
+#[unsafe(link_section = ".text.slate_distinct.printf.sqlite3_vmprintf")]
+extern "C-unwind" fn sqlite3_vmprintf(
+    mut zFormat: *const i8,
+    mut ap: core::ffi::VaList<'_>,
+) -> *mut i8 {
+    let mut z: *mut i8 = unsafe { std::mem::zeroed() };
+    let mut zBase: __SlateAlign16<[i8; 70]> = __SlateAlign16([0 as i8; 70]);
+    let mut acc: sqlite3_str = unsafe { std::mem::zeroed() };
+    if (unsafe { sqlite3_initialize() }) != (0 as i32) {
+        return std::ptr::null_mut::<i8>();
+    }
+    sqlite3StrAccumInit(
+        std::ptr::addr_of_mut!(acc),
+        std::ptr::null_mut::<sqlite3>(),
+        zBase.0.as_mut_ptr() as *mut i8,
+        ((70 as u64) as u32) as i32,
+        1000000000 as i32,
+    );
+    sqlite3_str_vappendf(std::ptr::addr_of_mut!(acc), zFormat, ap.clone());
+    z = sqlite3StrAccumFinish(std::ptr::addr_of_mut!(acc));
+    return z;
+}
+
+/// Print into memory obtained from sqlite3_malloc()().  Omit the internal
+/// %-conversion extensions.
+#[unsafe(no_mangle)]
+unsafe extern "C-unwind" fn sqlite3_mprintf(mut zFormat: *const i8, mut __va_args: ...) -> *mut i8 {
+    let mut ap: core::ffi::VaList<'_> = unsafe { std::mem::zeroed() };
+    let mut z: *mut i8 = unsafe { std::mem::zeroed() };
+    if (unsafe { sqlite3_initialize() }) != (0 as i32) {
+        return std::ptr::null_mut::<i8>();
+    }
+    ap = __va_args.clone();
+    z = sqlite3_vmprintf(zFormat, ap.clone());
+    {}
+    return z;
+}
+
+/// sqlite3_snprintf() works like snprintf() except that it ignores the
+/// current locale settings.  This is important for SQLite because we
+/// are not able to use a "," as the decimal point in place of "." as
+/// specified by some locales.
+///
+/// Oops:  The first two arguments of sqlite3_snprintf() are backwards
+/// from the snprintf() standard.  Unfortunately, it is too late to change
+/// this without breaking compatibility, so we just have to live with the
+/// mistake.
+///
+/// sqlite3_vsnprintf() is the varargs version.
+#[unsafe(no_mangle)]
+#[unsafe(link_section = ".text.slate_distinct.printf.sqlite3_vsnprintf")]
+extern "C-unwind" fn sqlite3_vsnprintf(
+    mut n: i32,
+    mut zBuf: *mut i8,
+    mut zFormat: *const i8,
+    mut ap: core::ffi::VaList<'_>,
+) -> *mut i8 {
+    let mut acc: sqlite3_str = unsafe { std::mem::zeroed() };
+    if n <= (0 as i32) {
+        return zBuf;
+    }
+    sqlite3StrAccumInit(
+        std::ptr::addr_of_mut!(acc),
+        std::ptr::null_mut::<sqlite3>(),
+        zBuf,
+        n,
+        0 as i32,
+    );
+    sqlite3_str_vappendf(std::ptr::addr_of_mut!(acc), zFormat, ap.clone());
+    unsafe {
+        *unsafe { zBuf.offset(acc.nChar as isize) } = (0 as i32) as i8;
+    }
+    return zBuf;
+}
+
+#[unsafe(no_mangle)]
+unsafe extern "C-unwind" fn sqlite3_snprintf(
+    mut n: i32,
+    mut zBuf: *mut i8,
+    mut zFormat: *const i8,
+    mut __va_args: ...
+) -> *mut i8 {
+    let mut acc: sqlite3_str = unsafe { std::mem::zeroed() };
+    let mut ap: core::ffi::VaList<'_> = unsafe { std::mem::zeroed() };
+    if n <= (0 as i32) {
+        return zBuf;
+    }
+    sqlite3StrAccumInit(
+        std::ptr::addr_of_mut!(acc),
+        std::ptr::null_mut::<sqlite3>(),
+        zBuf,
+        n,
+        0 as i32,
+    );
+    ap = __va_args.clone();
+    sqlite3_str_vappendf(std::ptr::addr_of_mut!(acc), zFormat, ap.clone());
+    {}
+    unsafe {
+        *unsafe { zBuf.offset(acc.nChar as isize) } = (0 as i32) as i8;
+    }
+    return zBuf;
+}
+
+/// Maximum size of an sqlite3_log() message.
+///
+/// This is the routine that actually formats the sqlite3_log() message.
+/// We house it in a separate routine from sqlite3_log() to avoid using
+/// stack space on small-stack systems when logging is disabled.
+///
+/// sqlite3_log() must render into a static buffer.  It cannot dynamically
+/// allocate memory because it might be called while the memory allocator
+/// mutex is held.
+///
+/// sqlite3_str_vappendf() might ask for *temporary* memory allocations for
+/// certain format characters (%q) or for very large precisions or widths.
+/// Care must be taken that any sqlite3_log() calls that occur while the
+/// memory mutex is held do not use these mechanisms.
+fn renderLogMsg(mut iErrCode: i32, mut zFormat: *const i8, mut ap: core::ffi::VaList<'_>) {
+    let mut acc: sqlite3_str = unsafe { std::mem::zeroed() }; // String accumulator
+    let mut zMsg: __SlateAlign16<[i8; 700]> = __SlateAlign16([0 as i8; 700]); // Complete log message
     sqlite3StrAccumInit(
         std::ptr::addr_of_mut!(acc),
         std::ptr::null_mut::<sqlite3>(),
@@ -6899,4 +6659,128 @@ fn renderLogMsg(mut iErrCode: i32, mut zFormat: *const i8, mut ap: core::ffi::Va
             sqlite3StrAccumFinish(std::ptr::addr_of_mut!(acc)) as *const i8,
         )
     };
+}
+
+/// Format and write a message to the log if logging is enabled.
+#[unsafe(no_mangle)]
+unsafe extern "C-unwind" fn sqlite3_log(
+    mut iErrCode: i32,
+    mut zFormat: *const i8,
+    mut __va_args: ...
+) {
+    let mut ap: core::ffi::VaList<'_> = unsafe { std::mem::zeroed() }; // Vararg list
+    if (unsafe { sqlite3Config.xLog }) != None {
+        ap = __va_args.clone();
+        renderLogMsg(iErrCode, zFormat, ap.clone());
+        {}
+    }
+}
+
+/// variable-argument wrapper around sqlite3_str_vappendf(). The bFlags argument
+/// can contain the bit SQLITE_PRINTF_INTERNAL enable internal formats.
+#[unsafe(no_mangle)]
+#[unsafe(link_section = ".text.slate_distinct.printf.sqlite3_str_appendf")]
+unsafe extern "C-unwind" fn sqlite3_str_appendf(
+    mut p: *mut sqlite3_str,
+    mut zFormat: *const i8,
+    mut __va_args: ...
+) {
+    let mut ap: core::ffi::VaList<'_> = unsafe { std::mem::zeroed() };
+    ap = __va_args.clone();
+    sqlite3_str_vappendf(p, zFormat, ap.clone());
+    {}
+}
+
+// Reference counted string/blob storage
+/// Increase the reference count of the string by one.
+///
+/// The input parameter is returned.
+#[unsafe(no_mangle)]
+extern "C-unwind" fn sqlite3RCStrRef(mut z: *mut i8) -> *mut i8 {
+    let mut p: *mut RCStr = z as *mut RCStr;
+    0 as i32;
+    let __v984: *mut RCStr = p;
+    let __v985: *mut RCStr = unsafe { __v984.offset(-((1 as i32) as isize)) };
+    p = __v985;
+    let __v986: *mut RCStr = p;
+    let __v987: u64 = unsafe { (*__v986).nRCRef };
+    let __v988: u64 = __v987.wrapping_add(((1 as i32) as i64) as u64);
+    unsafe {
+        (*__v986).nRCRef = __v988;
+    }
+    return z;
+}
+
+/// Decrease the reference count by one.  Free the string when the
+/// reference count reaches zero.
+#[unsafe(no_mangle)]
+#[unsafe(link_section = ".text.slate_distinct.printf.sqlite3RCStrUnref")]
+extern "C-unwind" fn sqlite3RCStrUnref(mut z: *mut ()) {
+    let mut p: *mut RCStr = z as *mut RCStr;
+    0 as i32;
+    let __v989: *mut RCStr = p;
+    let __v990: *mut RCStr = unsafe { __v989.offset(-((1 as i32) as isize)) };
+    p = __v990;
+    0 as i32;
+    if (unsafe { (*p).nRCRef }) >= (((2 as i32) as i64) as u64) {
+        let __v991: *mut RCStr = p;
+        let __v992: u64 = unsafe { (*__v991).nRCRef };
+        let __v993: u64 = __v992.wrapping_sub(((1 as i32) as i64) as u64);
+        unsafe {
+            (*__v991).nRCRef = __v993;
+        }
+    } else {
+        unsafe { sqlite3_free(p as *mut ()) };
+    }
+}
+
+/// Create a new string that is capable of holding N bytes of text, not counting
+/// the zero byte at the end.  The string is uninitialized.
+///
+/// The reference count is initially 1.  Call sqlite3RCStrUnref() to free the
+/// newly allocated string.
+///
+/// This routine returns 0 on an OOM.
+#[unsafe(no_mangle)]
+extern "C-unwind" fn sqlite3RCStrNew(mut N: u64) -> *mut i8 {
+    let mut p: *mut RCStr = (unsafe {
+        sqlite3_malloc64(
+            N.wrapping_add(8 as u64)
+                .wrapping_add(((1 as i32) as i64) as u64),
+        )
+    }) as *mut RCStr;
+    if p == std::ptr::null_mut::<RCStr>() {
+        return std::ptr::null_mut::<i8>();
+    }
+    unsafe {
+        (*p).nRCRef = ((1 as i32) as i64) as u64;
+    }
+    return (unsafe { p.offset((1 as i32) as isize) }) as *mut i8;
+}
+
+/// Change the size of the string so that it is able to hold N bytes.
+/// The string might be reallocated, so return the new allocation.
+#[unsafe(no_mangle)]
+extern "C-unwind" fn sqlite3RCStrResize(mut z: *mut i8, mut N: u64) -> *mut i8 {
+    let mut p: *mut RCStr = z as *mut RCStr;
+    let mut pNew: *mut RCStr = unsafe { std::mem::zeroed() };
+    0 as i32;
+    let __v994: *mut RCStr = p;
+    let __v995: *mut RCStr = unsafe { __v994.offset(-((1 as i32) as isize)) };
+    p = __v995;
+    0 as i32;
+    pNew = (unsafe {
+        sqlite3_realloc64(
+            p as *mut (),
+            N.wrapping_add(8 as u64)
+                .wrapping_add(((1 as i32) as i64) as u64),
+        )
+    }) as *mut RCStr;
+    if pNew == std::ptr::null_mut::<RCStr>() {
+        unsafe { sqlite3_free(p as *mut ()) };
+        return std::ptr::null_mut::<i8>();
+    } else {
+        return (unsafe { pNew.offset((1 as i32) as isize) }) as *mut i8;
+    }
+    return unsafe { std::mem::zeroed() };
 }

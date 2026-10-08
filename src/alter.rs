@@ -1,3 +1,15 @@
+//! 2005 February 15
+//!
+//! The author disclaims copyright to this source code.  In place of
+//! a legal notice, here is a blessing:
+//!
+//!    May you do good and not evil.
+//!    May you find forgiveness for yourself and forgive others.
+//!    May you share freely, never taking more than you give.
+//!
+//!
+//! This file contains C code routines that used to generate VDBE code
+//! that implements the ALTER TABLE command.
 unsafe extern "C" {
     static mut sqlite3CtypeMap: [u8; 0];
     fn sqlite3_snprintf(__v949: i32, __v950: *mut i8, __v951: *const i8, ...) -> *mut i8;
@@ -205,6 +217,364 @@ unsafe extern "C" {
 
 #[repr(C)]
 #[derive(Clone, Copy)]
+struct sqlite3_file {
+    pMethods: *const sqlite3_io_methods,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_io_methods {
+    iVersion: i32,
+    xClose: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file) -> i32>,
+    xRead: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, *mut (), i32, i64) -> i32>,
+    xWrite: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, *const (), i32, i64) -> i32>,
+    xTruncate: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i64) -> i32>,
+    xSync: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32) -> i32>,
+    xFileSize: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, *mut i64) -> i32>,
+    xLock: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32) -> i32>,
+    xUnlock: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32) -> i32>,
+    xCheckReservedLock: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, *mut i32) -> i32>,
+    xFileControl: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32, *mut ()) -> i32>,
+    xSectorSize: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file) -> i32>,
+    xDeviceCharacteristics: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file) -> i32>,
+    xShmMap:
+        Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32, i32, i32, *mut *mut ()) -> i32>,
+    xShmLock: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32, i32, i32) -> i32>,
+    xShmBarrier: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file)>,
+    xShmUnmap: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32) -> i32>,
+    xFetch: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i64, i32, *mut *mut ()) -> i32>,
+    xUnfetch: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i64, *mut ()) -> i32>,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_vfs {
+    iVersion: i32,
+    szOsFile: i32,
+    mxPathname: i32,
+    pNext: *mut sqlite3_vfs,
+    zName: *const i8,
+    pAppData: *mut (),
+    xOpen: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vfs,
+            *const i8,
+            *mut sqlite3_file,
+            i32,
+            *mut i32,
+        ) -> i32,
+    >,
+    xDelete: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8, i32) -> i32>,
+    xAccess: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8, i32, *mut i32) -> i32>,
+    xFullPathname:
+        Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8, i32, *mut i8) -> i32>,
+    xDlOpen: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8) -> *mut ()>,
+    xDlError: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, i32, *mut i8)>,
+    xDlSym: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vfs,
+            *mut (),
+            *const i8,
+        ) -> Option<unsafe extern "C-unwind" fn()>,
+    >,
+    xDlClose: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *mut ())>,
+    xRandomness: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, i32, *mut i8) -> i32>,
+    xSleep: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, i32) -> i32>,
+    xCurrentTime: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *mut f64) -> i32>,
+    xGetLastError: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, i32, *mut i8) -> i32>,
+    xCurrentTimeInt64: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *mut i64) -> i32>,
+    xSetSystemCall: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vfs,
+            *const i8,
+            Option<unsafe extern "C-unwind" fn()>,
+        ) -> i32,
+    >,
+    xGetSystemCall: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vfs,
+            *const i8,
+        ) -> Option<unsafe extern "C-unwind" fn()>,
+    >,
+    xNextSystemCall: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8) -> *const i8>,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_mutex {}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_module {
+    iVersion: i32,
+    xCreate: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3,
+            *mut (),
+            i32,
+            *const *const i8,
+            *mut *mut sqlite3_vtab,
+            *mut *mut i8,
+        ) -> i32,
+    >,
+    xConnect: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3,
+            *mut (),
+            i32,
+            *const *const i8,
+            *mut *mut sqlite3_vtab,
+            *mut *mut i8,
+        ) -> i32,
+    >,
+    xBestIndex:
+        Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, *mut sqlite3_index_info) -> i32>,
+    xDisconnect: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
+    xDestroy: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
+    xOpen: Option<
+        unsafe extern "C-unwind" fn(*mut sqlite3_vtab, *mut *mut sqlite3_vtab_cursor) -> i32,
+    >,
+    xClose: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor) -> i32>,
+    xFilter: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vtab_cursor,
+            i32,
+            *const i8,
+            i32,
+            *mut *mut sqlite3_value,
+        ) -> i32,
+    >,
+    xNext: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor) -> i32>,
+    xEof: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor) -> i32>,
+    xColumn: Option<
+        unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor, *mut sqlite3_context, i32) -> i32,
+    >,
+    xRowid: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor, *mut i64) -> i32>,
+    xUpdate: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vtab,
+            i32,
+            *mut *mut sqlite3_value,
+            *mut i64,
+        ) -> i32,
+    >,
+    xBegin: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
+    xSync: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
+    xCommit: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
+    xRollback: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
+    xFindFunction: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vtab,
+            i32,
+            *const i8,
+            *mut Option<
+                unsafe extern "C-unwind" fn(*mut sqlite3_context, i32, *mut *mut sqlite3_value),
+            >,
+            *mut *mut (),
+        ) -> i32,
+    >,
+    xRename: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, *const i8) -> i32>,
+    xSavepoint: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, i32) -> i32>,
+    xRelease: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, i32) -> i32>,
+    xRollbackTo: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, i32) -> i32>,
+    xShadowName: Option<unsafe extern "C-unwind" fn(*const i8) -> i32>,
+    xIntegrity: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vtab,
+            *const i8,
+            *const i8,
+            i32,
+            *mut *mut i8,
+        ) -> i32,
+    >,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_value {}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_context {}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_index_info {
+    nConstraint: i32,
+    aConstraint: *mut sqlite3_index_constraint,
+    nOrderBy: i32,
+    aOrderBy: *mut sqlite3_index_orderby,
+    aConstraintUsage: *mut sqlite3_index_constraint_usage,
+    idxNum: i32,
+    idxStr: *mut i8,
+    needToFreeIdxStr: i32,
+    orderByConsumed: i32,
+    estimatedCost: f64,
+    estimatedRows: i64,
+    idxFlags: i32,
+    colUsed: u64,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_vtab {
+    pModule: *const sqlite3_module,
+    nRef: i32,
+    zErrMsg: *mut i8,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_vtab_cursor {
+    pVtab: *mut sqlite3_vtab,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Hash {
+    htsize: u32,
+    count: u32,
+    first: *mut HashElem,
+    ht: *mut _ht,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_index_constraint {
+    iColumn: i32,
+    op: u8,
+    usable: u8,
+    iTermOffset: i32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_index_orderby {
+    iColumn: i32,
+    desc: u8,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_index_constraint_usage {
+    argvIndex: i32,
+    omit: u8,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct HashElem {
+    next: *mut HashElem,
+    prev: *mut HashElem,
+    data: *mut (),
+    pKey: *const i8,
+    h: u32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct BusyHandler {
+    xBusyHandler: Option<unsafe extern "C-unwind" fn(*mut (), i32) -> i32>,
+    pBusyArg: *mut (),
+    nBusy: i32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct SubrtnSig {
+    selId: i32,
+    bComplete: u8,
+    zAff: *mut i8,
+    iTable: i32,
+    iAddr: i32,
+    regReturn: i32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct _ht {
+    count: u32,
+    chain: *mut HashElem,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct VdbeOp {
+    opcode: u8,
+    p4type: i8,
+    p5: u16,
+    p1: i32,
+    p2: i32,
+    p3: i32,
+    p4: p4union,
+    zComment: *mut i8,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct SubProgram {
+    aOp: *mut VdbeOp,
+    nOp: i32,
+    nMem: i32,
+    nCsr: i32,
+    aOnce: *mut u8,
+    token: *mut (),
+    pNext: *mut SubProgram,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Db {
+    zDbSName: *mut i8,
+    pBt: *mut Btree,
+    safety_level: u8,
+    bSyncSet: u8,
+    pSchema: *mut Schema,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Schema {
+    schema_cookie: i32,
+    iGeneration: i32,
+    tblHash: Hash,
+    idxHash: Hash,
+    trigHash: Hash,
+    fkeyHash: Hash,
+    pSeqTab: *mut Table,
+    file_format: u8,
+    enc: u8,
+    schemaFlags: u16,
+    cache_size: i32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Lookaside {
+    bDisable: u32,
+    sz: u16,
+    szTrue: u16,
+    bMalloced: u8,
+    nSlot: u32,
+    anStat: [u32; 3],
+    pInit: *mut LookasideSlot,
+    pFree: *mut LookasideSlot,
+    pSmallInit: *mut LookasideSlot,
+    pSmallFree: *mut LookasideSlot,
+    pMiddle: *mut (),
+    pStart: *mut (),
+    pEnd: *mut (),
+    pTrueEnd: *mut (),
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct LookasideSlot {
+    pNext: *mut LookasideSlot,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
 struct sqlite3 {
     pVfs: *mut sqlite3_vfs,
     pVdbe: *mut Vdbe,
@@ -310,285 +680,163 @@ struct sqlite3 {
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct sqlite3_file {
-    pMethods: *const sqlite3_io_methods,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct sqlite3_io_methods {
-    iVersion: i32,
-    xClose: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file) -> i32>,
-    xRead: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, *mut (), i32, i64) -> i32>,
-    xWrite: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, *const (), i32, i64) -> i32>,
-    xTruncate: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i64) -> i32>,
-    xSync: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32) -> i32>,
-    xFileSize: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, *mut i64) -> i32>,
-    xLock: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32) -> i32>,
-    xUnlock: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32) -> i32>,
-    xCheckReservedLock: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, *mut i32) -> i32>,
-    xFileControl: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32, *mut ()) -> i32>,
-    xSectorSize: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file) -> i32>,
-    xDeviceCharacteristics: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file) -> i32>,
-    xShmMap:
-        Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32, i32, i32, *mut *mut ()) -> i32>,
-    xShmLock: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32, i32, i32) -> i32>,
-    xShmBarrier: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file)>,
-    xShmUnmap: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32) -> i32>,
-    xFetch: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i64, i32, *mut *mut ()) -> i32>,
-    xUnfetch: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i64, *mut ()) -> i32>,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct sqlite3_mutex {}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct sqlite3_vfs {
-    iVersion: i32,
-    szOsFile: i32,
-    mxPathname: i32,
-    pNext: *mut sqlite3_vfs,
+struct FuncDef {
+    nArg: i16,
+    funcFlags: u32,
+    pUserData: *mut (),
+    pNext: *mut FuncDef,
+    xSFunc: Option<unsafe extern "C-unwind" fn(*mut sqlite3_context, i32, *mut *mut sqlite3_value)>,
+    xFinalize: Option<unsafe extern "C-unwind" fn(*mut sqlite3_context)>,
+    xValue: Option<unsafe extern "C-unwind" fn(*mut sqlite3_context)>,
+    xInverse:
+        Option<unsafe extern "C-unwind" fn(*mut sqlite3_context, i32, *mut *mut sqlite3_value)>,
     zName: *const i8,
-    pAppData: *mut (),
-    xOpen: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3_vfs,
-            *const i8,
-            *mut sqlite3_file,
-            i32,
-            *mut i32,
-        ) -> i32,
-    >,
-    xDelete: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8, i32) -> i32>,
-    xAccess: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8, i32, *mut i32) -> i32>,
-    xFullPathname:
-        Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8, i32, *mut i8) -> i32>,
-    xDlOpen: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8) -> *mut ()>,
-    xDlError: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, i32, *mut i8)>,
-    xDlSym: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3_vfs,
-            *mut (),
-            *const i8,
-        ) -> Option<unsafe extern "C-unwind" fn()>,
-    >,
-    xDlClose: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *mut ())>,
-    xRandomness: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, i32, *mut i8) -> i32>,
-    xSleep: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, i32) -> i32>,
-    xCurrentTime: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *mut f64) -> i32>,
-    xGetLastError: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, i32, *mut i8) -> i32>,
-    xCurrentTimeInt64: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *mut i64) -> i32>,
-    xSetSystemCall: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3_vfs,
-            *const i8,
-            Option<unsafe extern "C-unwind" fn()>,
-        ) -> i32,
-    >,
-    xGetSystemCall: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3_vfs,
-            *const i8,
-        ) -> Option<unsafe extern "C-unwind" fn()>,
-    >,
-    xNextSystemCall: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8) -> *const i8>,
+    u: __SlateRecord168,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct sqlite3_value {}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct sqlite3_context {}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct sqlite3_vtab {
-    pModule: *const sqlite3_module,
+struct FuncDestructor {
     nRef: i32,
-    zErrMsg: *mut i8,
+    xDestroy: Option<unsafe extern "C-unwind" fn(*mut ())>,
+    pUserData: *mut (),
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct sqlite3_index_info {
-    nConstraint: i32,
-    aConstraint: *mut sqlite3_index_constraint,
-    nOrderBy: i32,
-    aOrderBy: *mut sqlite3_index_orderby,
-    aConstraintUsage: *mut sqlite3_index_constraint_usage,
-    idxNum: i32,
-    idxStr: *mut i8,
-    needToFreeIdxStr: i32,
-    orderByConsumed: i32,
-    estimatedCost: f64,
-    estimatedRows: i64,
-    idxFlags: i32,
-    colUsed: u64,
+struct Savepoint {
+    zName: *mut i8,
+    nDeferredCons: i64,
+    nDeferredImmCons: i64,
+    pNext: *mut Savepoint,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct sqlite3_vtab_cursor {
-    pVtab: *mut sqlite3_vtab,
+struct Module {
+    pModule: *const sqlite3_module,
+    zName: *const i8,
+    nRefModule: i32,
+    pAux: *mut (),
+    xDestroy: Option<unsafe extern "C-unwind" fn(*mut ())>,
+    pEpoTab: *mut Table,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct sqlite3_module {
-    iVersion: i32,
-    xCreate: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3,
-            *mut (),
-            i32,
-            *const *const i8,
-            *mut *mut sqlite3_vtab,
-            *mut *mut i8,
-        ) -> i32,
-    >,
-    xConnect: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3,
-            *mut (),
-            i32,
-            *const *const i8,
-            *mut *mut sqlite3_vtab,
-            *mut *mut i8,
-        ) -> i32,
-    >,
-    xBestIndex:
-        Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, *mut sqlite3_index_info) -> i32>,
-    xDisconnect: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
-    xDestroy: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
-    xOpen: Option<
-        unsafe extern "C-unwind" fn(*mut sqlite3_vtab, *mut *mut sqlite3_vtab_cursor) -> i32,
-    >,
-    xClose: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor) -> i32>,
-    xFilter: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3_vtab_cursor,
-            i32,
-            *const i8,
-            i32,
-            *mut *mut sqlite3_value,
-        ) -> i32,
-    >,
-    xNext: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor) -> i32>,
-    xEof: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor) -> i32>,
-    xColumn: Option<
-        unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor, *mut sqlite3_context, i32) -> i32,
-    >,
-    xRowid: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor, *mut i64) -> i32>,
-    xUpdate: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3_vtab,
-            i32,
-            *mut *mut sqlite3_value,
-            *mut i64,
-        ) -> i32,
-    >,
-    xBegin: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
-    xSync: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
-    xCommit: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
-    xRollback: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
-    xFindFunction: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3_vtab,
-            i32,
-            *const i8,
-            *mut Option<
-                unsafe extern "C-unwind" fn(*mut sqlite3_context, i32, *mut *mut sqlite3_value),
-            >,
-            *mut *mut (),
-        ) -> i32,
-    >,
-    xRename: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, *const i8) -> i32>,
-    xSavepoint: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, i32) -> i32>,
-    xRelease: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, i32) -> i32>,
-    xRollbackTo: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, i32) -> i32>,
-    xShadowName: Option<unsafe extern "C-unwind" fn(*const i8) -> i32>,
-    xIntegrity: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3_vtab,
-            *const i8,
-            *const i8,
-            i32,
-            *mut *mut i8,
-        ) -> i32,
-    >,
+struct Column {
+    zCnName: *mut i8,
+    __slate_bits_0: __slate_bits::__SlateBits67U0,
+    affinity: i8,
+    szEst: u8,
+    hName: u8,
+    iDflt: u16,
+    colFlags: u16,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct sqlite3_index_constraint {
-    iColumn: i32,
-    op: u8,
-    usable: u8,
-    iTermOffset: i32,
+struct CollSeq {
+    zName: *mut i8,
+    enc: u8,
+    pUser: *mut (),
+    xCmp: Option<unsafe extern "C-unwind" fn(*mut (), i32, *const (), i32, *const ()) -> i32>,
+    xDel: Option<unsafe extern "C-unwind" fn(*mut ())>,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct sqlite3_index_orderby {
-    iColumn: i32,
-    desc: u8,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct sqlite3_index_constraint_usage {
-    argvIndex: i32,
-    omit: u8,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct sqlite3_str {
+struct VTable {
     db: *mut sqlite3,
-    zText: *mut i8,
-    nAlloc: u32,
-    mxAlloc: u32,
-    nChar: u32,
-    accError: u8,
-    printfFlags: u8,
+    pMod: *mut Module,
+    pVtab: *mut sqlite3_vtab,
+    nRef: i32,
+    bConstraint: u8,
+    bAllSchemas: u8,
+    eVtabRisk: u8,
+    iSavepoint: i32,
+    pNext: *mut VTable,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct Hash {
-    htsize: u32,
-    count: u32,
-    first: *mut HashElem,
-    ht: *mut _ht,
+struct Table {
+    zName: *mut i8,
+    aCol: *mut Column,
+    pIndex: *mut Index,
+    zColAff: *mut i8,
+    pCheck: *mut ExprList,
+    tnum: u32,
+    nTabRef: u32,
+    tabFlags: u32,
+    iPKey: i16,
+    nCol: i16,
+    nNVCol: i16,
+    nRowLogEst: i16,
+    szTabRow: i16,
+    keyConf: u8,
+    eTabType: u8,
+    u: __SlateRecord169,
+    pTrigger: *mut Trigger,
+    pSchema: *mut Schema,
+    aHx: [u8; 16],
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct HashElem {
-    next: *mut HashElem,
-    prev: *mut HashElem,
-    data: *mut (),
-    pKey: *const i8,
-    h: u32,
+struct FKey {
+    pFrom: *mut Table,
+    pNextFrom: *mut FKey,
+    zTo: *mut i8,
+    pNextTo: *mut FKey,
+    pPrevTo: *mut FKey,
+    nCol: i32,
+    isDeferred: u8,
+    aAction: [u8; 2],
+    apTrigger: [*mut Trigger; 2],
+    aCol: [sColMap; 0],
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct _ht {
-    count: u32,
-    chain: *mut HashElem,
+struct KeyInfo {
+    nRef: u32,
+    enc: u8,
+    nKeyField: u16,
+    nAllField: u16,
+    db: *mut sqlite3,
+    aSortFlags: *mut u8,
+    aColl: [*mut CollSeq; 0],
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct BusyHandler {
-    xBusyHandler: Option<unsafe extern "C-unwind" fn(*mut (), i32) -> i32>,
-    pBusyArg: *mut (),
-    nBusy: i32,
+struct Index {
+    zName: *mut i8,
+    aiColumn: *mut i16,
+    aiRowLogEst: *mut i16,
+    pTable: *mut Table,
+    zColAff: *mut i8,
+    pNext: *mut Index,
+    pSchema: *mut Schema,
+    aSortOrder: *mut u8,
+    azColl: *mut *const i8,
+    pPartIdxWhere: *mut Expr,
+    aColExpr: *mut ExprList,
+    tnum: u32,
+    szIdxRow: i16,
+    nKeyCol: u16,
+    nColumn: u16,
+    onError: u8,
+    __slate_bits_0: __slate_bits::__SlateBits93U0,
+    colNotIdxed: u64,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Token {
+    z: *const i8,
+    n: u32,
 }
 
 #[repr(C)]
@@ -607,106 +855,6 @@ struct AggInfo {
     aFunc: *mut AggInfo_func,
     nFunc: i32,
     selId: u32,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct AutoincInfo {
-    pNext: *mut AutoincInfo,
-    pTab: *mut Table,
-    iDb: i32,
-    regCtr: i32,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct CollSeq {
-    zName: *mut i8,
-    enc: u8,
-    pUser: *mut (),
-    xCmp: Option<unsafe extern "C-unwind" fn(*mut (), i32, *const (), i32, *const ()) -> i32>,
-    xDel: Option<unsafe extern "C-unwind" fn(*mut ())>,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Column {
-    zCnName: *mut i8,
-    __slate_bits_0: __slate_bits::__SlateBits67U0,
-    affinity: i8,
-    szEst: u8,
-    hName: u8,
-    iDflt: u16,
-    colFlags: u16,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Cte {
-    zName: *mut i8,
-    pCols: *mut ExprList,
-    pSelect: *mut Select,
-    zCteErr: *const i8,
-    pUse: *mut CteUse,
-    eM10d: u8,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct CteUse {
-    nUse: i32,
-    addrM9e: i32,
-    regRtn: i32,
-    iCur: i32,
-    nRowEst: i16,
-    eM10d: u8,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Db {
-    zDbSName: *mut i8,
-    pBt: *mut Btree,
-    safety_level: u8,
-    bSyncSet: u8,
-    pSchema: *mut Schema,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct DbClientData {
-    pNext: *mut DbClientData,
-    pData: *mut (),
-    xDestructor: Option<unsafe extern "C-unwind" fn(*mut ())>,
-    zName: [i8; 0],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct DbFixer {
-    pParse: *mut Parse,
-    w: Walker,
-    pSchema: *mut Schema,
-    bTemp: u8,
-    zDb: *const i8,
-    zType: *const i8,
-    pName: *const Token,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Schema {
-    schema_cookie: i32,
-    iGeneration: i32,
-    tblHash: Hash,
-    idxHash: Hash,
-    trigHash: Hash,
-    fkeyHash: Hash,
-    pSeqTab: *mut Table,
-    file_format: u8,
-    enc: u8,
-    schemaFlags: u16,
-    cache_size: i32,
 }
 
 #[repr(C)]
@@ -739,45 +887,6 @@ struct ExprList {
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct FKey {
-    pFrom: *mut Table,
-    pNextFrom: *mut FKey,
-    zTo: *mut i8,
-    pNextTo: *mut FKey,
-    pPrevTo: *mut FKey,
-    nCol: i32,
-    isDeferred: u8,
-    aAction: [u8; 2],
-    apTrigger: [*mut Trigger; 2],
-    aCol: [sColMap; 0],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct FuncDestructor {
-    nRef: i32,
-    xDestroy: Option<unsafe extern "C-unwind" fn(*mut ())>,
-    pUserData: *mut (),
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct FuncDef {
-    nArg: i16,
-    funcFlags: u32,
-    pUserData: *mut (),
-    pNext: *mut FuncDef,
-    xSFunc: Option<unsafe extern "C-unwind" fn(*mut sqlite3_context, i32, *mut *mut sqlite3_value)>,
-    xFinalize: Option<unsafe extern "C-unwind" fn(*mut sqlite3_context)>,
-    xValue: Option<unsafe extern "C-unwind" fn(*mut sqlite3_context)>,
-    xInverse:
-        Option<unsafe extern "C-unwind" fn(*mut sqlite3_context, i32, *mut *mut sqlite3_value)>,
-    zName: *const i8,
-    u: __SlateRecord168,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
 struct IdList {
     nId: i32,
     a: [IdList_item; 0],
@@ -785,85 +894,34 @@ struct IdList {
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct Index {
+struct Subquery {
+    pSelect: *mut Select,
+    addrFillSub: i32,
+    regReturn: i32,
+    regResult: i32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct SrcItem {
     zName: *mut i8,
-    aiColumn: *mut i16,
-    aiRowLogEst: *mut i16,
-    pTable: *mut Table,
-    zColAff: *mut i8,
-    pNext: *mut Index,
-    pSchema: *mut Schema,
-    aSortOrder: *mut u8,
-    azColl: *mut *const i8,
-    pPartIdxWhere: *mut Expr,
-    aColExpr: *mut ExprList,
-    tnum: u32,
-    szIdxRow: i16,
-    nKeyCol: u16,
-    nColumn: u16,
-    onError: u8,
-    __slate_bits_0: __slate_bits::__SlateBits93U0,
-    colNotIdxed: u64,
+    zAlias: *mut i8,
+    pSTab: *mut Table,
+    fg: __SlateRecord187,
+    iCursor: i32,
+    colUsed: u64,
+    u1: __SlateRecord188,
+    u2: __SlateRecord189,
+    u3: __SlateRecord190,
+    u4: __SlateRecord191,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct IndexedExpr {
-    pExpr: *mut Expr,
-    iDataCur: i32,
-    iIdxCur: i32,
-    iIdxCol: i32,
-    bMaybeNullRow: u8,
-    aff: u8,
-    pIENext: *mut IndexedExpr,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct KeyInfo {
-    nRef: u32,
-    enc: u8,
-    nKeyField: u16,
-    nAllField: u16,
-    db: *mut sqlite3,
-    aSortFlags: *mut u8,
-    aColl: [*mut CollSeq; 0],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Lookaside {
-    bDisable: u32,
-    sz: u16,
-    szTrue: u16,
-    bMalloced: u8,
-    nSlot: u32,
-    anStat: [u32; 3],
-    pInit: *mut LookasideSlot,
-    pFree: *mut LookasideSlot,
-    pSmallInit: *mut LookasideSlot,
-    pSmallFree: *mut LookasideSlot,
-    pMiddle: *mut (),
-    pStart: *mut (),
-    pEnd: *mut (),
-    pTrueEnd: *mut (),
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct LookasideSlot {
-    pNext: *mut LookasideSlot,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Module {
-    pModule: *const sqlite3_module,
-    zName: *const i8,
-    nRefModule: i32,
-    pAux: *mut (),
-    xDestroy: Option<unsafe extern "C-unwind" fn(*mut ())>,
-    pEpoTab: *mut Table,
+struct SrcList {
+    nSrc: i32,
+    nAlloc: u32,
+    a: [SrcItem; 0],
 }
 
 #[repr(C)]
@@ -878,6 +936,87 @@ struct NameContext {
     ncFlags: i32,
     nNestedSelect: u32,
     pWinSelect: *mut Select,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Upsert {
+    pUpsertTarget: *mut ExprList,
+    pUpsertTargetWhere: *mut Expr,
+    pUpsertSet: *mut ExprList,
+    pUpsertWhere: *mut Expr,
+    pNextUpsert: *mut Upsert,
+    isDoUpdate: u8,
+    isDup: u8,
+    pToFree: *mut (),
+    pUpsertIdx: *mut Index,
+    pUpsertSrc: *mut SrcList,
+    regData: i32,
+    iDataCur: i32,
+    iIdxCur: i32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Select {
+    op: u8,
+    nSelectRow: i16,
+    selFlags: u32,
+    iLimit: i32,
+    iOffset: i32,
+    selId: u32,
+    pEList: *mut ExprList,
+    pSrc: *mut SrcList,
+    pWhere: *mut Expr,
+    pGroupBy: *mut ExprList,
+    pHaving: *mut Expr,
+    pOrderBy: *mut ExprList,
+    pPrior: *mut Select,
+    pNext: *mut Select,
+    pLimit: *mut Expr,
+    pWith: *mut With,
+    pWin: *mut Window,
+    pWinDefn: *mut Window,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct AutoincInfo {
+    pNext: *mut AutoincInfo,
+    pTab: *mut Table,
+    iDb: i32,
+    regCtr: i32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct TriggerPrg {
+    pTrigger: *mut Trigger,
+    pNext: *mut TriggerPrg,
+    pProgram: *mut SubProgram,
+    orconf: i32,
+    aColmask: [u32; 2],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct IndexedExpr {
+    pExpr: *mut Expr,
+    iDataCur: i32,
+    iIdxCur: i32,
+    iIdxCol: i32,
+    bMaybeNullRow: u8,
+    aff: u8,
+    pIENext: *mut IndexedExpr,
+    zIdxName: *const i8,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct ParseCleanup {
+    pNext: *mut ParseCleanup,
+    pPtr: *mut (),
+    xCleanup: Option<unsafe extern "C-unwind" fn(*mut sqlite3, *mut ())>,
 }
 
 #[repr(C)]
@@ -953,131 +1092,7 @@ struct Parse {
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct ParseCleanup {
-    pNext: *mut ParseCleanup,
-    pPtr: *mut (),
-    xCleanup: Option<unsafe extern "C-unwind" fn(*mut sqlite3, *mut ())>,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct RenameToken {
-    p: *const (),
-    t: Token,
-    pNext: *mut RenameToken,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Returning {
-    pParse: *mut Parse,
-    pReturnEL: *mut ExprList,
-    retTrig: Trigger,
-    retTStep: TriggerStep,
-    iRetCur: i32,
-    nRetCol: i32,
-    iRetReg: i32,
-    zName: [i8; 40],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Savepoint {
-    zName: *mut i8,
-    nDeferredCons: i64,
-    nDeferredImmCons: i64,
-    pNext: *mut Savepoint,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Select {
-    op: u8,
-    nSelectRow: i16,
-    selFlags: u32,
-    iLimit: i32,
-    iOffset: i32,
-    selId: u32,
-    pEList: *mut ExprList,
-    pSrc: *mut SrcList,
-    pWhere: *mut Expr,
-    pGroupBy: *mut ExprList,
-    pHaving: *mut Expr,
-    pOrderBy: *mut ExprList,
-    pPrior: *mut Select,
-    pNext: *mut Select,
-    pLimit: *mut Expr,
-    pWith: *mut With,
-    pWin: *mut Window,
-    pWinDefn: *mut Window,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Subquery {
-    pSelect: *mut Select,
-    addrFillSub: i32,
-    regReturn: i32,
-    regResult: i32,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct SrcItem {
-    zName: *mut i8,
-    zAlias: *mut i8,
-    pSTab: *mut Table,
-    fg: __SlateRecord187,
-    iCursor: i32,
-    colUsed: u64,
-    u1: __SlateRecord188,
-    u2: __SlateRecord189,
-    u3: __SlateRecord190,
-    u4: __SlateRecord191,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct SrcList {
-    nSrc: i32,
-    nAlloc: u32,
-    a: [SrcItem; 0],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Table {
-    zName: *mut i8,
-    aCol: *mut Column,
-    pIndex: *mut Index,
-    zColAff: *mut i8,
-    pCheck: *mut ExprList,
-    tnum: u32,
-    nTabRef: u32,
-    tabFlags: u32,
-    iPKey: i16,
-    nCol: i16,
-    nNVCol: i16,
-    nRowLogEst: i16,
-    szTabRow: i16,
-    keyConf: u8,
-    eTabType: u8,
-    u: __SlateRecord169,
-    pTrigger: *mut Trigger,
-    pSchema: *mut Schema,
-    aHx: [u8; 16],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
 struct TableLock {}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Token {
-    z: *const i8,
-    n: u32,
-}
 
 #[repr(C)]
 #[derive(Clone, Copy)]
@@ -1093,16 +1108,6 @@ struct Trigger {
     pTabSchema: *mut Schema,
     step_list: *mut TriggerStep,
     pNext: *mut Trigger,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct TriggerPrg {
-    pTrigger: *mut Trigger,
-    pNext: *mut TriggerPrg,
-    pProgram: *mut SubProgram,
-    orconf: i32,
-    aColmask: [u32; 2],
 }
 
 #[repr(C)]
@@ -1124,39 +1129,28 @@ struct TriggerStep {
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct Upsert {
-    pUpsertTarget: *mut ExprList,
-    pUpsertTargetWhere: *mut Expr,
-    pUpsertSet: *mut ExprList,
-    pUpsertWhere: *mut Expr,
-    pNextUpsert: *mut Upsert,
-    isDoUpdate: u8,
-    isDup: u8,
-    pToFree: *mut (),
-    pUpsertIdx: *mut Index,
-    pUpsertSrc: *mut SrcList,
-    regData: i32,
-    iDataCur: i32,
-    iIdxCur: i32,
+struct Returning {
+    pParse: *mut Parse,
+    pReturnEL: *mut ExprList,
+    retTrig: Trigger,
+    retTStep: TriggerStep,
+    iRetCur: i32,
+    nRetCol: i32,
+    iRetReg: i32,
+    zName: [i8; 40],
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct VTable {
+struct sqlite3_str {
     db: *mut sqlite3,
-    pMod: *mut Module,
-    pVtab: *mut sqlite3_vtab,
-    nRef: i32,
-    bConstraint: u8,
-    bAllSchemas: u8,
-    eVtabRisk: u8,
-    iSavepoint: i32,
-    pNext: *mut VTable,
+    zText: *mut i8,
+    nAlloc: u32,
+    mxAlloc: u32,
+    nChar: u32,
+    accError: u8,
+    printfFlags: u8,
 }
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct VtabCtx {}
 
 #[repr(C)]
 #[derive(Clone, Copy)]
@@ -1169,6 +1163,70 @@ struct Walker {
     eCode: u16,
     mWFlags: u16,
     u: __SlateRecord197,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct DbFixer {
+    pParse: *mut Parse,
+    w: Walker,
+    pSchema: *mut Schema,
+    bTemp: u8,
+    zDb: *const i8,
+    zType: *const i8,
+    pName: *const Token,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct VtabCtx {}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Cte {
+    zName: *mut i8,
+    pCols: *mut ExprList,
+    pSelect: *mut Select,
+    zCteErr: *const i8,
+    pUse: *mut CteUse,
+    eM10d: u8,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct With {
+    nCte: i32,
+    bView: i32,
+    pOuter: *mut With,
+    a: [Cte; 0],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct CteUse {
+    nUse: i32,
+    addrM9e: i32,
+    regRtn: i32,
+    iCur: i32,
+    nRowEst: i16,
+    eM10d: u8,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Btree {}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Vdbe {}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct DbClientData {
+    pNext: *mut DbClientData,
+    pData: *mut (),
+    xDestructor: Option<unsafe extern "C-unwind" fn(*mut ())>,
+    zName: [i8; 0],
 }
 
 #[repr(C)]
@@ -1204,56 +1262,48 @@ struct Window {
     bExprArgs: u8,
 }
 
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct With {
-    nCte: i32,
-    bView: i32,
-    pOuter: *mut With,
-    a: [Cte; 0],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Btree {}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Vdbe {}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct SubProgram {
-    aOp: *mut VdbeOp,
-    nOp: i32,
-    nMem: i32,
-    nCsr: i32,
-    aOnce: *mut u8,
-    token: *mut (),
-    pNext: *mut SubProgram,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct SubrtnSig {
-    selId: i32,
-    bComplete: u8,
-    zAff: *mut i8,
-    iTable: i32,
-    iAddr: i32,
-    regReturn: i32,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct VdbeOp {
-    opcode: u8,
-    p4type: i8,
-    p5: u16,
-    p1: i32,
-    p2: i32,
-    p3: i32,
-    p4: p4union,
+// The code in this file only exists if we are not omitting the
+// ALTER TABLE logic from the build.
+/// Parameter zName is the name of a table that is about to be altered
+/// (either with ALTER TABLE ... RENAME TO or ALTER TABLE ... ADD COLUMN).
+/// If the table is a system table, this function leaves an error message
+/// in pParse->zErr (system tables may not be altered) and returns non-zero.
+///
+/// Or, if zName is not a system table, zero is returned.
+fn isAlterableTable(mut pParse: *mut Parse, mut pTab: *mut Table) -> i32 {
+    let __v1389: bool;
+    if (0 as i32)
+        == unsafe {
+            sqlite3_strnicmp(
+                (unsafe { (*pTab).zName }) as *const i8,
+                (b"sqlite_\0".as_ptr() as *mut i8) as *const i8,
+                7 as i32,
+            )
+        }
+        || (unsafe { (*pTab).tabFlags }) & ((32768 as i32) as u32) != ((0 as i32) as u32)
+    {
+        __v1389 = true as bool;
+    } else {
+        let __v1390: bool;
+        if (unsafe { (*pTab).tabFlags }) & ((4096 as i32) as u32) != ((0 as i32) as u32) {
+            __v1390 =
+                (unsafe { sqlite3ReadOnlyShadowTables(unsafe { (*pParse).db }) }) != (0 as i32);
+        } else {
+            __v1390 = false as bool;
+        }
+        __v1389 = __v1390;
+    }
+    if __v1389 {
+        unsafe {
+            sqlite3ErrorMsg(
+                pParse,
+                (b"table %s may not be altered\0".as_ptr() as *mut i8) as *const i8,
+                unsafe { (*pTab).zName },
+            )
+        };
+        return 1 as i32;
+    }
+    return 0 as i32;
 }
 
 #[repr(C)]
@@ -1532,20 +1582,6 @@ union __SlateRecord197 {
     pCheckOnCtx: *mut CheckOnCtx,
 }
 
-// /*
-// ** 2005 February 15
-// **
-// ** The author disclaims copyright to this source code.  In place of
-// ** a legal notice, here is a blessing:
-// **
-// **    May you do good and not evil.
-// **    May you find forgiveness for yourself and forgive others.
-// **    May you share freely, never taking more than you give.
-// **
-// *************************************************************************
-// ** This file contains C code routines that used to generate VDBE code
-// ** that implements the ALTER TABLE command.
-// */
 #[repr(C)]
 #[derive(Clone, Copy)]
 struct CCurHint {}
@@ -1566,47 +1602,39 @@ struct WindowRewrite {}
 #[derive(Clone, Copy)]
 struct WhereConst {}
 
-// /* Parsing context */
-// /* Table being altered.  pSrc->nSrc==1 */
-// /* Name of column being changed */
-// /* New column name */
-// /*
-// ** Each RenameToken object maps an element of the parse tree into
-// ** the token that generated that element.  The parse tree element
-// ** might be one of:
-// **
-// **     *  A pointer to an Expr that represents an ID
-// **     *  The name of a table column in Column.zName
-// **
-// ** A list of RenameToken objects can be constructed during parsing.
-// ** Each new object is created by sqlite3RenameTokenMap().
-// ** As the parse tree is transformed, the sqlite3RenameTokenRemap()
-// ** routine is used to keep the mapping current.
-// **
-// ** After the parse finishes, renameTokenFind() routine can be used
-// ** to look up the actual token value that created some element in
-// ** the parse tree.
-// */
-// /* Parse tree element created by token t */
-// /* The token that created parse tree element p */
-// /* Next is a list of all RenameToken objects */
-// /*
-// ** The context of an ALTER TABLE RENAME COLUMN operation that gets passed
-// ** down into the Walker.
-// */
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct RenameCtx {
-    pList: *mut RenameToken,
-    // /* List of tokens to overwrite */
-    nList: i32,
-    // /* Number of tokens in pList */
-    iCol: i32,
-    // /* Index of column being renamed */
-    pTab: *mut Table,
-    // /* Table being ALTERed */
-    zOld: *const i8,
-    // /* Old column name */
+/// Generate code to verify that the schemas of database zDb and, if
+/// bTemp is not true, database "temp", can still be parsed. This is
+/// called at the end of the generation of an ALTER TABLE ... RENAME ...
+/// statement to ensure that the operation has not rendered any schema
+/// objects unusable.
+///
+/// # Arguments
+///
+/// * `pParse` - Parse context
+/// * `zDb` - Name of db to verify schema of
+/// * `bTemp` - True if this is the temp db
+/// * `zWhen` - "when" part of error message
+/// * `bNoDQS` - Do not allow DQS in the schema
+fn renameTestSchema(
+    mut pParse: *mut Parse,
+    mut zDb: *const i8,
+    mut bTemp: i32,
+    mut zWhen: *const i8,
+    mut bNoDQS: i32,
+) {
+    unsafe {
+        (*pParse)
+            .__slate_bits_0
+            .__set_colNamesSet((1 as i32) as u32);
+    }
+    unsafe {
+        sqlite3NestedParse(pParse, (b"SELECT 1 FROM \"%w\".sqlite_master WHERE name NOT LIKE 'sqliteX_%%' ESCAPE 'X' AND sql NOT LIKE 'create virtual%%' AND sqlite_rename_test(%Q, sql, type, name, %d, %Q, %d)=NULL \0".as_ptr() as *mut i8) as *const i8, zDb, zDb, bTemp, zWhen, bNoDQS)
+    };
+    if bTemp == (0 as i32) {
+        unsafe {
+            sqlite3NestedParse(pParse, (b"SELECT 1 FROM temp.sqlite_master WHERE name NOT LIKE 'sqliteX_%%' ESCAPE 'X' AND sql NOT LIKE 'create virtual%%' AND sqlite_rename_test(%Q, sql, type, name, 1, %Q, %d)=NULL \0".as_ptr() as *mut i8) as *const i8, zDb, zWhen, bNoDQS)
+        };
+    }
 }
 
 #[repr(C)]
@@ -1777,178 +1805,57 @@ mod __slate_bits {
     }
 }
 
-static mut aAlterTableFuncs: __SlateAlign16<[FuncDef; 9]> = __SlateAlign16([
-    FuncDef {
-        nArg: (9 as i32) as i16,
-        funcFlags: ((8388608 as i32) | (262144 as i32) | (1 as i32) | (2048 as i32)) as u32,
-        pUserData: std::ptr::null_mut::<()>(),
-        pNext: std::ptr::null_mut::<FuncDef>(),
-        xSFunc: Some(renameColumnFunc),
-        xFinalize: None,
-        xValue: None,
-        xInverse: None,
-        zName: (b"sqlite_rename_column\0".as_ptr() as *mut i8) as *const i8,
-        u: {
-            let mut __t0: __SlateRecord168 = unsafe { std::mem::zeroed() };
-            __t0.pHash = std::ptr::null_mut::<FuncDef>();
-            __t0
-        },
-    },
-    FuncDef {
-        nArg: (7 as i32) as i16,
-        funcFlags: ((8388608 as i32) | (262144 as i32) | (1 as i32) | (2048 as i32)) as u32,
-        pUserData: std::ptr::null_mut::<()>(),
-        pNext: std::ptr::null_mut::<FuncDef>(),
-        xSFunc: Some(renameTableFunc),
-        xFinalize: None,
-        xValue: None,
-        xInverse: None,
-        zName: (b"sqlite_rename_table\0".as_ptr() as *mut i8) as *const i8,
-        u: {
-            let mut __t1: __SlateRecord168 = unsafe { std::mem::zeroed() };
-            __t1.pHash = std::ptr::null_mut::<FuncDef>();
-            __t1
-        },
-    },
-    FuncDef {
-        nArg: (7 as i32) as i16,
-        funcFlags: ((8388608 as i32) | (262144 as i32) | (1 as i32) | (2048 as i32)) as u32,
-        pUserData: std::ptr::null_mut::<()>(),
-        pNext: std::ptr::null_mut::<FuncDef>(),
-        xSFunc: Some(renameTableTest),
-        xFinalize: None,
-        xValue: None,
-        xInverse: None,
-        zName: (b"sqlite_rename_test\0".as_ptr() as *mut i8) as *const i8,
-        u: {
-            let mut __t2: __SlateRecord168 = unsafe { std::mem::zeroed() };
-            __t2.pHash = std::ptr::null_mut::<FuncDef>();
-            __t2
-        },
-    },
-    FuncDef {
-        nArg: (3 as i32) as i16,
-        funcFlags: ((8388608 as i32) | (262144 as i32) | (1 as i32) | (2048 as i32)) as u32,
-        pUserData: std::ptr::null_mut::<()>(),
-        pNext: std::ptr::null_mut::<FuncDef>(),
-        xSFunc: Some(dropColumnFunc),
-        xFinalize: None,
-        xValue: None,
-        xInverse: None,
-        zName: (b"sqlite_drop_column\0".as_ptr() as *mut i8) as *const i8,
-        u: {
-            let mut __t3: __SlateRecord168 = unsafe { std::mem::zeroed() };
-            __t3.pHash = std::ptr::null_mut::<FuncDef>();
-            __t3
-        },
-    },
-    FuncDef {
-        nArg: (2 as i32) as i16,
-        funcFlags: ((8388608 as i32) | (262144 as i32) | (1 as i32) | (2048 as i32)) as u32,
-        pUserData: std::ptr::null_mut::<()>(),
-        pNext: std::ptr::null_mut::<FuncDef>(),
-        xSFunc: Some(renameQuotefixFunc),
-        xFinalize: None,
-        xValue: None,
-        xInverse: None,
-        zName: (b"sqlite_rename_quotefix\0".as_ptr() as *mut i8) as *const i8,
-        u: {
-            let mut __t4: __SlateRecord168 = unsafe { std::mem::zeroed() };
-            __t4.pHash = std::ptr::null_mut::<FuncDef>();
-            __t4
-        },
-    },
-    FuncDef {
-        nArg: (2 as i32) as i16,
-        funcFlags: ((8388608 as i32) | (262144 as i32) | (1 as i32) | (2048 as i32)) as u32,
-        pUserData: std::ptr::null_mut::<()>(),
-        pNext: std::ptr::null_mut::<FuncDef>(),
-        xSFunc: Some(dropConstraintFunc),
-        xFinalize: None,
-        xValue: None,
-        xInverse: None,
-        zName: (b"sqlite_drop_constraint\0".as_ptr() as *mut i8) as *const i8,
-        u: {
-            let mut __t5: __SlateRecord168 = unsafe { std::mem::zeroed() };
-            __t5.pHash = std::ptr::null_mut::<FuncDef>();
-            __t5
-        },
-    },
-    FuncDef {
-        nArg: (2 as i32) as i16,
-        funcFlags: ((8388608 as i32) | (262144 as i32) | (1 as i32) | (2048 as i32)) as u32,
-        pUserData: std::ptr::null_mut::<()>(),
-        pNext: std::ptr::null_mut::<FuncDef>(),
-        xSFunc: Some(failConstraintFunc),
-        xFinalize: None,
-        xValue: None,
-        xInverse: None,
-        zName: (b"sqlite_fail\0".as_ptr() as *mut i8) as *const i8,
-        u: {
-            let mut __t6: __SlateRecord168 = unsafe { std::mem::zeroed() };
-            __t6.pHash = std::ptr::null_mut::<FuncDef>();
-            __t6
-        },
-    },
-    FuncDef {
-        nArg: (3 as i32) as i16,
-        funcFlags: ((8388608 as i32) | (262144 as i32) | (1 as i32) | (2048 as i32)) as u32,
-        pUserData: std::ptr::null_mut::<()>(),
-        pNext: std::ptr::null_mut::<FuncDef>(),
-        xSFunc: Some(addConstraintFunc),
-        xFinalize: None,
-        xValue: None,
-        xInverse: None,
-        zName: (b"sqlite_add_constraint\0".as_ptr() as *mut i8) as *const i8,
-        u: {
-            let mut __t7: __SlateRecord168 = unsafe { std::mem::zeroed() };
-            __t7.pHash = std::ptr::null_mut::<FuncDef>();
-            __t7
-        },
-    },
-    FuncDef {
-        nArg: (2 as i32) as i16,
-        funcFlags: ((8388608 as i32) | (262144 as i32) | (1 as i32) | (2048 as i32)) as u32,
-        pUserData: std::ptr::null_mut::<()>(),
-        pNext: std::ptr::null_mut::<FuncDef>(),
-        xSFunc: Some(findConstraintFunc),
-        xFinalize: None,
-        xValue: None,
-        xInverse: None,
-        zName: (b"sqlite_find_constraint\0".as_ptr() as *mut i8) as *const i8,
-        u: {
-            let mut __t8: __SlateRecord168 = unsafe { std::mem::zeroed() };
-            __t8.pHash = std::ptr::null_mut::<FuncDef>();
-            __t8
-        },
-    },
-]);
-
-// /* Parse context */
-// /* Table to add constraint to */
-// /* First token of new constraint */
-// /* Name of new constraint. NULL if name omitted. */
-// /* Text of CHECK expression */
-// /* Size of pExpr in bytes */
-// /* The parsed CHECK expression */
-// /*
-// ** Register built-in functions used to help implement ALTER TABLE
-// */
-// /* SQLITE_ALTER_TABLE */
-#[unsafe(no_mangle)]
-extern "C-unwind" fn sqlite3AlterFunctions() {
+/// Generate VM code to replace any double-quoted strings (but not double-quoted
+/// identifiers) within the "sql" column of the sqlite_schema table in
+/// database zDb with their single-quoted equivalents. If argument bTemp is
+/// not true, similarly update all SQL statements in the sqlite_schema table
+/// of the temp db.
+fn renameFixQuotes(mut pParse: *mut Parse, mut zDb: *const i8, mut bTemp: i32) {
     unsafe {
-        sqlite3InsertBuiltinFuncs(
-            unsafe { std::ptr::addr_of_mut!(aAlterTableFuncs.0) as *mut FuncDef },
-            (((648 as u64) / (72 as u64)) as u32) as i32,
-        )
+        sqlite3NestedParse(pParse, (b"UPDATE \"%w\".sqlite_master SET sql = sqlite_rename_quotefix(%Q, sql)WHERE name NOT LIKE 'sqliteX_%%' ESCAPE 'X' AND sql NOT LIKE 'create virtual%%'\0".as_ptr() as *mut i8) as *const i8, zDb, zDb)
     };
+    if bTemp == (0 as i32) {
+        unsafe {
+            sqlite3NestedParse(pParse, (b"UPDATE temp.sqlite_master SET sql = sqlite_rename_quotefix('temp', sql)WHERE name NOT LIKE 'sqliteX_%%' ESCAPE 'X' AND sql NOT LIKE 'create virtual%%'\0".as_ptr() as *mut i8) as *const i8)
+        };
+    }
 }
 
-// /*
-// ** Generate code to implement the "ALTER TABLE xxx RENAME TO yyy"
-// ** command.
-// */
+/// Generate code to reload the schema for database iDb. And, if iDb!=1, for
+/// the temp database as well.
+fn renameReloadSchema(mut pParse: *mut Parse, mut iDb: i32, mut p5: u16) {
+    let mut v: *mut Vdbe = unsafe { (*pParse).pVdbe };
+    if v != std::ptr::null_mut::<Vdbe>() {
+        unsafe { sqlite3ChangeCookie(pParse, iDb) };
+        unsafe {
+            sqlite3VdbeAddParseSchemaOp(
+                unsafe { (*pParse).pVdbe },
+                iDb,
+                std::ptr::null_mut::<i8>(),
+                p5,
+            )
+        };
+        if iDb != (1 as i32) {
+            unsafe {
+                sqlite3VdbeAddParseSchemaOp(
+                    unsafe { (*pParse).pVdbe },
+                    1 as i32,
+                    std::ptr::null_mut::<i8>(),
+                    p5,
+                )
+            };
+        }
+    }
+}
+
+/// Generate code to implement the "ALTER TABLE xxx RENAME TO yyy"
+/// command.
+///
+/// # Arguments
+///
+/// * `pParse` - Parser context.
+/// * `pSrc` - The table to rename.
+/// * `pName` - The new table name.
 #[unsafe(no_mangle)]
 extern "C-unwind" fn sqlite3AlterRenameTable(
     mut pParse: *mut Parse,
@@ -1967,48 +1874,42 @@ extern "C-unwind" fn sqlite3AlterRenameTable(
     let __slate_slot_466: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_466) as *mut i32;
     let mut __slate_storage_1355: std::mem::MaybeUninit<bool> = std::mem::MaybeUninit::uninit();
     let __slate_slot_1355: *mut bool = std::ptr::addr_of_mut!(__slate_storage_1355) as *mut bool;
+    // Check that a table or index named 'zName' does not already exist
+    // in database iDb. If so, this is an error.
     let mut __slate_storage_1354: std::mem::MaybeUninit<bool> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_1354: *mut bool = std::ptr::addr_of_mut!(__slate_storage_1354) as *mut bool;
+    let __slate_slot_1354: *mut bool = std::ptr::addr_of_mut!(__slate_storage_1354) as *mut bool; // Non-zero if this is a v-tab with an xRename()
     let mut __slate_storage_465: std::mem::MaybeUninit<*mut VTable> =
         std::mem::MaybeUninit::uninit();
     let __slate_slot_465: *mut *mut VTable =
         std::ptr::addr_of_mut!(__slate_storage_465) as *mut *mut VTable;
     let mut __slate_storage_464: std::mem::MaybeUninit<*mut Vdbe> = std::mem::MaybeUninit::uninit();
     let __slate_slot_464: *mut *mut Vdbe =
-        std::ptr::addr_of_mut!(__slate_storage_464) as *mut *mut Vdbe;
+        std::ptr::addr_of_mut!(__slate_storage_464) as *mut *mut Vdbe; // Original name of the table
     let mut __slate_storage_463: std::mem::MaybeUninit<*const i8> = std::mem::MaybeUninit::uninit();
     let __slate_slot_463: *mut *const i8 =
-        std::ptr::addr_of_mut!(__slate_storage_463) as *mut *const i8;
+        std::ptr::addr_of_mut!(__slate_storage_463) as *mut *const i8; // Number of UTF-8 characters in zTabName
     let mut __slate_storage_462: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_462: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_462) as *mut i32;
+    let __slate_slot_462: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_462) as *mut i32; // Database connection
     let mut __slate_storage_461: std::mem::MaybeUninit<*mut sqlite3> =
         std::mem::MaybeUninit::uninit();
     let __slate_slot_461: *mut *mut sqlite3 =
-        std::ptr::addr_of_mut!(__slate_storage_461) as *mut *mut sqlite3;
+        std::ptr::addr_of_mut!(__slate_storage_461) as *mut *mut sqlite3; // NULL-terminated version of pName
     let mut __slate_storage_460: std::mem::MaybeUninit<*mut i8> = std::mem::MaybeUninit::uninit();
     let __slate_slot_460: *mut *mut i8 =
-        std::ptr::addr_of_mut!(__slate_storage_460) as *mut *mut i8;
+        std::ptr::addr_of_mut!(__slate_storage_460) as *mut *mut i8; // Table being renamed
     let mut __slate_storage_459: std::mem::MaybeUninit<*mut Table> =
         std::mem::MaybeUninit::uninit();
     let __slate_slot_459: *mut *mut Table =
-        std::ptr::addr_of_mut!(__slate_storage_459) as *mut *mut Table;
+        std::ptr::addr_of_mut!(__slate_storage_459) as *mut *mut Table; // Name of database iDb
     let mut __slate_storage_458: std::mem::MaybeUninit<*mut i8> = std::mem::MaybeUninit::uninit();
     let __slate_slot_458: *mut *mut i8 =
-        std::ptr::addr_of_mut!(__slate_storage_458) as *mut *mut i8;
+        std::ptr::addr_of_mut!(__slate_storage_458) as *mut *mut i8; // Database that contains the table
     let mut __slate_storage_457: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
     let __slate_slot_457: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_457) as *mut i32;
     unsafe {
         '__join_0: {
-            // /* Database that contains the table */
-            // /* Name of database iDb */
-            // /* Table being renamed */
-            // /* NULL-terminated version of pName */
             std::ptr::write(__slate_slot_460, std::ptr::null_mut::<i8>());
-            // /* Database connection */
             std::ptr::write(__slate_slot_461, unsafe { (*pParse).db });
-            // /* Number of UTF-8 characters in zTabName */
-            // /* Original name of the table */
-            // /* Non-zero if this is a v-tab with an xRename() */
             std::ptr::write(__slate_slot_465, std::ptr::null_mut::<VTable>());
             if (unsafe { (*(*__slate_slot_461)).mallocFailed }) != (0 as u8) {
             } else {
@@ -2033,14 +1934,11 @@ extern "C-unwind" fn sqlite3AlterRenameTable(
                         })
                         .zDbSName
                     };
-                    // /* Get a NULL terminated version of the new table name. */
+                    // Get a NULL terminated version of the new table name.
                     *__slate_slot_460 =
                         unsafe { sqlite3NameFromToken(*__slate_slot_461, pName as *const Token) };
                     if !(*__slate_slot_460 != std::ptr::null_mut::<i8>()) {
                     } else {
-                        // /* Check that a table or index named 'zName' does not already exist
-                        //   ** in database iDb. If so, this is an error.
-                        //   */
                         if (unsafe {
                             sqlite3FindTable(
                                 *__slate_slot_461,
@@ -2081,9 +1979,8 @@ extern "C-unwind" fn sqlite3AlterRenameTable(
                                 )
                             };
                         } else {
-                            // /* Make sure it is not a system table being altered, or a reserved name
-                            //   ** that the table is being renamed to.
-                            //   */
+                            // Make sure it is not a system table being altered, or a reserved name
+                            // that the table is being renamed to.
                             if (0 as i32) != isAlterableTable(pParse, *__slate_slot_459) {
                             } else {
                                 if (0 as i32)
@@ -2111,7 +2008,7 @@ extern "C-unwind" fn sqlite3AlterRenameTable(
                                             )
                                         };
                                     } else {
-                                        // /* Invoke the authorization callback. */
+                                        // Invoke the authorization callback.
                                         if (unsafe {
                                             sqlite3AuthCheck(
                                                 pParse,
@@ -2154,17 +2051,17 @@ extern "C-unwind" fn sqlite3AlterRenameTable(
                                                             std::ptr::null_mut::<VTable>();
                                                     }
                                                 }
-                                                // /* Begin a transaction for database iDb. Then modify the schema cookie
-                                                //   ** (since the ALTER TABLE modifies the schema). Call sqlite3MayAbort(),
-                                                //   ** as the scalar functions (e.g. sqlite_rename_table()) invoked by the
-                                                //   ** nested SQL may raise an exception.  */
+                                                // Begin a transaction for database iDb. Then modify the schema cookie
+                                                // (since the ALTER TABLE modifies the schema). Call sqlite3MayAbort(),
+                                                // as the scalar functions (e.g. sqlite_rename_table()) invoked by the
+                                                // nested SQL may raise an exception.
                                                 *__slate_slot_464 =
                                                     unsafe { sqlite3GetVdbe(pParse) };
                                                 if *__slate_slot_464 == std::ptr::null_mut::<Vdbe>()
                                                 {
                                                 } else {
                                                     unsafe { sqlite3MayAbort(pParse) };
-                                                    // /* figure out how many UTF-8 characters are in zName */
+                                                    // figure out how many UTF-8 characters are in zName
                                                     *__slate_slot_463 =
                                                         (unsafe { (*(*__slate_slot_459)).zName })
                                                             as *const i8;
@@ -2174,19 +2071,18 @@ extern "C-unwind" fn sqlite3AlterRenameTable(
                                                             -(1 as i32),
                                                         )
                                                     };
-                                                    // /* Rewrite all CREATE TABLE, INDEX, TRIGGER or VIEW statements in
-                                                    //   ** the schema to use the new table name.  */
+                                                    // Rewrite all CREATE TABLE, INDEX, TRIGGER or VIEW statements in
+                                                    // the schema to use the new table name.
                                                     unsafe {
                                                         sqlite3NestedParse(pParse, (b"UPDATE \"%w\".sqlite_master SET sql = sqlite_rename_table(%Q, type, name, sql, %Q, %Q, %d) WHERE (type!='index' OR tbl_name=%Q COLLATE nocase)AND   name NOT LIKE 'sqliteX_%%' ESCAPE 'X'\0".as_ptr() as *mut i8) as *const i8, *__slate_slot_458, *__slate_slot_458, *__slate_slot_463, *__slate_slot_460, (*__slate_slot_457 == (1 as i32)) as i32, *__slate_slot_463)
                                                     };
-                                                    // /* Update the tbl_name and name columns of the sqlite_schema table
-                                                    //   ** as required.  */
+                                                    // Update the tbl_name and name columns of the sqlite_schema table
+                                                    // as required.
                                                     unsafe {
                                                         sqlite3NestedParse(pParse, (b"UPDATE %Q.sqlite_master SET tbl_name = %Q, name = CASE WHEN type='table' THEN %Q WHEN name LIKE 'sqliteX_autoindex%%' ESCAPE 'X'      AND type='index' THEN 'sqlite_autoindex_' || %Q || substr(name,%d+18) ELSE name END WHERE tbl_name=%Q COLLATE nocase AND (type='table' OR type='index' OR type='trigger');\0".as_ptr() as *mut i8) as *const i8, *__slate_slot_458, *__slate_slot_460, *__slate_slot_460, *__slate_slot_460, *__slate_slot_462, *__slate_slot_463)
                                                     };
-                                                    // /* If the sqlite_sequence table exists in this database, then update
-                                                    //   ** it with the new table name.
-                                                    //   */
+                                                    // If the sqlite_sequence table exists in this database, then update
+                                                    // it with the new table name.
                                                     if (unsafe {
                                                         sqlite3FindTable(
                                                             *__slate_slot_461,
@@ -2201,19 +2097,18 @@ extern "C-unwind" fn sqlite3AlterRenameTable(
                                                             sqlite3NestedParse(pParse, (b"UPDATE \"%w\".sqlite_sequence set name = %Q WHERE name = %Q\0".as_ptr() as *mut i8) as *const i8, *__slate_slot_458, *__slate_slot_460, unsafe { (*(*__slate_slot_459)).zName })
                                                         };
                                                     }
-                                                    // /* If the table being renamed is not itself part of the temp database,
-                                                    //   ** edit view and trigger definitions within the temp database
-                                                    //   ** as required.  */
+                                                    // If the table being renamed is not itself part of the temp database,
+                                                    // edit view and trigger definitions within the temp database
+                                                    // as required.
                                                     if *__slate_slot_457 != (1 as i32) {
                                                         unsafe {
                                                             sqlite3NestedParse(pParse, (b"UPDATE sqlite_temp_schema SET sql = sqlite_rename_table(%Q, type, name, sql, %Q, %Q, 1), tbl_name = CASE WHEN tbl_name=%Q COLLATE nocase AND   sqlite_rename_test(%Q, sql, type, name, 1, 'after rename', 0) THEN %Q ELSE tbl_name END WHERE type IN ('view', 'trigger')\0".as_ptr() as *mut i8) as *const i8, *__slate_slot_458, *__slate_slot_463, *__slate_slot_460, *__slate_slot_463, *__slate_slot_458, *__slate_slot_460)
                                                         };
                                                     }
-                                                    // /* If this is a virtual table, invoke the xRename() function if
-                                                    //   ** one is defined. The xRename() callback will modify the names
-                                                    //   ** of any resources used by the v-table implementation (including other
-                                                    //   ** SQLite tables) that are identified by the name of the virtual table.
-                                                    //   */
+                                                    // If this is a virtual table, invoke the xRename() function if
+                                                    // one is defined. The xRename() callback will modify the names
+                                                    // of any resources used by the v-table implementation (including other
+                                                    // SQLite tables) that are identified by the name of the virtual table.
                                                     if *__slate_slot_465
                                                         != std::ptr::null_mut::<VTable>()
                                                     {
@@ -2279,457 +2174,51 @@ extern "C-unwind" fn sqlite3AlterRenameTable(
     }
 }
 
-// /* !defined(SQLITE_OMIT_VIEW) || !defined(SQLITE_OMIT_VIRTUALTABLE) */
-// /*
-// ** Handles the following parser reduction:
-// **
-// **  cmd ::= ALTER TABLE pSrc RENAME COLUMN pOld TO pNew
-// */
-#[unsafe(no_mangle)]
-extern "C-unwind" fn sqlite3AlterRenameColumn(
+/// Write code that will raise an error if the table described by
+/// zDb and zTab is not empty.
+///
+/// # Arguments
+///
+/// * `pParse` - Parsing context
+/// * `zDb` - Schema holding the table
+/// * `zTab` - Table to check for empty
+/// * `zErr` - Error message text
+fn sqlite3ErrorIfNotEmpty(
     mut pParse: *mut Parse,
-    mut pSrc: *mut SrcList,
-    mut pOld: *mut Token,
-    mut pNew: *mut Token,
+    mut zDb: *const i8,
+    mut zTab: *const i8,
+    mut zErr: *const i8,
 ) {
-    let mut __slate_storage_516: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_516: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_516) as *mut i32;
-    let mut __slate_storage_515: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_515: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_515) as *mut i32;
-    let mut __slate_storage_514: std::mem::MaybeUninit<*const i8> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_514: *mut *const i8 =
-        std::ptr::addr_of_mut!(__slate_storage_514) as *mut *const i8;
-    let mut __slate_storage_513: std::mem::MaybeUninit<*mut i8> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_513: *mut *mut i8 =
-        std::ptr::addr_of_mut!(__slate_storage_513) as *mut *mut i8;
-    let mut __slate_storage_512: std::mem::MaybeUninit<*mut i8> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_512: *mut *mut i8 =
-        std::ptr::addr_of_mut!(__slate_storage_512) as *mut *mut i8;
-    let mut __slate_storage_511: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_511: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_511) as *mut i32;
-    let mut __slate_storage_510: std::mem::MaybeUninit<*mut Table> =
-        std::mem::MaybeUninit::uninit();
-    let __slate_slot_510: *mut *mut Table =
-        std::ptr::addr_of_mut!(__slate_storage_510) as *mut *mut Table;
-    let mut __slate_storage_509: std::mem::MaybeUninit<*mut sqlite3> =
-        std::mem::MaybeUninit::uninit();
-    let __slate_slot_509: *mut *mut sqlite3 =
-        std::ptr::addr_of_mut!(__slate_storage_509) as *mut *mut sqlite3;
-    unsafe {
-        '__join_0: {
-            // /* Database connection */
-            std::ptr::write(__slate_slot_509, unsafe { (*pParse).db });
-            // /* Table being updated */
-            // /* Index of column being renamed */
-            // /* Old column name */
-            std::ptr::write(__slate_slot_512, std::ptr::null_mut::<i8>());
-            // /* New column name */
-            std::ptr::write(__slate_slot_513, std::ptr::null_mut::<i8>());
-            // /* Name of schema containing the table */
-            // /* Index of the schema */
-            // /* True to quote the new name */
-            // /* Locate the table to be altered */
-            *__slate_slot_510 = unsafe {
-                sqlite3LocateTableItem(pParse, (0 as i32) as u32, unsafe {
-                    unsafe { std::ptr::addr_of_mut!((*pSrc).a) as *mut SrcItem }
-                        .offset((0 as i32) as isize)
-                })
-            };
-            if !(*__slate_slot_510 != std::ptr::null_mut::<Table>()) {
-            } else {
-                // /* Cannot alter a system table */
-                if (0 as i32) != isAlterableTable(pParse, *__slate_slot_510) {
-                } else {
-                    if (0 as i32) != isRealTable(pParse, *__slate_slot_510, 0 as i32) {
-                    } else {
-                        // /* Which schema holds the table to be altered */
-                        *__slate_slot_515 = unsafe {
-                            sqlite3SchemaToIndex(*__slate_slot_509, unsafe {
-                                (*(*__slate_slot_510)).pSchema
-                            })
-                        };
-                        0 as i32;
-                        *__slate_slot_514 = (unsafe {
-                            (*unsafe {
-                                unsafe { (*(*__slate_slot_509)).aDb }
-                                    .offset(*__slate_slot_515 as isize)
-                            })
-                            .zDbSName
-                        }) as *const i8;
-                        // /* Invoke the authorization callback. */
-                        if (unsafe {
-                            sqlite3AuthCheck(
-                                pParse,
-                                26 as i32,
-                                *__slate_slot_514,
-                                (unsafe { (*(*__slate_slot_510)).zName }) as *const i8,
-                                std::ptr::null::<i8>(),
-                            )
-                        }) != (0 as i32)
-                        {
-                        } else {
-                            // /* Make sure the old name really is a column name in the table to be
-                            //   ** altered.  Set iCol to be the index of the column being renamed */
-                            *__slate_slot_512 = unsafe {
-                                sqlite3NameFromToken(*__slate_slot_509, pOld as *const Token)
-                            };
-                            if !(*__slate_slot_512 != std::ptr::null_mut::<i8>()) {
-                            } else {
-                                *__slate_slot_511 = unsafe {
-                                    sqlite3ColumnIndex(
-                                        *__slate_slot_510,
-                                        *__slate_slot_512 as *const i8,
-                                    )
-                                };
-                                if *__slate_slot_511 < (0 as i32) {
-                                    unsafe {
-                                        sqlite3ErrorMsg(
-                                            pParse,
-                                            (b"no such column: \"%T\"\0".as_ptr() as *mut i8)
-                                                as *const i8,
-                                            pOld,
-                                        )
-                                    };
-                                } else {
-                                    // /* Ensure the schema contains no double-quoted strings */
-                                    renameTestSchema(
-                                        pParse,
-                                        *__slate_slot_514,
-                                        (*__slate_slot_515 == (1 as i32)) as i32,
-                                        (b"\0".as_ptr() as *mut i8) as *const i8,
-                                        0 as i32,
-                                    );
-                                    renameFixQuotes(
-                                        pParse,
-                                        *__slate_slot_514,
-                                        (*__slate_slot_515 == (1 as i32)) as i32,
-                                    );
-                                    // /* Do the rename operation using a recursive UPDATE statement that
-                                    //   ** uses the sqlite_rename_column() SQL function to compute the new
-                                    //   ** CREATE statement text for the sqlite_schema table.
-                                    //   */
-                                    unsafe { sqlite3MayAbort(pParse) };
-                                    *__slate_slot_513 = unsafe {
-                                        sqlite3NameFromToken(
-                                            *__slate_slot_509,
-                                            pNew as *const Token,
-                                        )
-                                    };
-                                    if !(*__slate_slot_513 != std::ptr::null_mut::<i8>()) {
-                                    } else {
-                                        0 as i32;
-                                        *__slate_slot_516 = (((unsafe {
-                                            *unsafe {
-                                                unsafe {
-                                                    std::ptr::addr_of!(sqlite3CtypeMap) as *const u8
-                                                }
-                                                .offset(
-                                                    ((((unsafe {
-                                                        *unsafe {
-                                                            unsafe { (*pNew).z }
-                                                                .offset((0 as i32) as isize)
-                                                        }
-                                                    })
-                                                        as u8)
-                                                        as u32)
-                                                        as i32)
-                                                        as isize,
-                                                )
-                                            }
-                                        })
-                                            as u32)
-                                            as i32)
-                                            & (128 as i32);
-                                        unsafe {
-                                            sqlite3NestedParse(pParse, (b"UPDATE \"%w\".sqlite_master SET sql = sqlite_rename_column(sql, type, name, %Q, %Q, %d, %Q, %d, %d) WHERE name NOT LIKE 'sqliteX_%%' ESCAPE 'X'  AND (type != 'index' OR tbl_name = %Q)\0".as_ptr() as *mut i8) as *const i8, *__slate_slot_514, *__slate_slot_514, unsafe { (*(*__slate_slot_510)).zName }, *__slate_slot_511, *__slate_slot_513, *__slate_slot_516, (*__slate_slot_515 == (1 as i32)) as i32, unsafe { (*(*__slate_slot_510)).zName })
-                                        };
-                                        unsafe {
-                                            sqlite3NestedParse(pParse, (b"UPDATE temp.sqlite_master SET sql = sqlite_rename_column(sql, type, name, %Q, %Q, %d, %Q, %d, 1) WHERE type IN ('trigger', 'view')\0".as_ptr() as *mut i8) as *const i8, *__slate_slot_514, unsafe { (*(*__slate_slot_510)).zName }, *__slate_slot_511, *__slate_slot_513, *__slate_slot_516)
-                                        };
-                                        // /* Drop and reload the database schema. */
-                                        renameReloadSchema(
-                                            pParse,
-                                            *__slate_slot_515,
-                                            ((1 as i32) as i16) as u16,
-                                        );
-                                        renameTestSchema(
-                                            pParse,
-                                            *__slate_slot_514,
-                                            (*__slate_slot_515 == (1 as i32)) as i32,
-                                            (b"after rename\0".as_ptr() as *mut i8) as *const i8,
-                                            1 as i32,
-                                        );
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        unsafe { sqlite3SrcListDelete(*__slate_slot_509, pSrc) };
-        unsafe { sqlite3DbFree(*__slate_slot_509, *__slate_slot_512 as *mut ()) };
-        unsafe { sqlite3DbFree(*__slate_slot_509, *__slate_slot_513 as *mut ()) };
-        return;
-    }
-}
-
-// /* Parsing context */
-// /* Name of the table to look for */
-// /* OUT: write the iDb here */
-// /* OUT: write name of schema here */
-// /* Do ALTER TABLE authorization checks if true */
-// /*
-// ** Generate bytecode for one of:
-// **
-// **  (1)   ALTER TABLE pSrc DROP CONSTRAINT pCons
-// **  (2)   ALTER TABLE pSrc ALTER pCol DROP NOT NULL
-// **
-// ** One of pCons and pCol must be NULL and the other non-null.
-// */
-#[unsafe(no_mangle)]
-extern "C-unwind" fn sqlite3AlterDropConstraint(
-    mut pParse: *mut Parse,
-    mut pSrc: *mut SrcList,
-    mut pCons: *mut Token,
-    mut pCol: *mut Token,
-) {
-    let mut db: *mut sqlite3 = unsafe { (*pParse).db };
-    let mut pTab: *mut Table = std::ptr::null_mut::<Table>();
-    let mut iDb: i32 = 0 as i32;
-    let mut zDb: *const i8 = std::ptr::null::<i8>();
-    let mut zArg: *mut i8 = std::ptr::null_mut::<i8>();
-    0 as i32;
-    0 as i32;
-    pTab = alterFindTable(
-        pParse,
-        pSrc,
-        std::ptr::addr_of_mut!(iDb),
-        std::ptr::addr_of_mut!(zDb),
-        (pCons != std::ptr::null_mut::<Token>()) as i32,
-    );
-    if !(pTab != std::ptr::null_mut::<Table>()) {
-        return;
-    }
-    if pCons != std::ptr::null_mut::<Token>() {
-        let mut z: *mut i8 = unsafe { sqlite3NameFromToken(db, pCons as *const Token) };
-        zArg = unsafe { sqlite3MPrintf(db, (b"%Q\0".as_ptr() as *mut i8) as *const i8, z) };
-        unsafe { sqlite3DbFree(db, z as *mut ()) };
-    } else {
-        let mut iCol: i32 = 0 as i32;
-        if alterFindCol(pParse, pTab, pCol, std::ptr::addr_of_mut!(iCol)) != (0 as i32) {
-            return;
-        }
-        zArg = unsafe { sqlite3MPrintf(db, (b"%d\0".as_ptr() as *mut i8) as *const i8, iCol) };
-    }
-    // /* Edit the SQL for the named table. */
-    unsafe {
-        sqlite3NestedParse(pParse, (b"UPDATE \"%w\".sqlite_master SET sql = sqlite_drop_constraint(sql, %s) WHERE type='table' AND tbl_name=%Q COLLATE nocase\0".as_ptr() as *mut i8) as *const i8, zDb, zArg, unsafe { (*pTab).zName })
-    };
-    unsafe { sqlite3DbFree(db, zArg as *mut ()) };
-    // /* Finally, reload the database schema. */
-    renameReloadSchema(pParse, iDb, ((4 as i32) as i16) as u16);
-}
-
-// /*
-// ** Generate bytecode to implement:
-// **
-// **    ALTER TABLE pSrc ADD [CONSTRAINT pName] CHECK(pExpr)
-// **
-// ** Any "ON CONFLICT" text that occurs after the "CHECK(...)", up
-// ** until pParse->sLastToken, is included as part of the new constraint.
-// */
-#[unsafe(no_mangle)]
-extern "C-unwind" fn sqlite3AlterAddConstraint(
-    mut pParse: *mut Parse,
-    mut pSrc: *mut SrcList,
-    mut pFirst: *mut Token,
-    mut pName: *mut Token,
-    mut zExpr: *const i8,
-    mut nExpr: i32,
-    mut pExpr: *mut Expr,
-) {
-    // /* Table identified by pSrc */
-    let mut pTab: *mut Table = std::ptr::null_mut::<Table>();
-    // /* Which schema does pTab live in */
-    let mut iDb: i32 = 0 as i32;
-    // /* Name of the schema in which pTab lives */
-    let mut zDb: *const i8 = std::ptr::null::<i8>();
-    // /* Text of the constraint */
-    let mut pCons: *const i8 = std::ptr::null::<i8>();
-    // /* Bytes of text to use from pCons[] */
-    let mut nCons: i32 = 0 as i32;
-    // /* Result from error checking pExpr */
-    let mut rc: i32 = 0 as i32;
-    // /* Look up the table being altered. */
-    0 as i32;
-    pTab = alterFindTable(
-        pParse,
-        pSrc,
-        std::ptr::addr_of_mut!(iDb),
-        std::ptr::addr_of_mut!(zDb),
-        1 as i32,
-    );
-    if !(pTab != std::ptr::null_mut::<Table>()) {
-        unsafe { sqlite3ExprDelete(unsafe { (*pParse).db }, pExpr) };
-        return;
-    }
-    // /* Verify that the new CHECK constraint does not contain any
-    //   ** internal-use-only function.  Forum post 2026-05-10T01:11:28Z
-    //   */
-    rc = unsafe {
-        sqlite3ResolveSelfReference(
-            pParse,
-            pTab,
-            4 as i32,
-            pExpr,
-            std::ptr::null_mut::<ExprList>(),
-        )
-    };
-    unsafe { sqlite3ExprDelete(unsafe { (*pParse).db }, pExpr) };
-    if rc != (0 as i32) {
-        return;
-    }
-    // /* If this new constraint has a name, check that it is not a duplicate of
-    //   ** an existing constraint. It is an error if it is.  */
-    if pName != std::ptr::null_mut::<Token>() {
-        let mut zName: *mut i8 =
-            unsafe { sqlite3NameFromToken(unsafe { (*pParse).db }, pName as *const Token) };
-        unsafe {
-            sqlite3NestedParse(pParse, (b"SELECT sqlite_fail('constraint %q already exists', %d) FROM \"%w\".sqlite_master WHERE type='table' AND tbl_name=%Q COLLATE nocase AND sqlite_find_constraint(sql, %Q)\0".as_ptr() as *mut i8) as *const i8, zName, 1 as i32, zDb, unsafe { (*pTab).zName }, zName)
-        };
-        unsafe { sqlite3DbFree(unsafe { (*pParse).db }, zName as *mut ()) };
-    }
-    // /* Search for a constraint violation. Throw an exception if one is found. */
     unsafe {
         sqlite3NestedParse(
             pParse,
-            (b"SELECT sqlite_fail('constraint failed', %d) FROM %Q.%Q WHERE (%.*s) IS NOT TRUE\0"
-                .as_ptr() as *mut i8) as *const i8,
-            19 as i32,
+            (b"SELECT raise(ABORT,%Q) FROM \"%w\".\"%w\"\0".as_ptr() as *mut i8) as *const i8,
+            zErr,
             zDb,
-            unsafe { (*pTab).zName },
-            nExpr,
-            zExpr,
+            zTab,
         )
     };
-    // /* Edit the SQL for the named table. */
-    pCons = unsafe { (*pFirst).z };
-    nCons = alterRtrimConstraint(
-        unsafe { (*pParse).db },
-        pCons,
-        ((unsafe { unsafe { (*pParse).sLastToken.z }.offset_from(pCons as *const i8) }) as i64)
-            as i32,
-    );
-    unsafe {
-        sqlite3NestedParse(pParse, (b"UPDATE \"%w\".sqlite_master SET sql = sqlite_add_constraint(sql, %.*Q, -1) WHERE type='table' AND tbl_name=%Q COLLATE nocase\0".as_ptr() as *mut i8) as *const i8, zDb, nCons, pCons, unsafe { (*pTab).zName })
-    };
-    // /* Finally, reload the database schema. */
-    renameReloadSchema(pParse, iDb, ((4 as i32) as i16) as u16);
 }
 
-// /* used to record OOM error */
-// /* Buffer containing constraint */
-// /* Size of pCons in bytes */
-// /*
-// ** Prepare a statement of the form:
-// **
-// **   ALTER TABLE pSrc ALTER pCol SET NOT NULL
-// */
-#[unsafe(no_mangle)]
-extern "C-unwind" fn sqlite3AlterSetNotNull(
-    mut pParse: *mut Parse,
-    mut pSrc: *mut SrcList,
-    mut pCol: *mut Token,
-    mut pFirst: *mut Token,
-) {
-    let mut pTab: *mut Table = std::ptr::null_mut::<Table>();
-    let mut iCol: i32 = 0 as i32;
-    let mut iDb: i32 = 0 as i32;
-    let mut zDb: *const i8 = std::ptr::null::<i8>();
-    let mut pCons: *const i8 = std::ptr::null::<i8>();
-    let mut nCons: i32 = 0 as i32;
-    // /* Look up the table being altered. */
-    0 as i32;
-    pTab = alterFindTable(
-        pParse,
-        pSrc,
-        std::ptr::addr_of_mut!(iDb),
-        std::ptr::addr_of_mut!(zDb),
-        0 as i32,
-    );
-    if !(pTab != std::ptr::null_mut::<Table>()) {
-        return;
-    }
-    // /* Find the column being altered. */
-    if alterFindCol(pParse, pTab, pCol, std::ptr::addr_of_mut!(iCol)) != (0 as i32) {
-        return;
-    }
-    // /* Find the length in bytes of the constraint definition */
-    pCons = unsafe { (*pFirst).z };
-    nCons = alterRtrimConstraint(
-        unsafe { (*pParse).db },
-        pCons,
-        ((unsafe { unsafe { (*pParse).sLastToken.z }.offset_from(pCons as *const i8) }) as i64)
-            as i32,
-    );
-    // /* Search for a constraint violation. Throw an exception if one is found. */
-    unsafe {
-        sqlite3NestedParse(
-            pParse,
-            (b"SELECT sqlite_fail('constraint failed', %d) FROM %Q.%Q AS x WHERE x.%.*s IS NULL\0"
-                .as_ptr() as *mut i8) as *const i8,
-            19 as i32,
-            zDb,
-            unsafe { (*pTab).zName },
-            (unsafe { (*pCol).n }) as i32,
-            unsafe { (*pCol).z },
-        )
-    };
-    // /* Edit the SQL for the named table. */
-    unsafe {
-        sqlite3NestedParse(pParse, (b"UPDATE \"%w\".sqlite_master SET sql = sqlite_add_constraint(sqlite_drop_constraint(sql, %d), %.*Q, %d) WHERE type='table' AND tbl_name=%Q COLLATE nocase\0".as_ptr() as *mut i8) as *const i8, zDb, iCol, nCons, pCons, iCol, unsafe { (*pTab).zName })
-    };
-    // /* Finally, reload the database schema. */
-    renameReloadSchema(pParse, iDb, ((4 as i32) as i16) as u16);
-}
-
-// /* Parsing context */
-// /* Schema holding the table */
-// /* Table to check for empty */
-// /* Error message text */
-// /*
-// ** This function is called after an "ALTER TABLE ... ADD" statement
-// ** has been parsed. Argument pColDef contains the text of the new
-// ** column definition.
-// **
-// ** The Table structure pParse->pNewTable was extended to include
-// ** the new column during parsing.
-// */
+/// This function is called after an "ALTER TABLE ... ADD" statement
+/// has been parsed. Argument pColDef contains the text of the new
+/// column definition.
+///
+/// The Table structure pParse->pNewTable was extended to include
+/// the new column during parsing.
 #[unsafe(no_mangle)]
 extern "C-unwind" fn sqlite3AlterFinishAddColumn(mut pParse: *mut Parse, mut pColDef: *mut Token) {
-    // /* Copy of pParse->pNewTable */
-    let mut pNew: *mut Table = unsafe { std::mem::zeroed() };
-    // /* Table being altered */
-    let mut pTab: *mut Table = unsafe { std::mem::zeroed() };
-    // /* Database number */
-    let mut iDb: i32 = 0 as i32;
-    // /* Database name */
-    let mut zDb: *const i8 = unsafe { std::mem::zeroed() };
-    // /* Table name */
-    let mut zTab: *const i8 = unsafe { std::mem::zeroed() };
-    // /* Null-terminated column definition */
-    let mut zCol: *mut i8 = unsafe { std::mem::zeroed() };
-    // /* The new column */
-    let mut pCol: *mut Column = unsafe { std::mem::zeroed() };
-    // /* Default value for the new column */
-    let mut pDflt: *mut Expr = unsafe { std::mem::zeroed() };
-    // /* The database connection; */
-    let mut db: *mut sqlite3 = unsafe { std::mem::zeroed() };
-    // /* The prepared statement under construction */
-    let mut v: *mut Vdbe = unsafe { std::mem::zeroed() };
-    // /* Temporary registers */
-    let mut r1: i32 = 0 as i32;
+    let mut pNew: *mut Table = unsafe { std::mem::zeroed() }; // Copy of pParse->pNewTable
+    let mut pTab: *mut Table = unsafe { std::mem::zeroed() }; // Table being altered
+    let mut iDb: i32 = 0 as i32; // Database number
+    let mut zDb: *const i8 = unsafe { std::mem::zeroed() }; // Database name
+    let mut zTab: *const i8 = unsafe { std::mem::zeroed() }; // Table name
+    let mut zCol: *mut i8 = unsafe { std::mem::zeroed() }; // Null-terminated column definition
+    let mut pCol: *mut Column = unsafe { std::mem::zeroed() }; // The new column
+    let mut pDflt: *mut Expr = unsafe { std::mem::zeroed() }; // Default value for the new column
+    let mut db: *mut sqlite3 = unsafe { std::mem::zeroed() }; // The database connection;
+    let mut v: *mut Vdbe = unsafe { std::mem::zeroed() }; // The prepared statement under construction
+    let mut r1: i32 = 0 as i32; // Temporary registers
     db = unsafe { (*pParse).db };
     0 as i32;
     if (unsafe { (*pParse).nErr }) != (0 as i32) {
@@ -2742,15 +2231,14 @@ extern "C-unwind" fn sqlite3AlterFinishAddColumn(mut pParse: *mut Parse, mut pCo
     iDb = unsafe { sqlite3SchemaToIndex(db, unsafe { (*pNew).pSchema }) };
     zDb =
         (unsafe { (*unsafe { unsafe { (*db).aDb }.offset(iDb as isize) }).zDbSName }) as *const i8;
-    // /* Skip the "sqlite_altertab_" prefix on the name */
-    zTab = (unsafe { unsafe { (*pNew).zName }.offset((16 as i32) as isize) }) as *const i8;
+    zTab = (unsafe { unsafe { (*pNew).zName }.offset((16 as i32) as isize) }) as *const i8; // Skip the "sqlite_altertab_" prefix on the name
     pCol = unsafe {
         unsafe { (*pNew).aCol }.offset((((unsafe { (*pNew).nCol }) as i32) - (1 as i32)) as isize)
     };
     pDflt = unsafe { sqlite3ColumnExpr(pNew, pCol) };
     pTab = unsafe { sqlite3FindTable(db, zTab, zDb) };
     0 as i32;
-    // /* Invoke the authorization callback. */
+    // Invoke the authorization callback.
     if (unsafe {
         sqlite3AuthCheck(
             pParse,
@@ -2763,10 +2251,9 @@ extern "C-unwind" fn sqlite3AlterFinishAddColumn(mut pParse: *mut Parse, mut pCo
     {
         return;
     }
-    // /* Check that the new column is not specified as PRIMARY KEY or UNIQUE.
-    //   ** If there is a NOT NULL constraint, then the default value for the
-    //   ** column must not be NULL.
-    //   */
+    // Check that the new column is not specified as PRIMARY KEY or UNIQUE.
+    // If there is a NOT NULL constraint, then the default value for the
+    // column must not be NULL.
     if (((unsafe { (*pCol).colFlags }) as u32) as i32) & (1 as i32) != (0 as i32) {
         unsafe {
             sqlite3ErrorMsg(
@@ -2786,10 +2273,9 @@ extern "C-unwind" fn sqlite3AlterFinishAddColumn(mut pParse: *mut Parse, mut pCo
         return;
     }
     if (((unsafe { (*pCol).colFlags }) as u32) as i32) & (96 as i32) == (0 as i32) {
-        // /* If the default value for the new column was specified with a
-        //     ** literal NULL, then set pDflt to 0. This simplifies checking
-        //     ** for an SQL NULL default below.
-        //     */
+        // If the default value for the new column was specified with a
+        // literal NULL, then set pDflt to 0. This simplifies checking
+        // for an SQL NULL default below.
         0 as i32;
         if pDflt != std::ptr::null_mut::<Expr>()
             && (((unsafe { (*unsafe { (*pDflt).pLeft }).op }) as u32) as i32) == (122 as i32)
@@ -2820,9 +2306,8 @@ extern "C-unwind" fn sqlite3AlterFinishAddColumn(mut pParse: *mut Parse, mut pCo
                     as *const i8,
             );
         }
-        // /* Ensure the default expression is something that sqlite3ValueFromExpr()
-        //     ** can handle (i.e. not CURRENT_TIME etc.)
-        //     */
+        // Ensure the default expression is something that sqlite3ValueFromExpr()
+        // can handle (i.e. not CURRENT_TIME etc.)
         if pDflt != std::ptr::null_mut::<Expr>() {
             let mut pVal: *mut sqlite3_value = std::ptr::null_mut::<sqlite3_value>();
             let mut rc: i32 = 0 as i32;
@@ -2861,7 +2346,7 @@ extern "C-unwind" fn sqlite3AlterFinishAddColumn(mut pParse: *mut Parse, mut pCo
             );
         }
     }
-    // /* Modify the CREATE TABLE statement. */
+    // Modify the CREATE TABLE statement.
     zCol = unsafe {
         sqlite3DbStrNDup(
             db,
@@ -2891,8 +2376,8 @@ extern "C-unwind" fn sqlite3AlterFinishAddColumn(mut pParse: *mut Parse, mut pCo
                 *__v1359 = (0 as i32) as i8;
             }
         }
-        // /* substr() operations on characters, but addColOffset is in bytes. So we
-        //     ** have to use printf() to translate between these units: */
+        // substr() operations on characters, but addColOffset is in bytes. So we
+        // have to use printf() to translate between these units:
         0 as i32;
         0 as i32;
         unsafe {
@@ -2902,10 +2387,9 @@ extern "C-unwind" fn sqlite3AlterFinishAddColumn(mut pParse: *mut Parse, mut pCo
     }
     v = unsafe { sqlite3GetVdbe(pParse) };
     if v != std::ptr::null_mut::<Vdbe>() {
-        // /* Make sure the schema version is at least 3.  But do not upgrade
-        //     ** from less than 3 to 4, as that will corrupt any preexisting DESC
-        //     ** index.
-        //     */
+        // Make sure the schema version is at least 3.  But do not upgrade
+        // from less than 3 to 4, as that will corrupt any preexisting DESC
+        // index.
         r1 = unsafe { sqlite3GetTempReg(pParse) };
         unsafe { sqlite3VdbeAddOp3(v, 101 as i32, iDb, r1, 2 as i32) };
         unsafe { sqlite3VdbeUsesBtree(v, iDb) };
@@ -2921,9 +2405,9 @@ extern "C-unwind" fn sqlite3AlterFinishAddColumn(mut pParse: *mut Parse, mut pCo
         {}
         unsafe { sqlite3VdbeAddOp3(v, 102 as i32, iDb, 2 as i32, 3 as i32) };
         unsafe { sqlite3ReleaseTempReg(pParse, r1) };
-        // /* Reload the table definition */
+        // Reload the table definition
         renameReloadSchema(pParse, iDb, ((3 as i32) as i16) as u16);
-        // /* Verify that constraints are still satisfied */
+        // Verify that constraints are still satisfied
         if (unsafe { (*pNew).pCheck }) != std::ptr::null_mut::<ExprList>()
             || ((unsafe { (*pCol).__slate_bits_0.__get_notNull() }) as i32) != (0 as i32)
                 && (((unsafe { (*pCol).colFlags }) as u32) as i32) & (96 as i32) != (0 as i32)
@@ -2936,21 +2420,19 @@ extern "C-unwind" fn sqlite3AlterFinishAddColumn(mut pParse: *mut Parse, mut pCo
     }
 }
 
-// /*
-// ** This function is called by the parser after the table-name in
-// ** an "ALTER TABLE <table-name> ADD" statement is parsed. Argument
-// ** pSrc is the full-name of the table being altered.
-// **
-// ** This routine makes a (partial) copy of the Table structure
-// ** for the table being altered and sets Parse.pNewTable to point
-// ** to it. Routines called by the parser as the column definition
-// ** is parsed (i.e. sqlite3AddColumn()) add the new Column data to
-// ** the copy. The copy of the Table structure is deleted by tokenize.c
-// ** after parsing is finished.
-// **
-// ** Routine sqlite3AlterFinishAddColumn() will be called to complete
-// ** coding the "ALTER TABLE ... ADD" statement.
-// */
+/// This function is called by the parser after the table-name in
+/// an "ALTER TABLE <table-name> ADD" statement is parsed. Argument
+/// pSrc is the full-name of the table being altered.
+///
+/// This routine makes a (partial) copy of the Table structure
+/// for the table being altered and sets Parse.pNewTable to point
+/// to it. Routines called by the parser as the column definition
+/// is parsed (i.e. sqlite3AddColumn()) add the new Column data to
+/// the copy. The copy of the Table structure is deleted by tokenize.c
+/// after parsing is finished.
+///
+/// Routine sqlite3AlterFinishAddColumn() will be called to complete
+/// coding the "ALTER TABLE ... ADD" statement.
 #[unsafe(no_mangle)]
 extern "C-unwind" fn sqlite3AlterBeginAddColumn(mut pParse: *mut Parse, mut pSrc: *mut SrcList) {
     let mut __slate_storage_1362: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
@@ -2982,7 +2464,7 @@ extern "C-unwind" fn sqlite3AlterBeginAddColumn(mut pParse: *mut Parse, mut pSrc
     unsafe {
         '__join_0: {
             std::ptr::write(__slate_slot_496, unsafe { (*pParse).db });
-            // /* Look up the table being altered. */
+            // Look up the table being altered.
             0 as i32;
             0 as i32;
             if (unsafe { (*(*__slate_slot_496)).mallocFailed }) != (0 as u8) {
@@ -3005,7 +2487,7 @@ extern "C-unwind" fn sqlite3AlterBeginAddColumn(mut pParse: *mut Parse, mut pSrc
                             )
                         };
                     } else {
-                        // /* Make sure this is not an attempt to ALTER a view. */
+                        // Make sure this is not an attempt to ALTER a view.
                         if (((unsafe { (*(*__slate_slot_492)).eTabType }) as u32) as i32)
                             == (2 as i32)
                         {
@@ -3027,13 +2509,12 @@ extern "C-unwind" fn sqlite3AlterBeginAddColumn(mut pParse: *mut Parse, mut pSrc
                                         (*(*__slate_slot_492)).pSchema
                                     })
                                 };
-                                // /* Put a copy of the Table struct in Parse.pNewTable for the
-                                //   ** sqlite3AddColumn() function and friends to modify.  But modify
-                                //   ** the name by adding an "sqlite_altertab_" prefix.  By adding this
-                                //   ** prefix, we insure that the name will not collide with an existing
-                                //   ** table because user table are not allowed to have the "sqlite_"
-                                //   ** prefix on their name.
-                                //   */
+                                // Put a copy of the Table struct in Parse.pNewTable for the
+                                // sqlite3AddColumn() function and friends to modify.  But modify
+                                // the name by adding an "sqlite_altertab_" prefix.  By adding this
+                                // prefix, we insure that the name will not collide with an existing
+                                // table because user table are not allowed to have the "sqlite_"
+                                // prefix on their name.
                                 *__slate_slot_491 =
                                     (unsafe { sqlite3DbMallocZero(*__slate_slot_496, 120 as u64) })
                                         as *mut Table;
@@ -3181,973 +2662,12 @@ extern "C-unwind" fn sqlite3AlterBeginAddColumn(mut pParse: *mut Parse, mut pSrc
     }
 }
 
-// /*
-// ** This function is called by the parser upon parsing an
-// **
-// **     ALTER TABLE pSrc DROP COLUMN pName
-// **
-// ** statement. Argument pSrc contains the possibly qualified name of the
-// ** table being edited, and token pName the name of the column to drop.
-// */
-#[unsafe(no_mangle)]
-extern "C-unwind" fn sqlite3AlterDropColumn(
-    mut pParse: *mut Parse,
-    mut pSrc: *mut SrcList,
-    mut pName: *const Token,
-) {
-    let mut __slate_storage_1386: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_1386: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_1386) as *mut i32;
-    let mut __slate_storage_1385: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_1385: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_1385) as *mut i32;
-    let mut __slate_storage_1384: std::mem::MaybeUninit<*mut Parse> =
-        std::mem::MaybeUninit::uninit();
-    let __slate_slot_1384: *mut *mut Parse =
-        std::ptr::addr_of_mut!(__slate_storage_1384) as *mut *mut Parse;
-    let mut __slate_storage_1381: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_1381: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_1381) as *mut i32;
-    let mut __slate_storage_1380: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_1380: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_1380) as *mut i32;
-    let mut __slate_storage_1383: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_1383: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_1383) as *mut i32;
-    let mut __slate_storage_1382: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_1382: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_1382) as *mut i32;
-    let mut __slate_storage_813: std::mem::MaybeUninit<i8> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_813: *mut i8 = std::ptr::addr_of_mut!(__slate_storage_813) as *mut i8;
-    let mut __slate_storage_812: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_812: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_812) as *mut i32;
-    let mut __slate_storage_811: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_811: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_811) as *mut i32;
-    let mut __slate_storage_810: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_810: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_810) as *mut i32;
-    let mut __slate_storage_1379: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_1379: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_1379) as *mut i32;
-    let mut __slate_storage_1378: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_1378: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_1378) as *mut i32;
-    let mut __slate_storage_1377: std::mem::MaybeUninit<*mut Parse> =
-        std::mem::MaybeUninit::uninit();
-    let __slate_slot_1377: *mut *mut Parse =
-        std::ptr::addr_of_mut!(__slate_storage_1377) as *mut *mut Parse;
-    let mut __slate_storage_1371: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_1371: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_1371) as *mut i32;
-    let mut __slate_storage_1370: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_1370: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_1370) as *mut i32;
-    let mut __slate_storage_1369: std::mem::MaybeUninit<*mut Parse> =
-        std::mem::MaybeUninit::uninit();
-    let __slate_slot_1369: *mut *mut Parse =
-        std::ptr::addr_of_mut!(__slate_storage_1369) as *mut *mut Parse;
-    let mut __slate_storage_1376: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_1376: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_1376) as *mut i32;
-    let mut __slate_storage_1375: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_1375: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_1375) as *mut i32;
-    let mut __slate_storage_1374: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_1374: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_1374) as *mut i32;
-    let mut __slate_storage_1373: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_1373: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_1373) as *mut i32;
-    let mut __slate_storage_1372: std::mem::MaybeUninit<*mut Parse> =
-        std::mem::MaybeUninit::uninit();
-    let __slate_slot_1372: *mut *mut Parse =
-        std::ptr::addr_of_mut!(__slate_storage_1372) as *mut *mut Parse;
-    let mut __slate_storage_1368: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_1368: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_1368) as *mut i32;
-    let mut __slate_storage_1367: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_1367: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_1367) as *mut i32;
-    let mut __slate_storage_1366: std::mem::MaybeUninit<*mut Parse> =
-        std::mem::MaybeUninit::uninit();
-    let __slate_slot_1366: *mut *mut Parse =
-        std::ptr::addr_of_mut!(__slate_storage_1366) as *mut *mut Parse;
-    let mut __slate_storage_1365: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_1365: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_1365) as *mut i32;
-    let mut __slate_storage_1364: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_1364: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_1364) as *mut i32;
-    let mut __slate_storage_1363: std::mem::MaybeUninit<*mut Parse> =
-        std::mem::MaybeUninit::uninit();
-    let __slate_slot_1363: *mut *mut Parse =
-        std::ptr::addr_of_mut!(__slate_storage_1363) as *mut *mut Parse;
-    let mut __slate_storage_809: std::mem::MaybeUninit<*mut Vdbe> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_809: *mut *mut Vdbe =
-        std::ptr::addr_of_mut!(__slate_storage_809) as *mut *mut Vdbe;
-    let mut __slate_storage_808: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_808: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_808) as *mut i32;
-    let mut __slate_storage_807: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_807: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_807) as *mut i32;
-    let mut __slate_storage_806: std::mem::MaybeUninit<*mut Index> =
-        std::mem::MaybeUninit::uninit();
-    let __slate_slot_806: *mut *mut Index =
-        std::ptr::addr_of_mut!(__slate_storage_806) as *mut *mut Index;
-    let mut __slate_storage_805: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_805: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_805) as *mut i32;
-    let mut __slate_storage_804: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_804: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_804) as *mut i32;
-    let mut __slate_storage_803: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_803: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_803) as *mut i32;
-    let mut __slate_storage_802: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_802: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_802) as *mut i32;
-    let mut __slate_storage_801: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_801: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_801) as *mut i32;
-    let mut __slate_storage_800: std::mem::MaybeUninit<*mut i8> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_800: *mut *mut i8 =
-        std::ptr::addr_of_mut!(__slate_storage_800) as *mut *mut i8;
-    let mut __slate_storage_799: std::mem::MaybeUninit<*const i8> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_799: *mut *const i8 =
-        std::ptr::addr_of_mut!(__slate_storage_799) as *mut *const i8;
-    let mut __slate_storage_798: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
-    let __slate_slot_798: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_798) as *mut i32;
-    let mut __slate_storage_797: std::mem::MaybeUninit<*mut Table> =
-        std::mem::MaybeUninit::uninit();
-    let __slate_slot_797: *mut *mut Table =
-        std::ptr::addr_of_mut!(__slate_storage_797) as *mut *mut Table;
-    let mut __slate_storage_796: std::mem::MaybeUninit<*mut sqlite3> =
-        std::mem::MaybeUninit::uninit();
-    let __slate_slot_796: *mut *mut sqlite3 =
-        std::ptr::addr_of_mut!(__slate_storage_796) as *mut *mut sqlite3;
-    unsafe {
-        '__join_0: {
-            // /* Database handle */
-            std::ptr::write(__slate_slot_796, unsafe { (*pParse).db });
-            // /* Table to modify */
-            // /* Index of db containing pTab in aDb[] */
-            // /* Database containing pTab ("main" etc.) */
-            // /* Name of column to drop */
-            std::ptr::write(__slate_slot_800, std::ptr::null_mut::<i8>());
-            // /* Index of column zCol in pTab->aCol[] */
-            // /* Look up the table being altered. */
-            0 as i32;
-            0 as i32;
-            if (unsafe { (*(*__slate_slot_796)).mallocFailed }) != (0 as u8) {
-            } else {
-                *__slate_slot_797 = unsafe {
-                    sqlite3LocateTableItem(pParse, (0 as i32) as u32, unsafe {
-                        unsafe { std::ptr::addr_of_mut!((*pSrc).a) as *mut SrcItem }
-                            .offset((0 as i32) as isize)
-                    })
-                };
-                if !(*__slate_slot_797 != std::ptr::null_mut::<Table>()) {
-                } else {
-                    // /* Make sure this is not an attempt to ALTER a view, virtual table or
-                    //   ** system table. */
-                    if (0 as i32) != isAlterableTable(pParse, *__slate_slot_797) {
-                    } else {
-                        if (0 as i32) != isRealTable(pParse, *__slate_slot_797, 1 as i32) {
-                        } else {
-                            // /* Find the index of the column being dropped. */
-                            *__slate_slot_800 =
-                                unsafe { sqlite3NameFromToken(*__slate_slot_796, pName) };
-                            if *__slate_slot_800 == std::ptr::null_mut::<i8>() {
-                                0 as i32;
-                            } else {
-                                *__slate_slot_801 = unsafe {
-                                    sqlite3ColumnIndex(
-                                        *__slate_slot_797,
-                                        *__slate_slot_800 as *const i8,
-                                    )
-                                };
-                                if *__slate_slot_801 < (0 as i32) {
-                                    unsafe {
-                                        sqlite3ErrorMsg(
-                                            pParse,
-                                            (b"no such column: \"%T\"\0".as_ptr() as *mut i8)
-                                                as *const i8,
-                                            pName,
-                                        )
-                                    };
-                                } else {
-                                    // /* Do not allow the user to drop a PRIMARY KEY column or a column
-                                    //   ** constrained by a UNIQUE constraint.  */
-                                    if (((unsafe {
-                                        (*unsafe {
-                                            unsafe { (*(*__slate_slot_797)).aCol }
-                                                .offset(*__slate_slot_801 as isize)
-                                        })
-                                        .colFlags
-                                    }) as u32) as i32)
-                                        & ((1 as i32) | (8 as i32))
-                                        != (0 as i32)
-                                    {
-                                        unsafe {
-                                            sqlite3ErrorMsg(
-                                                pParse,
-                                                (b"cannot drop %s column: \"%s\"\0".as_ptr()
-                                                    as *mut i8)
-                                                    as *const i8,
-                                                if (((unsafe {
-                                                    (*unsafe {
-                                                        unsafe { (*(*__slate_slot_797)).aCol }
-                                                            .offset(*__slate_slot_801 as isize)
-                                                    })
-                                                    .colFlags
-                                                })
-                                                    as u32)
-                                                    as i32)
-                                                    & (1 as i32)
-                                                    != (0 as i32)
-                                                {
-                                                    b"PRIMARY KEY\0".as_ptr() as *mut i8
-                                                } else {
-                                                    b"UNIQUE\0".as_ptr() as *mut i8
-                                                },
-                                                *__slate_slot_800,
-                                            )
-                                        };
-                                    } else {
-                                        // /* Do not allow the number of columns to go to zero */
-                                        if ((unsafe { (*(*__slate_slot_797)).nCol }) as i32)
-                                            <= (1 as i32)
-                                        {
-                                            unsafe {
-                                                sqlite3ErrorMsg(pParse, (b"cannot drop column \"%s\": no other columns exist\0".as_ptr() as *mut i8) as *const i8, *__slate_slot_800)
-                                            };
-                                        } else {
-                                            // /* Edit the sqlite_schema table */
-                                            *__slate_slot_798 = unsafe {
-                                                sqlite3SchemaToIndex(*__slate_slot_796, unsafe {
-                                                    (*(*__slate_slot_797)).pSchema
-                                                })
-                                            };
-                                            0 as i32;
-                                            *__slate_slot_799 = (unsafe {
-                                                (*unsafe {
-                                                    unsafe { (*(*__slate_slot_796)).aDb }
-                                                        .offset(*__slate_slot_798 as isize)
-                                                })
-                                                .zDbSName
-                                            })
-                                                as *const i8;
-                                            // /* Invoke the authorization callback. */
-                                            if (unsafe {
-                                                sqlite3AuthCheck(
-                                                    pParse,
-                                                    26 as i32,
-                                                    *__slate_slot_799,
-                                                    (unsafe { (*(*__slate_slot_797)).zName })
-                                                        as *const i8,
-                                                    *__slate_slot_800 as *const i8,
-                                                )
-                                            }) != (0 as i32)
-                                            {
-                                            } else {
-                                                renameTestSchema(
-                                                    pParse,
-                                                    *__slate_slot_799,
-                                                    (*__slate_slot_798 == (1 as i32)) as i32,
-                                                    (b"\0".as_ptr() as *mut i8) as *const i8,
-                                                    0 as i32,
-                                                );
-                                                renameFixQuotes(
-                                                    pParse,
-                                                    *__slate_slot_799,
-                                                    (*__slate_slot_798 == (1 as i32)) as i32,
-                                                );
-                                                unsafe {
-                                                    sqlite3NestedParse(pParse, (b"UPDATE \"%w\".sqlite_master SET sql = sqlite_drop_column(%d, sql, %d) WHERE (type=='table' AND tbl_name=%Q COLLATE nocase)\0".as_ptr() as *mut i8) as *const i8, *__slate_slot_799, *__slate_slot_798, *__slate_slot_801, unsafe { (*(*__slate_slot_797)).zName })
-                                                };
-                                                // /* Drop and reload the database schema. */
-                                                renameReloadSchema(
-                                                    pParse,
-                                                    *__slate_slot_798,
-                                                    ((2 as i32) as i16) as u16,
-                                                );
-                                                renameTestSchema(
-                                                    pParse,
-                                                    *__slate_slot_799,
-                                                    (*__slate_slot_798 == (1 as i32)) as i32,
-                                                    (b"after drop column\0".as_ptr() as *mut i8)
-                                                        as *const i8,
-                                                    1 as i32,
-                                                );
-                                                // /* Edit rows of table on disk */
-                                                if (unsafe { (*pParse).nErr }) == (0 as i32)
-                                                    && (((unsafe {
-                                                        (*unsafe {
-                                                            unsafe { (*(*__slate_slot_797)).aCol }
-                                                                .offset(*__slate_slot_801 as isize)
-                                                        })
-                                                        .colFlags
-                                                    })
-                                                        as u32)
-                                                        as i32)
-                                                        & (32 as i32)
-                                                        == (0 as i32)
-                                                {
-                                                    std::ptr::write(
-                                                        __slate_slot_806,
-                                                        std::ptr::null_mut::<Index>(),
-                                                    );
-                                                    // /* Number of non-virtual columns after drop */
-                                                    std::ptr::write(__slate_slot_807, 0 as i32);
-                                                    std::ptr::write(__slate_slot_809, unsafe {
-                                                        sqlite3GetVdbe(pParse)
-                                                    });
-                                                    std::ptr::write(__slate_slot_1363, pParse);
-                                                    std::ptr::write(__slate_slot_1364, unsafe {
-                                                        (*(*__slate_slot_1363)).nTab
-                                                    });
-                                                    std::ptr::write(
-                                                        __slate_slot_1365,
-                                                        *__slate_slot_1364 + (1 as i32),
-                                                    );
-                                                    unsafe {
-                                                        (*(*__slate_slot_1363)).nTab =
-                                                            *__slate_slot_1365;
-                                                    }
-                                                    *__slate_slot_808 = *__slate_slot_1364;
-                                                    unsafe {
-                                                        sqlite3OpenTable(
-                                                            pParse,
-                                                            *__slate_slot_808,
-                                                            *__slate_slot_798,
-                                                            *__slate_slot_797,
-                                                            116 as i32,
-                                                        )
-                                                    };
-                                                    *__slate_slot_803 = unsafe {
-                                                        sqlite3VdbeAddOp1(
-                                                            *__slate_slot_809,
-                                                            36 as i32,
-                                                            *__slate_slot_808,
-                                                        )
-                                                    };
-                                                    {}
-                                                    std::ptr::write(__slate_slot_1366, pParse);
-                                                    std::ptr::write(__slate_slot_1367, unsafe {
-                                                        (*(*__slate_slot_1366)).nMem
-                                                    });
-                                                    std::ptr::write(
-                                                        __slate_slot_1368,
-                                                        *__slate_slot_1367 + (1 as i32),
-                                                    );
-                                                    unsafe {
-                                                        (*(*__slate_slot_1366)).nMem =
-                                                            *__slate_slot_1368;
-                                                    }
-                                                    *__slate_slot_804 = *__slate_slot_1368;
-                                                    if (unsafe { (*(*__slate_slot_797)).tabFlags })
-                                                        & ((128 as i32) as u32)
-                                                        == ((0 as i32) as u32)
-                                                    {
-                                                        unsafe {
-                                                            sqlite3VdbeAddOp2(
-                                                                *__slate_slot_809,
-                                                                137 as i32,
-                                                                *__slate_slot_808,
-                                                                *__slate_slot_804,
-                                                            )
-                                                        };
-                                                        std::ptr::write(__slate_slot_1369, pParse);
-                                                        std::ptr::write(
-                                                            __slate_slot_1370,
-                                                            unsafe { (*(*__slate_slot_1369)).nMem },
-                                                        );
-                                                        std::ptr::write(
-                                                            __slate_slot_1371,
-                                                            *__slate_slot_1370
-                                                                + ((unsafe {
-                                                                    (*(*__slate_slot_797)).nCol
-                                                                })
-                                                                    as i32),
-                                                        );
-                                                        unsafe {
-                                                            (*(*__slate_slot_1369)).nMem =
-                                                                *__slate_slot_1371;
-                                                        }
-                                                    } else {
-                                                        *__slate_slot_806 = unsafe {
-                                                            sqlite3PrimaryKeyIndex(
-                                                                *__slate_slot_797,
-                                                            )
-                                                        };
-                                                        std::ptr::write(__slate_slot_1372, pParse);
-                                                        std::ptr::write(
-                                                            __slate_slot_1373,
-                                                            unsafe { (*(*__slate_slot_1372)).nMem },
-                                                        );
-                                                        std::ptr::write(
-                                                            __slate_slot_1374,
-                                                            *__slate_slot_1373
-                                                                + (((unsafe {
-                                                                    (*(*__slate_slot_806)).nColumn
-                                                                })
-                                                                    as u32)
-                                                                    as i32),
-                                                        );
-                                                        unsafe {
-                                                            (*(*__slate_slot_1372)).nMem =
-                                                                *__slate_slot_1374;
-                                                        }
-                                                        *__slate_slot_802 = 0 as i32;
-                                                        loop {
-                                                            if *__slate_slot_802
-                                                                < (((unsafe {
-                                                                    (*(*__slate_slot_806)).nKeyCol
-                                                                })
-                                                                    as u32)
-                                                                    as i32)
-                                                            {
-                                                                unsafe {
-                                                                    sqlite3VdbeAddOp3(
-                                                                        *__slate_slot_809,
-                                                                        96 as i32,
-                                                                        *__slate_slot_808,
-                                                                        *__slate_slot_802,
-                                                                        *__slate_slot_804
-                                                                            + *__slate_slot_802
-                                                                            + (1 as i32),
-                                                                    )
-                                                                };
-                                                                std::ptr::write(
-                                                                    __slate_slot_1375,
-                                                                    *__slate_slot_802,
-                                                                );
-                                                                std::ptr::write(
-                                                                    __slate_slot_1376,
-                                                                    *__slate_slot_1375 + (1 as i32),
-                                                                );
-                                                                *__slate_slot_802 =
-                                                                    *__slate_slot_1376;
-                                                            } else {
-                                                                break;
-                                                            }
-                                                        }
-                                                        *__slate_slot_807 = ((unsafe {
-                                                            (*(*__slate_slot_806)).nKeyCol
-                                                        })
-                                                            as u32)
-                                                            as i32;
-                                                    }
-                                                    std::ptr::write(__slate_slot_1377, pParse);
-                                                    std::ptr::write(__slate_slot_1378, unsafe {
-                                                        (*(*__slate_slot_1377)).nMem
-                                                    });
-                                                    std::ptr::write(
-                                                        __slate_slot_1379,
-                                                        *__slate_slot_1378 + (1 as i32),
-                                                    );
-                                                    unsafe {
-                                                        (*(*__slate_slot_1377)).nMem =
-                                                            *__slate_slot_1379;
-                                                    }
-                                                    *__slate_slot_805 = *__slate_slot_1379;
-                                                    *__slate_slot_802 = 0 as i32;
-                                                    loop {
-                                                        if *__slate_slot_802
-                                                            < ((unsafe {
-                                                                (*(*__slate_slot_797)).nCol
-                                                            })
-                                                                as i32)
-                                                        {
-                                                            '__join_8: {
-                                                                if *__slate_slot_802
-                                                                    != *__slate_slot_801
-                                                                    && (((unsafe {
-                                                                        (*unsafe { unsafe { (*(*__slate_slot_797)).aCol }.offset(*__slate_slot_802 as isize) }).colFlags
-                                                                    })
-                                                                        as u32)
-                                                                        as i32)
-                                                                        & (32 as i32)
-                                                                        == (0 as i32)
-                                                                {
-                                                                    if *__slate_slot_806
-                                                                        != std::ptr::null_mut::<Index>(
-                                                                        )
-                                                                    {
-                                                                        std::ptr::write(
-                                                                            __slate_slot_811,
-                                                                            unsafe {
-                                                                                sqlite3TableColumnToIndex(*__slate_slot_806, *__slate_slot_802)
-                                                                            },
-                                                                        );
-                                                                        std::ptr::write(
-                                                                            __slate_slot_812,
-                                                                            unsafe {
-                                                                                sqlite3TableColumnToIndex(*__slate_slot_806, *__slate_slot_801)
-                                                                            },
-                                                                        );
-                                                                        if *__slate_slot_811
-                                                                            < (((unsafe {
-                                                                                (*(*__slate_slot_806)).nKeyCol
-                                                                            })
-                                                                                as u32)
-                                                                                as i32)
-                                                                        {
-                                                                            break '__join_8;
-                                                                        } else {
-                                                                            *__slate_slot_810 = *__slate_slot_804 + (1 as i32) + *__slate_slot_811 - ((*__slate_slot_811 > *__slate_slot_812) as i32);
-                                                                        }
-                                                                    } else {
-                                                                        *__slate_slot_810 =
-                                                                            *__slate_slot_804
-                                                                                + (1 as i32)
-                                                                                + *__slate_slot_807;
-                                                                    }
-                                                                    if *__slate_slot_802
-                                                                        == ((unsafe {
-                                                                            (*(*__slate_slot_797))
-                                                                                .iPKey
-                                                                        })
-                                                                            as i32)
-                                                                    {
-                                                                        unsafe {
-                                                                            sqlite3VdbeAddOp2(
-                                                                                *__slate_slot_809,
-                                                                                77 as i32,
-                                                                                0 as i32,
-                                                                                *__slate_slot_810,
-                                                                            )
-                                                                        };
-                                                                    } else {
-                                                                        std::ptr::write(
-                                                                            __slate_slot_813,
-                                                                            unsafe {
-                                                                                (*unsafe { unsafe { (*(*__slate_slot_797)).aCol }.offset(*__slate_slot_802 as isize) }).affinity
-                                                                            },
-                                                                        );
-                                                                        if (*__slate_slot_813
-                                                                            as i32)
-                                                                            == (69 as i32)
-                                                                        {
-                                                                            unsafe {
-                                                                                (*unsafe { unsafe { (*(*__slate_slot_797)).aCol }.offset(*__slate_slot_802 as isize) }).affinity = (67 as i32) as i8;
-                                                                            }
-                                                                        }
-                                                                        unsafe {
-                                                                            sqlite3ExprCodeGetColumnOfTable(*__slate_slot_809, *__slate_slot_797, *__slate_slot_808, *__slate_slot_802, *__slate_slot_810)
-                                                                        };
-                                                                        unsafe {
-                                                                            (*unsafe { unsafe { (*(*__slate_slot_797)).aCol }.offset(*__slate_slot_802 as isize) }).affinity = *__slate_slot_813;
-                                                                        }
-                                                                    }
-                                                                    std::ptr::write(
-                                                                        __slate_slot_1382,
-                                                                        *__slate_slot_807,
-                                                                    );
-                                                                    std::ptr::write(
-                                                                        __slate_slot_1383,
-                                                                        *__slate_slot_1382
-                                                                            + (1 as i32),
-                                                                    );
-                                                                    *__slate_slot_807 =
-                                                                        *__slate_slot_1383;
-                                                                }
-                                                            }
-                                                            std::ptr::write(
-                                                                __slate_slot_1380,
-                                                                *__slate_slot_802,
-                                                            );
-                                                            std::ptr::write(
-                                                                __slate_slot_1381,
-                                                                *__slate_slot_1380 + (1 as i32),
-                                                            );
-                                                            *__slate_slot_802 = *__slate_slot_1381;
-                                                        } else {
-                                                            break;
-                                                        }
-                                                    }
-                                                    if *__slate_slot_807 == (0 as i32) {
-                                                        // /* dbsqlfuzz 5f09e7bcc78b4954d06bf9f2400d7715f48d1fef */
-                                                        std::ptr::write(__slate_slot_1384, pParse);
-                                                        std::ptr::write(
-                                                            __slate_slot_1385,
-                                                            unsafe { (*(*__slate_slot_1384)).nMem },
-                                                        );
-                                                        std::ptr::write(
-                                                            __slate_slot_1386,
-                                                            *__slate_slot_1385 + (1 as i32),
-                                                        );
-                                                        unsafe {
-                                                            (*(*__slate_slot_1384)).nMem =
-                                                                *__slate_slot_1386;
-                                                        }
-                                                        unsafe {
-                                                            sqlite3VdbeAddOp2(
-                                                                *__slate_slot_809,
-                                                                77 as i32,
-                                                                0 as i32,
-                                                                *__slate_slot_804 + (1 as i32),
-                                                            )
-                                                        };
-                                                        *__slate_slot_807 = 1 as i32;
-                                                    }
-                                                    unsafe {
-                                                        sqlite3VdbeAddOp3(
-                                                            *__slate_slot_809,
-                                                            99 as i32,
-                                                            *__slate_slot_804 + (1 as i32),
-                                                            *__slate_slot_807,
-                                                            *__slate_slot_805,
-                                                        )
-                                                    };
-                                                    if *__slate_slot_806
-                                                        != std::ptr::null_mut::<Index>()
-                                                    {
-                                                        unsafe {
-                                                            sqlite3VdbeAddOp4Int(
-                                                                *__slate_slot_809,
-                                                                140 as i32,
-                                                                *__slate_slot_808,
-                                                                *__slate_slot_805,
-                                                                *__slate_slot_804 + (1 as i32),
-                                                                ((unsafe {
-                                                                    (*(*__slate_slot_806)).nKeyCol
-                                                                })
-                                                                    as u32)
-                                                                    as i32,
-                                                            )
-                                                        };
-                                                    } else {
-                                                        unsafe {
-                                                            sqlite3VdbeAddOp3(
-                                                                *__slate_slot_809,
-                                                                130 as i32,
-                                                                *__slate_slot_808,
-                                                                *__slate_slot_805,
-                                                                *__slate_slot_804,
-                                                            )
-                                                        };
-                                                    }
-                                                    unsafe {
-                                                        sqlite3VdbeChangeP5(
-                                                            *__slate_slot_809,
-                                                            ((2 as i32) as i16) as u16,
-                                                        )
-                                                    };
-                                                    unsafe {
-                                                        sqlite3VdbeAddOp2(
-                                                            *__slate_slot_809,
-                                                            40 as i32,
-                                                            *__slate_slot_808,
-                                                            *__slate_slot_803 + (1 as i32),
-                                                        )
-                                                    };
-                                                    {}
-                                                    unsafe {
-                                                        sqlite3VdbeJumpHere(
-                                                            *__slate_slot_809,
-                                                            *__slate_slot_803,
-                                                        )
-                                                    };
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        unsafe { sqlite3DbFree(*__slate_slot_796, *__slate_slot_800 as *mut ()) };
-        unsafe { sqlite3SrcListDelete(*__slate_slot_796, pSrc) };
-    }
-}
-
-// /*
-// ** Remember that the parser tree element pPtr was created using
-// ** the token pToken.
-// **
-// ** In other words, construct a new RenameToken object and add it
-// ** to the list of RenameToken objects currently being built up
-// ** in pParse->pRename.
-// **
-// ** The pPtr argument is returned so that this routine can be used
-// ** with tail recursion in tokenExpr() routine, for a small performance
-// ** improvement.
-// */
-#[unsafe(no_mangle)]
-extern "C-unwind" fn sqlite3RenameTokenMap(
-    mut pParse: *mut Parse,
-    mut pPtr: *const (),
-    mut pToken: *const Token,
-) -> *const () {
-    let mut pNew: *mut RenameToken = unsafe { std::mem::zeroed() };
-    0 as i32;
-    {}
-    if (((unsafe { (*pParse).eParseMode }) as u32) as i32) != (3 as i32) {
-        pNew = (unsafe { sqlite3DbMallocZero(unsafe { (*pParse).db }, 32 as u64) })
-            as *mut RenameToken;
-        if pNew != std::ptr::null_mut::<RenameToken>() {
-            unsafe {
-                (*pNew).p = pPtr;
-            }
-            unsafe {
-                (*pNew).t = unsafe { *pToken };
-            }
-            unsafe {
-                (*pNew).pNext = unsafe { (*pParse).pRename };
-            }
-            unsafe {
-                (*pParse).pRename = pNew;
-            }
-        }
-    }
-    return pPtr;
-}
-
-// /*
-// ** It is assumed that there is already a RenameToken object associated
-// ** with parse tree element pFrom. This function remaps the associated token
-// ** to parse tree element pTo.
-// */
-#[unsafe(no_mangle)]
-extern "C-unwind" fn sqlite3RenameTokenRemap(
-    mut pParse: *mut Parse,
-    mut pTo: *const (),
-    mut pFrom: *const (),
-) {
-    let mut p: *mut RenameToken = unsafe { std::mem::zeroed() };
-    {}
-    p = unsafe { (*pParse).pRename };
-    '__slate_break_1264: while p != std::ptr::null_mut::<RenameToken>() {
-        if (unsafe { (*p).p }) == pFrom {
-            unsafe {
-                (*p).p = pTo;
-            }
-            break '__slate_break_1264;
-        }
-        p = unsafe { (*p).pNext };
-    }
-}
-
-// /*
-// ** Remove all nodes that are part of expression pExpr from the rename list.
-// */
-#[unsafe(no_mangle)]
-extern "C-unwind" fn sqlite3RenameExprUnmap(mut pParse: *mut Parse, mut pExpr: *mut Expr) {
-    let mut eMode: u8 = unsafe { (*pParse).eParseMode };
-    let mut sWalker: Walker = unsafe { std::mem::zeroed() };
-    unsafe {
-        memset(
-            std::ptr::addr_of_mut!(sWalker) as *mut (),
-            0 as i32,
-            48 as u64,
-        )
-    };
-    sWalker.pParse = pParse;
-    sWalker.xExprCallback = Some(renameUnmapExprCb);
-    sWalker.xSelectCallback = Some(renameUnmapSelectCb);
-    unsafe {
-        (*pParse).eParseMode = ((3 as i32) as i8) as u8;
-    }
-    unsafe { sqlite3WalkExpr(std::ptr::addr_of_mut!(sWalker), pExpr) };
-    unsafe {
-        (*pParse).eParseMode = eMode;
-    }
-}
-
-// /*
-// ** Remove all nodes that are part of expression-list pEList from the
-// ** rename list.
-// */
-#[unsafe(no_mangle)]
-extern "C-unwind" fn sqlite3RenameExprlistUnmap(mut pParse: *mut Parse, mut pEList: *mut ExprList) {
-    if pEList != std::ptr::null_mut::<ExprList>() {
-        let mut i: i32 = 0 as i32;
-        let mut sWalker: Walker = unsafe { std::mem::zeroed() };
-        unsafe {
-            memset(
-                std::ptr::addr_of_mut!(sWalker) as *mut (),
-                0 as i32,
-                48 as u64,
-            )
-        };
-        sWalker.pParse = pParse;
-        sWalker.xExprCallback = Some(renameUnmapExprCb);
-        unsafe { sqlite3WalkExprList(std::ptr::addr_of_mut!(sWalker), pEList) };
-        i = 0 as i32;
-        '__slate_break_1269: loop {
-            if !(i < unsafe { (*pEList).nExpr }) {
-                break;
-            }
-            if ((unsafe {
-                (*unsafe {
-                    unsafe { std::ptr::addr_of_mut!((*pEList).a) as *mut ExprList_item }
-                        .offset(i as isize)
-                })
-                .fg
-                .__slate_bits_0
-                .__get_eEName()
-            }) as i32)
-                == (0 as i32)
-            {
-                sqlite3RenameTokenRemap(
-                    pParse,
-                    std::ptr::null::<()>(),
-                    ((unsafe {
-                        (*unsafe {
-                            unsafe { std::ptr::addr_of_mut!((*pEList).a) as *mut ExprList_item }
-                                .offset(i as isize)
-                        })
-                        .zEName
-                    }) as *mut ()) as *const (),
-                );
-            }
-            let __v1387: i32 = i;
-            let __v1388: i32 = __v1387 + (1 as i32);
-            i = __v1388;
-        }
-    }
-}
-
-// /*
-// ** The code in this file only exists if we are not omitting the
-// ** ALTER TABLE logic from the build.
-// */
-// /*
-// ** Parameter zName is the name of a table that is about to be altered
-// ** (either with ALTER TABLE ... RENAME TO or ALTER TABLE ... ADD COLUMN).
-// ** If the table is a system table, this function leaves an error message
-// ** in pParse->zErr (system tables may not be altered) and returns non-zero.
-// **
-// ** Or, if zName is not a system table, zero is returned.
-// */
-fn isAlterableTable(mut pParse: *mut Parse, mut pTab: *mut Table) -> i32 {
-    let __v1389: bool;
-    if (0 as i32)
-        == unsafe {
-            sqlite3_strnicmp(
-                (unsafe { (*pTab).zName }) as *const i8,
-                (b"sqlite_\0".as_ptr() as *mut i8) as *const i8,
-                7 as i32,
-            )
-        }
-        || (unsafe { (*pTab).tabFlags }) & ((32768 as i32) as u32) != ((0 as i32) as u32)
-    {
-        __v1389 = true as bool;
-    } else {
-        let __v1390: bool;
-        if (unsafe { (*pTab).tabFlags }) & ((4096 as i32) as u32) != ((0 as i32) as u32) {
-            __v1390 =
-                (unsafe { sqlite3ReadOnlyShadowTables(unsafe { (*pParse).db }) }) != (0 as i32);
-        } else {
-            __v1390 = false as bool;
-        }
-        __v1389 = __v1390;
-    }
-    if __v1389 {
-        unsafe {
-            sqlite3ErrorMsg(
-                pParse,
-                (b"table %s may not be altered\0".as_ptr() as *mut i8) as *const i8,
-                unsafe { (*pTab).zName },
-            )
-        };
-        return 1 as i32;
-    }
-    return 0 as i32;
-}
-
-// /*
-// ** Generate code to verify that the schemas of database zDb and, if
-// ** bTemp is not true, database "temp", can still be parsed. This is
-// ** called at the end of the generation of an ALTER TABLE ... RENAME ...
-// ** statement to ensure that the operation has not rendered any schema
-// ** objects unusable.
-// */
-fn renameTestSchema(
-    mut pParse: *mut Parse,
-    mut zDb: *const i8,
-    mut bTemp: i32,
-    mut zWhen: *const i8,
-    mut bNoDQS: i32,
-) {
-    unsafe {
-        (*pParse)
-            .__slate_bits_0
-            .__set_colNamesSet((1 as i32) as u32);
-    }
-    unsafe {
-        sqlite3NestedParse(pParse, (b"SELECT 1 FROM \"%w\".sqlite_master WHERE name NOT LIKE 'sqliteX_%%' ESCAPE 'X' AND sql NOT LIKE 'create virtual%%' AND sqlite_rename_test(%Q, sql, type, name, %d, %Q, %d)=NULL \0".as_ptr() as *mut i8) as *const i8, zDb, zDb, bTemp, zWhen, bNoDQS)
-    };
-    if bTemp == (0 as i32) {
-        unsafe {
-            sqlite3NestedParse(pParse, (b"SELECT 1 FROM temp.sqlite_master WHERE name NOT LIKE 'sqliteX_%%' ESCAPE 'X' AND sql NOT LIKE 'create virtual%%' AND sqlite_rename_test(%Q, sql, type, name, 1, %Q, %d)=NULL \0".as_ptr() as *mut i8) as *const i8, zDb, zWhen, bNoDQS)
-        };
-    }
-}
-
-// /* Parse context */
-// /* Name of db to verify schema of */
-// /* True if this is the temp db */
-// /* "when" part of error message */
-// /* Do not allow DQS in the schema */
-// /*
-// ** Generate VM code to replace any double-quoted strings (but not double-quoted
-// ** identifiers) within the "sql" column of the sqlite_schema table in
-// ** database zDb with their single-quoted equivalents. If argument bTemp is
-// ** not true, similarly update all SQL statements in the sqlite_schema table
-// ** of the temp db.
-// */
-fn renameFixQuotes(mut pParse: *mut Parse, mut zDb: *const i8, mut bTemp: i32) {
-    unsafe {
-        sqlite3NestedParse(pParse, (b"UPDATE \"%w\".sqlite_master SET sql = sqlite_rename_quotefix(%Q, sql)WHERE name NOT LIKE 'sqliteX_%%' ESCAPE 'X' AND sql NOT LIKE 'create virtual%%'\0".as_ptr() as *mut i8) as *const i8, zDb, zDb)
-    };
-    if bTemp == (0 as i32) {
-        unsafe {
-            sqlite3NestedParse(pParse, (b"UPDATE temp.sqlite_master SET sql = sqlite_rename_quotefix('temp', sql)WHERE name NOT LIKE 'sqliteX_%%' ESCAPE 'X' AND sql NOT LIKE 'create virtual%%'\0".as_ptr() as *mut i8) as *const i8)
-        };
-    }
-}
-
-// /*
-// ** Generate code to reload the schema for database iDb. And, if iDb!=1, for
-// ** the temp database as well.
-// */
-fn renameReloadSchema(mut pParse: *mut Parse, mut iDb: i32, mut p5: u16) {
-    let mut v: *mut Vdbe = unsafe { (*pParse).pVdbe };
-    if v != std::ptr::null_mut::<Vdbe>() {
-        unsafe { sqlite3ChangeCookie(pParse, iDb) };
-        unsafe {
-            sqlite3VdbeAddParseSchemaOp(
-                unsafe { (*pParse).pVdbe },
-                iDb,
-                std::ptr::null_mut::<i8>(),
-                p5,
-            )
-        };
-        if iDb != (1 as i32) {
-            unsafe {
-                sqlite3VdbeAddParseSchemaOp(
-                    unsafe { (*pParse).pVdbe },
-                    1 as i32,
-                    std::ptr::null_mut::<i8>(),
-                    p5,
-                )
-            };
-        }
-    }
-}
-
-// /* Parser context. */
-// /* The table to rename. */
-// /* The new table name. */
-// /*
-// ** Write code that will raise an error if the table described by
-// ** zDb and zTab is not empty.
-// */
-fn sqlite3ErrorIfNotEmpty(
-    mut pParse: *mut Parse,
-    mut zDb: *const i8,
-    mut zTab: *const i8,
-    mut zErr: *const i8,
-) {
-    unsafe {
-        sqlite3NestedParse(
-            pParse,
-            (b"SELECT raise(ABORT,%Q) FROM \"%w\".\"%w\"\0".as_ptr() as *mut i8) as *const i8,
-            zErr,
-            zDb,
-            zTab,
-        )
-    };
-}
-
-// /*
-// ** Parameter pTab is the subject of an ALTER TABLE ... RENAME COLUMN
-// ** command. This function checks if the table is a view or virtual
-// ** table (columns of views or virtual tables may not be renamed). If so,
-// ** it loads an error message into pParse and returns non-zero.
-// **
-// ** Or, if pTab is not a view or virtual table, zero is returned.
-// */
+/// Parameter pTab is the subject of an ALTER TABLE ... RENAME COLUMN
+/// command. This function checks if the table is a view or virtual
+/// table (columns of views or virtual tables may not be renamed). If so,
+/// it loads an error message into pParse and returns non-zero.
+///
+/// Or, if pTab is not a view or virtual table, zero is returned.
 fn isRealTable(mut pParse: *mut Parse, mut pTab: *mut Table, mut iOp: i32) -> i32 {
     let mut zType: *const i8 = std::ptr::null::<i8>();
     if (((unsafe { (*pTab).eTabType }) as u32) as i32) == (2 as i32) {
@@ -4179,9 +2699,304 @@ fn isRealTable(mut pParse: *mut Parse, mut pTab: *mut Table, mut iOp: i32) -> i3
     return 0 as i32;
 }
 
-// /*
-// ** Walker callback used by sqlite3RenameExprUnmap().
-// */
+/// Handles the following parser reduction:
+///
+///  cmd ::= ALTER TABLE pSrc RENAME COLUMN pOld TO pNew
+///
+/// # Arguments
+///
+/// * `pParse` - Parsing context
+/// * `pSrc` - Table being altered.  pSrc->nSrc==1
+/// * `pOld` - Name of column being changed
+/// * `pNew` - New column name
+#[unsafe(no_mangle)]
+extern "C-unwind" fn sqlite3AlterRenameColumn(
+    mut pParse: *mut Parse,
+    mut pSrc: *mut SrcList,
+    mut pOld: *mut Token,
+    mut pNew: *mut Token,
+) {
+    // True to quote the new name
+    let mut __slate_storage_516: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_516: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_516) as *mut i32; // Index of the schema
+    let mut __slate_storage_515: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_515: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_515) as *mut i32; // Name of schema containing the table
+    let mut __slate_storage_514: std::mem::MaybeUninit<*const i8> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_514: *mut *const i8 =
+        std::ptr::addr_of_mut!(__slate_storage_514) as *mut *const i8; // New column name
+    let mut __slate_storage_513: std::mem::MaybeUninit<*mut i8> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_513: *mut *mut i8 =
+        std::ptr::addr_of_mut!(__slate_storage_513) as *mut *mut i8; // Old column name
+    let mut __slate_storage_512: std::mem::MaybeUninit<*mut i8> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_512: *mut *mut i8 =
+        std::ptr::addr_of_mut!(__slate_storage_512) as *mut *mut i8; // Index of column being renamed
+    let mut __slate_storage_511: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_511: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_511) as *mut i32; // Table being updated
+    let mut __slate_storage_510: std::mem::MaybeUninit<*mut Table> =
+        std::mem::MaybeUninit::uninit();
+    let __slate_slot_510: *mut *mut Table =
+        std::ptr::addr_of_mut!(__slate_storage_510) as *mut *mut Table; // Database connection
+    let mut __slate_storage_509: std::mem::MaybeUninit<*mut sqlite3> =
+        std::mem::MaybeUninit::uninit();
+    let __slate_slot_509: *mut *mut sqlite3 =
+        std::ptr::addr_of_mut!(__slate_storage_509) as *mut *mut sqlite3;
+    unsafe {
+        '__join_0: {
+            std::ptr::write(__slate_slot_509, unsafe { (*pParse).db });
+            std::ptr::write(__slate_slot_512, std::ptr::null_mut::<i8>());
+            std::ptr::write(__slate_slot_513, std::ptr::null_mut::<i8>());
+            // Locate the table to be altered
+            *__slate_slot_510 = unsafe {
+                sqlite3LocateTableItem(pParse, (0 as i32) as u32, unsafe {
+                    unsafe { std::ptr::addr_of_mut!((*pSrc).a) as *mut SrcItem }
+                        .offset((0 as i32) as isize)
+                })
+            };
+            if !(*__slate_slot_510 != std::ptr::null_mut::<Table>()) {
+            } else {
+                // Cannot alter a system table
+                if (0 as i32) != isAlterableTable(pParse, *__slate_slot_510) {
+                } else {
+                    if (0 as i32) != isRealTable(pParse, *__slate_slot_510, 0 as i32) {
+                    } else {
+                        // Which schema holds the table to be altered
+                        *__slate_slot_515 = unsafe {
+                            sqlite3SchemaToIndex(*__slate_slot_509, unsafe {
+                                (*(*__slate_slot_510)).pSchema
+                            })
+                        };
+                        0 as i32;
+                        *__slate_slot_514 = (unsafe {
+                            (*unsafe {
+                                unsafe { (*(*__slate_slot_509)).aDb }
+                                    .offset(*__slate_slot_515 as isize)
+                            })
+                            .zDbSName
+                        }) as *const i8;
+                        // Invoke the authorization callback.
+                        if (unsafe {
+                            sqlite3AuthCheck(
+                                pParse,
+                                26 as i32,
+                                *__slate_slot_514,
+                                (unsafe { (*(*__slate_slot_510)).zName }) as *const i8,
+                                std::ptr::null::<i8>(),
+                            )
+                        }) != (0 as i32)
+                        {
+                        } else {
+                            // Make sure the old name really is a column name in the table to be
+                            // altered.  Set iCol to be the index of the column being renamed
+                            *__slate_slot_512 = unsafe {
+                                sqlite3NameFromToken(*__slate_slot_509, pOld as *const Token)
+                            };
+                            if !(*__slate_slot_512 != std::ptr::null_mut::<i8>()) {
+                            } else {
+                                *__slate_slot_511 = unsafe {
+                                    sqlite3ColumnIndex(
+                                        *__slate_slot_510,
+                                        *__slate_slot_512 as *const i8,
+                                    )
+                                };
+                                if *__slate_slot_511 < (0 as i32) {
+                                    unsafe {
+                                        sqlite3ErrorMsg(
+                                            pParse,
+                                            (b"no such column: \"%T\"\0".as_ptr() as *mut i8)
+                                                as *const i8,
+                                            pOld,
+                                        )
+                                    };
+                                } else {
+                                    // Ensure the schema contains no double-quoted strings
+                                    renameTestSchema(
+                                        pParse,
+                                        *__slate_slot_514,
+                                        (*__slate_slot_515 == (1 as i32)) as i32,
+                                        (b"\0".as_ptr() as *mut i8) as *const i8,
+                                        0 as i32,
+                                    );
+                                    renameFixQuotes(
+                                        pParse,
+                                        *__slate_slot_514,
+                                        (*__slate_slot_515 == (1 as i32)) as i32,
+                                    );
+                                    // Do the rename operation using a recursive UPDATE statement that
+                                    // uses the sqlite_rename_column() SQL function to compute the new
+                                    // CREATE statement text for the sqlite_schema table.
+                                    unsafe { sqlite3MayAbort(pParse) };
+                                    *__slate_slot_513 = unsafe {
+                                        sqlite3NameFromToken(
+                                            *__slate_slot_509,
+                                            pNew as *const Token,
+                                        )
+                                    };
+                                    if !(*__slate_slot_513 != std::ptr::null_mut::<i8>()) {
+                                    } else {
+                                        0 as i32;
+                                        *__slate_slot_516 = (((unsafe {
+                                            *unsafe {
+                                                unsafe {
+                                                    std::ptr::addr_of!(sqlite3CtypeMap) as *const u8
+                                                }
+                                                .offset(
+                                                    ((((unsafe {
+                                                        *unsafe {
+                                                            unsafe { (*pNew).z }
+                                                                .offset((0 as i32) as isize)
+                                                        }
+                                                    })
+                                                        as u8)
+                                                        as u32)
+                                                        as i32)
+                                                        as isize,
+                                                )
+                                            }
+                                        })
+                                            as u32)
+                                            as i32)
+                                            & (128 as i32);
+                                        unsafe {
+                                            sqlite3NestedParse(pParse, (b"UPDATE \"%w\".sqlite_master SET sql = sqlite_rename_column(sql, type, name, %Q, %Q, %d, %Q, %d, %d) WHERE name NOT LIKE 'sqliteX_%%' ESCAPE 'X'  AND (type != 'index' OR tbl_name = %Q)\0".as_ptr() as *mut i8) as *const i8, *__slate_slot_514, *__slate_slot_514, unsafe { (*(*__slate_slot_510)).zName }, *__slate_slot_511, *__slate_slot_513, *__slate_slot_516, (*__slate_slot_515 == (1 as i32)) as i32, unsafe { (*(*__slate_slot_510)).zName })
+                                        };
+                                        unsafe {
+                                            sqlite3NestedParse(pParse, (b"UPDATE temp.sqlite_master SET sql = sqlite_rename_column(sql, type, name, %Q, %Q, %d, %Q, %d, 1) WHERE type IN ('trigger', 'view')\0".as_ptr() as *mut i8) as *const i8, *__slate_slot_514, unsafe { (*(*__slate_slot_510)).zName }, *__slate_slot_511, *__slate_slot_513, *__slate_slot_516)
+                                        };
+                                        // Drop and reload the database schema.
+                                        renameReloadSchema(
+                                            pParse,
+                                            *__slate_slot_515,
+                                            ((1 as i32) as i16) as u16,
+                                        );
+                                        renameTestSchema(
+                                            pParse,
+                                            *__slate_slot_514,
+                                            (*__slate_slot_515 == (1 as i32)) as i32,
+                                            (b"after rename\0".as_ptr() as *mut i8) as *const i8,
+                                            1 as i32,
+                                        );
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        unsafe { sqlite3SrcListDelete(*__slate_slot_509, pSrc) };
+        unsafe { sqlite3DbFree(*__slate_slot_509, *__slate_slot_512 as *mut ()) };
+        unsafe { sqlite3DbFree(*__slate_slot_509, *__slate_slot_513 as *mut ()) };
+        return;
+    }
+}
+
+/// Each RenameToken object maps an element of the parse tree into
+/// the token that generated that element.  The parse tree element
+/// might be one of:
+///
+///     *  A pointer to an Expr that represents an ID
+///     *  The name of a table column in Column.zName
+///
+/// A list of RenameToken objects can be constructed during parsing.
+/// Each new object is created by sqlite3RenameTokenMap().
+/// As the parse tree is transformed, the sqlite3RenameTokenRemap()
+/// routine is used to keep the mapping current.
+///
+/// After the parse finishes, renameTokenFind() routine can be used
+/// to look up the actual token value that created some element in
+/// the parse tree.
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct RenameToken {
+    /// Parse tree element created by token t
+    p: *const (),
+    /// The token that created parse tree element p
+    t: Token,
+    /// Next is a list of all RenameToken objects
+    pNext: *mut RenameToken,
+}
+
+/// The context of an ALTER TABLE RENAME COLUMN operation that gets passed
+/// down into the Walker.
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct RenameCtx {
+    /// List of tokens to overwrite
+    pList: *mut RenameToken,
+    /// Number of tokens in pList
+    nList: i32,
+    /// Index of column being renamed
+    iCol: i32,
+    /// Table being ALTERed
+    pTab: *mut Table,
+    /// Old column name
+    zOld: *const i8,
+}
+
+/// Remember that the parser tree element pPtr was created using
+/// the token pToken.
+///
+/// In other words, construct a new RenameToken object and add it
+/// to the list of RenameToken objects currently being built up
+/// in pParse->pRename.
+///
+/// The pPtr argument is returned so that this routine can be used
+/// with tail recursion in tokenExpr() routine, for a small performance
+/// improvement.
+#[unsafe(no_mangle)]
+extern "C-unwind" fn sqlite3RenameTokenMap(
+    mut pParse: *mut Parse,
+    mut pPtr: *const (),
+    mut pToken: *const Token,
+) -> *const () {
+    let mut pNew: *mut RenameToken = unsafe { std::mem::zeroed() };
+    0 as i32;
+    {}
+    if (((unsafe { (*pParse).eParseMode }) as u32) as i32) != (3 as i32) {
+        pNew = (unsafe { sqlite3DbMallocZero(unsafe { (*pParse).db }, 32 as u64) })
+            as *mut RenameToken;
+        if pNew != std::ptr::null_mut::<RenameToken>() {
+            unsafe {
+                (*pNew).p = pPtr;
+            }
+            unsafe {
+                (*pNew).t = unsafe { *pToken };
+            }
+            unsafe {
+                (*pNew).pNext = unsafe { (*pParse).pRename };
+            }
+            unsafe {
+                (*pParse).pRename = pNew;
+            }
+        }
+    }
+    return pPtr;
+}
+
+/// It is assumed that there is already a RenameToken object associated
+/// with parse tree element pFrom. This function remaps the associated token
+/// to parse tree element pTo.
+#[unsafe(no_mangle)]
+extern "C-unwind" fn sqlite3RenameTokenRemap(
+    mut pParse: *mut Parse,
+    mut pTo: *const (),
+    mut pFrom: *const (),
+) {
+    let mut p: *mut RenameToken = unsafe { std::mem::zeroed() };
+    {}
+    p = unsafe { (*pParse).pRename };
+    '__slate_break_1264: while p != std::ptr::null_mut::<RenameToken>() {
+        if (unsafe { (*p).p }) == pFrom {
+            unsafe {
+                (*p).p = pTo;
+            }
+            break '__slate_break_1264;
+        }
+        p = unsafe { (*p).pNext };
+    }
+}
+
+/// Walker callback used by sqlite3RenameExprUnmap().
 #[unsafe(link_section = ".text.slate_distinct.alter.renameUnmapExprCb")]
 extern "C-unwind" fn renameUnmapExprCb(mut pWalker: *mut Walker, mut pExpr: *mut Expr) -> i32 {
     let mut pParse: *mut Parse = unsafe { (*pWalker).pParse };
@@ -4198,10 +3013,8 @@ extern "C-unwind" fn renameUnmapExprCb(mut pWalker: *mut Walker, mut pExpr: *mut
     return 0 as i32;
 }
 
-// /*
-// ** Iterate through the Select objects that are part of WITH clauses attached
-// ** to select statement pSelect.
-// */
+/// Iterate through the Select objects that are part of WITH clauses attached
+/// to select statement pSelect.
 fn renameWalkWith(mut pWalker: *mut Walker, mut pSelect: *mut Select) {
     let mut pWith: *mut With = unsafe { (*pSelect).pWith };
     if pWith != std::ptr::null_mut::<With>() {
@@ -4221,11 +3034,11 @@ fn renameWalkWith(mut pWalker: *mut Walker, mut pSelect: *mut Select) {
         }) & ((64 as i32) as u32)
             == ((0 as i32) as u32)
         {
-            // /* Push a copy of the With object onto the with-stack. We use a copy
-            //       ** here as the original will be expanded and resolved (flags SF_Expanded
-            //       ** and SF_Resolved) below. And the parser code that uses the with-stack
-            //       ** fails if the Select objects on it have already been expanded and
-            //       ** resolved.  */
+            // Push a copy of the With object onto the with-stack. We use a copy
+            // here as the original will be expanded and resolved (flags SF_Expanded
+            // and SF_Resolved) below. And the parser code that uses the with-stack
+            // fails if the Select objects on it have already been expanded and
+            // resolved.
             pCopy = unsafe { sqlite3WithDup(unsafe { (*pParse).db }, pWith) };
             pCopy = unsafe { sqlite3WithPush(pParse, pCopy, ((1 as i32) as i8) as u8) };
         }
@@ -4268,9 +3081,7 @@ fn renameWalkWith(mut pWalker: *mut Walker, mut pSelect: *mut Select) {
     }
 }
 
-// /*
-// ** Unmap all tokens in the IdList object passed as the second argument.
-// */
+/// Unmap all tokens in the IdList object passed as the second argument.
 fn unmapColumnIdlistNames(mut pParse: *mut Parse, mut pIdList: *const IdList) {
     let mut ii: i32 = 0 as i32;
     0 as i32;
@@ -4296,9 +3107,7 @@ fn unmapColumnIdlistNames(mut pParse: *mut Parse, mut pIdList: *const IdList) {
     }
 }
 
-// /*
-// ** Walker callback used by sqlite3RenameExprUnmap().
-// */
+/// Walker callback used by sqlite3RenameExprUnmap().
 #[unsafe(link_section = ".text.slate_distinct.alter.renameUnmapSelectCb")]
 extern "C-unwind" fn renameUnmapSelectCb(mut pWalker: *mut Walker, mut p: *mut Select) -> i32 {
     let mut pParse: *mut Parse = unsafe { (*pWalker).pParse };
@@ -4353,8 +3162,8 @@ extern "C-unwind" fn renameUnmapSelectCb(mut pWalker: *mut Walker, mut p: *mut S
             i = __v1396;
         }
     }
-    // /* Every Select as a SrcList, even if it is empty */
     if (unsafe { (*p).pSrc }) != std::ptr::null_mut::<SrcList>() {
+        // Every Select as a SrcList, even if it is empty
         let mut pSrc: *mut SrcList = unsafe { (*p).pSrc };
         i = 0 as i32;
         '__slate_break_1268: loop {
@@ -4414,9 +3223,83 @@ extern "C-unwind" fn renameUnmapSelectCb(mut pWalker: *mut Walker, mut p: *mut S
     return 0 as i32;
 }
 
-// /*
-// ** Free the list of RenameToken objects given in the second argument
-// */
+/// Remove all nodes that are part of expression pExpr from the rename list.
+#[unsafe(no_mangle)]
+extern "C-unwind" fn sqlite3RenameExprUnmap(mut pParse: *mut Parse, mut pExpr: *mut Expr) {
+    let mut eMode: u8 = unsafe { (*pParse).eParseMode };
+    let mut sWalker: Walker = unsafe { std::mem::zeroed() };
+    unsafe {
+        memset(
+            std::ptr::addr_of_mut!(sWalker) as *mut (),
+            0 as i32,
+            48 as u64,
+        )
+    };
+    sWalker.pParse = pParse;
+    sWalker.xExprCallback = Some(renameUnmapExprCb);
+    sWalker.xSelectCallback = Some(renameUnmapSelectCb);
+    unsafe {
+        (*pParse).eParseMode = ((3 as i32) as i8) as u8;
+    }
+    unsafe { sqlite3WalkExpr(std::ptr::addr_of_mut!(sWalker), pExpr) };
+    unsafe {
+        (*pParse).eParseMode = eMode;
+    }
+}
+
+/// Remove all nodes that are part of expression-list pEList from the
+/// rename list.
+#[unsafe(no_mangle)]
+extern "C-unwind" fn sqlite3RenameExprlistUnmap(mut pParse: *mut Parse, mut pEList: *mut ExprList) {
+    if pEList != std::ptr::null_mut::<ExprList>() {
+        let mut i: i32 = 0 as i32;
+        let mut sWalker: Walker = unsafe { std::mem::zeroed() };
+        unsafe {
+            memset(
+                std::ptr::addr_of_mut!(sWalker) as *mut (),
+                0 as i32,
+                48 as u64,
+            )
+        };
+        sWalker.pParse = pParse;
+        sWalker.xExprCallback = Some(renameUnmapExprCb);
+        unsafe { sqlite3WalkExprList(std::ptr::addr_of_mut!(sWalker), pEList) };
+        i = 0 as i32;
+        '__slate_break_1269: loop {
+            if !(i < unsafe { (*pEList).nExpr }) {
+                break;
+            }
+            if ((unsafe {
+                (*unsafe {
+                    unsafe { std::ptr::addr_of_mut!((*pEList).a) as *mut ExprList_item }
+                        .offset(i as isize)
+                })
+                .fg
+                .__slate_bits_0
+                .__get_eEName()
+            }) as i32)
+                == (0 as i32)
+            {
+                sqlite3RenameTokenRemap(
+                    pParse,
+                    std::ptr::null::<()>(),
+                    ((unsafe {
+                        (*unsafe {
+                            unsafe { std::ptr::addr_of_mut!((*pEList).a) as *mut ExprList_item }
+                                .offset(i as isize)
+                        })
+                        .zEName
+                    }) as *mut ()) as *const (),
+                );
+            }
+            let __v1387: i32 = i;
+            let __v1388: i32 = __v1387 + (1 as i32);
+            i = __v1388;
+        }
+    }
+}
+
+/// Free the list of RenameToken objects given in the second argument
 fn renameTokenFree(mut db: *mut sqlite3, mut pToken: *mut RenameToken) {
     let mut pNext: *mut RenameToken = unsafe { std::mem::zeroed() };
     let mut p: *mut RenameToken = unsafe { std::mem::zeroed() };
@@ -4428,15 +3311,13 @@ fn renameTokenFree(mut db: *mut sqlite3, mut pToken: *mut RenameToken) {
     }
 }
 
-// /*
-// ** Search the Parse object passed as the first argument for a RenameToken
-// ** object associated with parse tree element pPtr. If found, return a pointer
-// ** to it. Otherwise, return NULL.
-// **
-// ** If the second argument passed to this function is not NULL and a matching
-// ** RenameToken object is found, remove it from the Parse object and add it to
-// ** the list maintained by the RenameCtx object.
-// */
+/// Search the Parse object passed as the first argument for a RenameToken
+/// object associated with parse tree element pPtr. If found, return a pointer
+/// to it. Otherwise, return NULL.
+///
+/// If the second argument passed to this function is not NULL and a matching
+/// RenameToken object is found, remove it from the Parse object and add it to
+/// the list maintained by the RenameCtx object.
 fn renameTokenFind(
     mut pParse: *mut Parse,
     mut pCtx: *mut RenameCtx,
@@ -4474,11 +3355,9 @@ fn renameTokenFind(
     return std::ptr::null_mut::<RenameToken>();
 }
 
-// /*
-// ** This is a Walker select callback. It does nothing. It is only required
-// ** because without a dummy callback, sqlite3WalkExpr() and similar do not
-// ** descend into sub-select statements.
-// */
+/// This is a Walker select callback. It does nothing. It is only required
+/// because without a dummy callback, sqlite3WalkExpr() and similar do not
+/// descend into sub-select statements.
 #[unsafe(link_section = ".text.slate_distinct.alter.renameColumnSelectCb")]
 extern "C-unwind" fn renameColumnSelectCb(mut pWalker: *mut Walker, mut p: *mut Select) -> i32 {
     if (unsafe { (*p).selFlags }) & (((2097152 as i32) | (67108864 as i32)) as u32) != (0 as u32) {
@@ -4490,15 +3369,13 @@ extern "C-unwind" fn renameColumnSelectCb(mut pWalker: *mut Walker, mut p: *mut 
     return 0 as i32;
 }
 
-// /*
-// ** This is a Walker expression callback.
-// **
-// ** For every TK_COLUMN node in the expression tree, search to see
-// ** if the column being references is the column being renamed by an
-// ** ALTER TABLE statement.  If it is, then attach its associated
-// ** RenameToken object to the list of RenameToken objects being
-// ** constructed in RenameCtx object at pWalker->u.pRename.
-// */
+/// This is a Walker expression callback.
+///
+/// For every TK_COLUMN node in the expression tree, search to see
+/// if the column being references is the column being renamed by an
+/// ALTER TABLE statement.  If it is, then attach its associated
+/// RenameToken object to the list of RenameToken objects being
+/// constructed in RenameCtx object at pWalker->u.pRename.
 #[unsafe(link_section = ".text.slate_distinct.alter.renameColumnExprCb")]
 extern "C-unwind" fn renameColumnExprCb(mut pWalker: *mut Walker, mut pExpr: *mut Expr) -> i32 {
     let mut p: *mut RenameCtx = unsafe { (*pWalker).u.pRename };
@@ -4528,15 +3405,13 @@ extern "C-unwind" fn renameColumnExprCb(mut pWalker: *mut Walker, mut pExpr: *mu
     return 0 as i32;
 }
 
-// /*
-// ** The RenameCtx contains a list of tokens that reference a column that
-// ** is being renamed by an ALTER TABLE statement.  Return the "last"
-// ** RenameToken in the RenameCtx and remove that RenameToken from the
-// ** RenameContext.  "Last" means the last RenameToken encountered when
-// ** the input SQL is parsed from left to right.  Repeated calls to this routine
-// ** return all column name tokens in the order that they are encountered
-// ** in the SQL statement.
-// */
+/// The RenameCtx contains a list of tokens that reference a column that
+/// is being renamed by an ALTER TABLE statement.  Return the "last"
+/// RenameToken in the RenameCtx and remove that RenameToken from the
+/// RenameContext.  "Last" means the last RenameToken encountered when
+/// the input SQL is parsed from left to right.  Repeated calls to this routine
+/// return all column name tokens in the order that they are encountered
+/// in the SQL statement.
 fn renameColumnTokenNext(mut pCtx: *mut RenameCtx) -> *mut RenameToken {
     let mut pBest: *mut RenameToken = unsafe { (*pCtx).pList };
     let mut pToken: *mut RenameToken = unsafe { std::mem::zeroed() };
@@ -4559,10 +3434,8 @@ fn renameColumnTokenNext(mut pCtx: *mut RenameCtx) -> *mut RenameToken {
     return pBest;
 }
 
-// /*
-// ** Set the error message of the context passed as the first argument to
-// ** the result of formatting zFmt using printf() style formatting.
-// */
+/// Set the error message of the context passed as the first argument to
+/// the result of formatting zFmt using printf() style formatting.
 unsafe extern "C-unwind" fn errorMPrintf(
     mut pCtx: *mut sqlite3_context,
     mut zFmt: *const i8,
@@ -4582,13 +3455,11 @@ unsafe extern "C-unwind" fn errorMPrintf(
     }
 }
 
-// /*
-// ** An error occurred while parsing or otherwise processing a database
-// ** object (either pParse->pNewTable, pNewIndex or pNewTrigger) as part of an
-// ** ALTER TABLE RENAME COLUMN program. The error message emitted by the
-// ** sub-routine is currently stored in pParse->zErrMsg. This function
-// ** adds context to the error message and then stores it in pCtx.
-// */
+/// An error occurred while parsing or otherwise processing a database
+/// object (either pParse->pNewTable, pNewIndex or pNewTrigger) as part of an
+/// ALTER TABLE RENAME COLUMN program. The error message emitted by the
+/// sub-routine is currently stored in pParse->zErrMsg. This function
+/// adds context to the error message and then stores it in pCtx.
 fn renameColumnParseError(
     mut pCtx: *mut sqlite3_context,
     mut zWhen: *const i8,
@@ -4618,12 +3489,10 @@ fn renameColumnParseError(
     unsafe { sqlite3DbFree(unsafe { (*pParse).db }, zErr as *mut ()) };
 }
 
-// /*
-// ** For each name in the the expression-list pEList (i.e. each
-// ** pEList->a[i].zName) that matches the string in zOld, extract the
-// ** corresponding rename-token from Parse object pParse and add it
-// ** to the RenameCtx pCtx.
-// */
+/// For each name in the the expression-list pEList (i.e. each
+/// pEList->a[i].zName) that matches the string in zOld, extract the
+/// corresponding rename-token from Parse object pParse and add it
+/// to the RenameCtx pCtx.
 fn renameColumnElistNames(
     mut pParse: *mut Parse,
     mut pCtx: *mut RenameCtx,
@@ -4671,11 +3540,9 @@ fn renameColumnElistNames(
     }
 }
 
-// /*
-// ** For each name in the the id-list pIdList (i.e. each pIdList->a[i].zName)
-// ** that matches the string in zOld, extract the corresponding rename-token
-// ** from Parse object pParse and add it to the RenameCtx pCtx.
-// */
+/// For each name in the the id-list pIdList (i.e. each pIdList->a[i].zName)
+/// that matches the string in zOld, extract the corresponding rename-token
+/// from Parse object pParse and add it to the RenameCtx pCtx.
 fn renameColumnIdlistNames(
     mut pParse: *mut Parse,
     mut pCtx: *mut RenameCtx,
@@ -4706,10 +3573,16 @@ fn renameColumnIdlistNames(
     }
 }
 
-// /*
-// ** Parse the SQL statement zSql using Parse object (*p). The Parse object
-// ** is initialized by this function before it is used.
-// */
+/// Parse the SQL statement zSql using Parse object (*p). The Parse object
+/// is initialized by this function before it is used.
+///
+/// # Arguments
+///
+/// * `p` - Memory to use for Parse object
+/// * `zDb` - Name of schema SQL belongs to
+/// * `db` - Database handle
+/// * `zSql` - SQL to parse
+/// * `bTemp` - True if SQL is from temp schema
 fn renameParseSql(
     mut p: *mut Parse,
     mut zDb: *const i8,
@@ -4781,20 +3654,21 @@ fn renameParseSql(
     return rc;
 }
 
-// /* Memory to use for Parse object */
-// /* Name of schema SQL belongs to */
-// /* Database handle */
-// /* SQL to parse */
-// /* True if SQL is from temp schema */
-// /*
-// ** This function edits SQL statement zSql, replacing each token identified
-// ** by the linked list pRename with the text of zNew. If argument bQuote is
-// ** true, then zNew is always quoted first. If no error occurs, the result
-// ** is loaded into context object pCtx as the result.
-// **
-// ** Or, if an error occurs (i.e. an OOM condition), an error is left in
-// ** pCtx and an SQLite error code returned.
-// */
+/// This function edits SQL statement zSql, replacing each token identified
+/// by the linked list pRename with the text of zNew. If argument bQuote is
+/// true, then zNew is always quoted first. If no error occurs, the result
+/// is loaded into context object pCtx as the result.
+///
+/// Or, if an error occurs (i.e. an OOM condition), an error is left in
+/// pCtx and an SQLite error code returned.
+///
+/// # Arguments
+///
+/// * `pCtx` - Return result here
+/// * `pRename` - Rename context
+/// * `zSql` - SQL statement to edit
+/// * `zNew` - New token text
+/// * `bQuote` - True to always quote token
 fn renameEditSql(
     mut pCtx: *mut sqlite3_context,
     mut pRename: *mut RenameCtx,
@@ -4812,11 +3686,11 @@ fn renameEditSql(
     let mut zBuf1: *mut i8 = std::ptr::null_mut::<i8>();
     let mut zBuf2: *mut i8 = std::ptr::null_mut::<i8>();
     if zNew != std::ptr::null::<i8>() {
-        // /* Set zQuot to point to a buffer containing a quoted copy of the
-        //     ** identifier zNew. If the corresponding identifier in the original
-        //     ** ALTER TABLE statement was quoted (bQuote==1), then set zNew to
-        //     ** point to zQuot so that all substitutions are made using the
-        //     ** quoted version of the new column name.  */
+        // Set zQuot to point to a buffer containing a quoted copy of the
+        // identifier zNew. If the corresponding identifier in the original
+        // ALTER TABLE statement was quoted (bQuote==1), then set zNew to
+        // point to zQuot so that all substitutions are made using the
+        // quoted version of the new column name.
         zQuot =
             unsafe { sqlite3MPrintf(db, (b"\"%w\" \0".as_ptr() as *mut i8) as *const i8, zNew) };
         if zQuot == std::ptr::null_mut::<i8>() {
@@ -4853,10 +3727,10 @@ fn renameEditSql(
                 unsafe { zOut.offset((nSql * ((4 as i32) as i64) + ((2 as i32) as i64)) as isize) };
         }
     }
-    // /* At this point pRename->pList contains a list of RenameToken objects
-    //   ** corresponding to all tokens in the input SQL that must be replaced
-    //   ** with the new column name, or with single-quoted versions of themselves.
-    //   ** All that remains is to construct and return the edited SQL string. */
+    // At this point pRename->pList contains a list of RenameToken objects
+    // corresponding to all tokens in the input SQL that must be replaced
+    // with the new column name, or with single-quoted versions of themselves.
+    // All that remains is to construct and return the edited SQL string.
     if zOut != std::ptr::null_mut::<i8>() {
         let mut nOut: i64 = nSql;
         0 as i32;
@@ -4864,8 +3738,7 @@ fn renameEditSql(
         '__slate_break_1281: while (unsafe { (*pRename).pList })
             != std::ptr::null_mut::<RenameToken>()
         {
-            // /* Offset of token to replace in zOut */
-            let mut iOff: i32 = 0 as i32;
+            let mut iOff: i32 = 0 as i32; // Offset of token to replace in zOut
             let mut nReplace: i64 = 0 as i64;
             let mut zReplace: *const i8 = unsafe { std::mem::zeroed() };
             let mut pBest: *mut RenameToken = renameColumnTokenNext(pRename);
@@ -4897,12 +3770,12 @@ fn renameEditSql(
                     }
                 }
             } else {
-                // /* Dequote the double-quoted token. Then requote it again, this time
-                //         ** using single quotes. If the character immediately following the
-                //         ** original token within the input SQL was a single quote ('), then
-                //         ** add another space after the new, single-quoted version of the
-                //         ** token. This is so that (SELECT "string"'alias') maps to
-                //         ** (SELECT 'string' 'alias'), and not (SELECT 'string''alias').  */
+                // Dequote the double-quoted token. Then requote it again, this time
+                // using single quotes. If the character immediately following the
+                // original token within the input SQL was a single quote ('), then
+                // add another space after the new, single-quoted version of the
+                // token. This is so that (SELECT "string"'alias') maps to
+                // (SELECT 'string' 'alias'), and not (SELECT 'string''alias').
                 unsafe {
                     memcpy(
                         zBuf1 as *mut (),
@@ -4914,8 +3787,7 @@ fn renameEditSql(
                     *unsafe { zBuf1.offset((unsafe { (*pBest).t.n }) as isize) } = (0 as i32) as i8;
                 }
                 unsafe { sqlite3Dequote(zBuf1) };
-                // /* otherwise malloc would have failed */
-                0 as i32;
+                0 as i32; // otherwise malloc would have failed
                 unsafe {
                     sqlite3_snprintf(
                         (nSql * ((2 as i32) as i64)) as i32,
@@ -4984,14 +3856,7 @@ fn renameEditSql(
     return rc;
 }
 
-// /* Return result here */
-// /* Rename context */
-// /* SQL statement to edit */
-// /* New token text */
-// /* True to always quote token */
-// /*
-// ** Set all pEList->a[].fg.eEName fields in the expression-list to val.
-// */
+/// Set all pEList->a[].fg.eEName fields in the expression-list to val.
 fn renameSetENames(mut pEList: *mut ExprList, mut val: i32) {
     0 as i32;
     if pEList != std::ptr::null_mut::<ExprList>() {
@@ -5018,12 +3883,10 @@ fn renameSetENames(mut pEList: *mut ExprList, mut val: i32) {
     }
 }
 
-// /*
-// ** Resolve all symbols in the trigger at pParse->pNewTrigger, assuming
-// ** it was read from the schema of database zDb. Return SQLITE_OK if
-// ** successful. Otherwise, return an SQLite error code and leave an error
-// ** message in the Parse object.
-// */
+/// Resolve all symbols in the trigger at pParse->pNewTrigger, assuming
+/// it was read from the schema of database zDb. Return SQLITE_OK if
+/// successful. Otherwise, return an SQLite error code and leave an error
+/// message in the Parse object.
 fn renameResolveTrigger(mut pParse: *mut Parse) -> i32 {
     let mut db: *mut sqlite3 = unsafe { (*pParse).db };
     let mut pNew: *mut Trigger = unsafe { (*pParse).pNewTrigger };
@@ -5053,13 +3916,13 @@ fn renameResolveTrigger(mut pParse: *mut Parse) -> i32 {
     unsafe {
         (*pParse).eTriggerOp = unsafe { (*pNew).op };
     }
-    // /* ALWAYS() because if the table of the trigger does not exist, the
-    //   ** error would have been hit before this point */
+    // ALWAYS() because if the table of the trigger does not exist, the
+    // error would have been hit before this point
     if (unsafe { (*pParse).pTriggerTab }) != std::ptr::null_mut::<Table>() {
         rc = ((unsafe { sqlite3ViewGetColumnNames(pParse, unsafe { (*pParse).pTriggerTab }) })
             != (0 as i32)) as i32;
     }
-    // /* Resolve symbols in WHEN clause */
+    // Resolve symbols in WHEN clause
     if rc == (0 as i32) && (unsafe { (*pNew).pWhen }) != std::ptr::null_mut::<Expr>() {
         rc = unsafe {
             sqlite3ResolveExprNames(std::ptr::addr_of_mut!(sNC), unsafe { (*pNew).pWhen })
@@ -5104,14 +3967,14 @@ fn renameResolveTrigger(mut pParse: *mut Parse) -> i32 {
                     pSrc = std::ptr::null_mut::<SrcList>();
                     rc = 7 as i32;
                 } else {
-                    // /* pStep->pExprList contains an expression-list used for an UPDATE
-                    //           ** statement. So the a[].zEName values are the RHS of the
-                    //           ** "<col> = <expr>" clauses of the UPDATE statement. So, before
-                    //           ** running SelectPrep(), change all the eEName values in
-                    //           ** pStep->pExprList to ENAME_SPAN (from their current value of
-                    //           ** ENAME_NAME). This is to prevent any ids in ON() clauses that are
-                    //           ** part of pSrc from being incorrectly resolved against the
-                    //           ** a[].zEName values as if they were column aliases.  */
+                    // pStep->pExprList contains an expression-list used for an UPDATE
+                    // statement. So the a[].zEName values are the RHS of the
+                    // "<col> = <expr>" clauses of the UPDATE statement. So, before
+                    // running SelectPrep(), change all the eEName values in
+                    // pStep->pExprList to ENAME_SPAN (from their current value of
+                    // ENAME_NAME). This is to prevent any ids in ON() clauses that are
+                    // part of pSrc from being incorrectly resolved against the
+                    // a[].zEName values as if they were column aliases.
                     renameSetENames(unsafe { (*pStep).pExprList }, 1 as i32);
                     unsafe { sqlite3SelectPrep(pParse, pSel, std::ptr::null_mut::<NameContext>()) };
                     renameSetENames(unsafe { (*pStep).pExprList }, 0 as i32);
@@ -5232,15 +4095,13 @@ fn renameResolveTrigger(mut pParse: *mut Parse) -> i32 {
     return rc;
 }
 
-// /*
-// ** Invoke sqlite3WalkExpr() or sqlite3WalkSelect() on all Select or Expr
-// ** objects that are part of the trigger passed as the second argument.
-// */
+/// Invoke sqlite3WalkExpr() or sqlite3WalkSelect() on all Select or Expr
+/// objects that are part of the trigger passed as the second argument.
 fn renameWalkTrigger(mut pWalker: *mut Walker, mut pTrigger: *mut Trigger) {
     let mut pStep: *mut TriggerStep = unsafe { std::mem::zeroed() };
-    // /* Find tokens to edit in WHEN clause */
+    // Find tokens to edit in WHEN clause
     unsafe { sqlite3WalkExpr(pWalker, unsafe { (*pTrigger).pWhen }) };
-    // /* Find tokens to edit in trigger steps */
+    // Find tokens to edit in trigger steps
     pStep = unsafe { (*pTrigger).step_list };
     '__slate_break_1288: while pStep != std::ptr::null_mut::<TriggerStep>() {
         unsafe { sqlite3WalkSelect(pWalker, unsafe { (*pStep).pSelect }) };
@@ -5296,10 +4157,8 @@ fn renameWalkTrigger(mut pWalker: *mut Walker, mut pTrigger: *mut Trigger) {
     }
 }
 
-// /*
-// ** Free the contents of Parse object (*pParse). Do not free the memory
-// ** occupied by the Parse object itself.
-// */
+/// Free the contents of Parse object (*pParse). Do not free the memory
+/// occupied by the Parse object itself.
 fn renameParseCleanup(mut pParse: *mut Parse) {
     let mut db: *mut sqlite3 = unsafe { (*pParse).db };
     let mut pIdx: *mut Index = unsafe { std::mem::zeroed() };
@@ -5324,30 +4183,28 @@ fn renameParseCleanup(mut pParse: *mut Parse) {
     unsafe { sqlite3ParseObjectReset(pParse) };
 }
 
-// /*
-// ** SQL function:
-// **
-// **     sqlite_rename_column(SQL,TYPE,OBJ,DB,TABLE,COL,NEWNAME,QUOTE,TEMP)
-// **
-// **   0. zSql:     SQL statement to rewrite
-// **   1. type:     Type of object ("table", "view" etc.)
-// **   2. object:   Name of object
-// **   3. Database: Database name (e.g. "main")
-// **   4. Table:    Table name
-// **   5. iCol:     Index of column to rename
-// **   6. zNew:     New column name
-// **   7. bQuote:   Non-zero if the new column name should be quoted.
-// **   8. bTemp:    True if zSql comes from temp schema
-// **
-// ** Do a column rename operation on the CREATE statement given in zSql.
-// ** The iCol-th column (left-most is 0) of table zTable is renamed from zCol
-// ** into zNew.  The name should be quoted if bQuote is true.
-// **
-// ** This function is used internally by the ALTER TABLE RENAME COLUMN command.
-// ** It is only accessible to SQL created using sqlite3NestedParse().  It is
-// ** not reachable from ordinary SQL passed into sqlite3_prepare() unless the
-// ** SQLITE_TESTCTRL_INTERNAL_FUNCTIONS test setting is enabled.
-// */
+/// SQL function:
+///
+///     sqlite_rename_column(SQL,TYPE,OBJ,DB,TABLE,COL,NEWNAME,QUOTE,TEMP)
+///
+///   0. zSql:     SQL statement to rewrite
+///   1. type:     Type of object ("table", "view" etc.)
+///   2. object:   Name of object
+///   3. Database: Database name (e.g. "main")
+///   4. Table:    Table name
+///   5. iCol:     Index of column to rename
+///   6. zNew:     New column name
+///   7. bQuote:   Non-zero if the new column name should be quoted.
+///   8. bTemp:    True if zSql comes from temp schema
+///
+/// Do a column rename operation on the CREATE statement given in zSql.
+/// The iCol-th column (left-most is 0) of table zTable is renamed from zCol
+/// into zNew.  The name should be quoted if bQuote is true.
+///
+/// This function is used internally by the ALTER TABLE RENAME COLUMN command.
+/// It is only accessible to SQL created using sqlite3NestedParse().  It is
+/// not reachable from ordinary SQL passed into sqlite3_prepare() unless the
+/// SQLITE_TESTCTRL_INTERNAL_FUNCTIONS test setting is enabled.
 #[unsafe(link_section = ".text.slate_distinct.alter.renameColumnFunc")]
 extern "C-unwind" fn renameColumnFunc(
     mut context: *mut sqlite3_context,
@@ -5384,6 +4241,7 @@ extern "C-unwind" fn renameColumnFunc(
     let mut __slate_storage_691: std::mem::MaybeUninit<*mut FKey> = std::mem::MaybeUninit::uninit();
     let __slate_slot_691: *mut *mut FKey =
         std::ptr::addr_of_mut!(__slate_storage_691) as *mut *mut FKey;
+    // A regular table
     let mut __slate_storage_690: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
     let __slate_slot_690: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_690) as *mut i32;
     let mut __slate_storage_695: std::mem::MaybeUninit<*mut ExprList> =
@@ -5394,6 +4252,7 @@ extern "C-unwind" fn renameColumnFunc(
         std::mem::MaybeUninit::uninit();
     let __slate_slot_694: *mut *mut Table =
         std::ptr::addr_of_mut!(__slate_storage_694) as *mut *mut Table;
+    // A trigger
     let mut __slate_storage_693: std::mem::MaybeUninit<*mut TriggerStep> =
         std::mem::MaybeUninit::uninit();
     let __slate_slot_693: *mut *mut TriggerStep =
@@ -5568,7 +4427,7 @@ extern "C-unwind" fn renameColumnFunc(
                                     *__slate_slot_674,
                                     *__slate_slot_680,
                                 );
-                                // /* Find tokens that need to be replaced. */
+                                // Find tokens that need to be replaced.
                                 unsafe {
                                     memset(
                                         std::ptr::addr_of_mut!(*__slate_slot_684) as *mut (),
@@ -5654,7 +4513,6 @@ extern "C-unwind" fn renameColumnFunc(
                                                     == (0 as i32)
                                                 {
                                                     '__join_26: {
-                                                        // /* A regular table */
                                                         std::ptr::write(__slate_slot_690, unsafe {
                                                             sqlite3_stricmp(
                                                                 *__slate_slot_676,
@@ -5933,7 +4791,6 @@ extern "C-unwind" fn renameColumnFunc(
                                                     )
                                                 };
                                             } else {
-                                                // /* A trigger */
                                                 *__slate_slot_682 = renameResolveTrigger(
                                                     std::ptr::addr_of_mut!(*__slate_slot_683),
                                                 );
@@ -5968,30 +4825,22 @@ extern "C-unwind" fn renameColumnFunc(
                                                                 if *__slate_slot_694
                                                                     == *__slate_slot_687
                                                                 {
-                                                                    if (unsafe {
-                                                                        (*(*__slate_slot_693))
-                                                                            .pUpsert
-                                                                    }) != std::ptr::null_mut::<
-                                                                        Upsert,
-                                                                    >(
-                                                                    ) {
-                                                                        std::ptr::write(
-                                                                            __slate_slot_695,
-                                                                            unsafe {
-                                                                                (*unsafe { (*(*__slate_slot_693)).pUpsert }).pUpsertSet
-                                                                            },
-                                                                        );
-                                                                        renameColumnElistNames(
-                                                                            std::ptr::addr_of_mut!(
-                                                                                *__slate_slot_683
-                                                                            ),
-                                                                            std::ptr::addr_of_mut!(
-                                                                                *__slate_slot_673
-                                                                            ),
-                                                                            *__slate_slot_695
-                                                                                as *const ExprList,
-                                                                            *__slate_slot_681,
-                                                                        );
+                                                                    '__join_49: {
+                                                                        if (unsafe {
+                                                                            (*(*__slate_slot_693))
+                                                                                .pUpsert
+                                                                        }) != std::ptr::null_mut::<
+                                                                            Upsert,
+                                                                        >(
+                                                                        ) {
+                                                                            std::ptr::write(
+                                                                                __slate_slot_695,
+                                                                                unsafe {
+                                                                                    (*unsafe { (*(*__slate_slot_693)).pUpsert }).pUpsertSet
+                                                                                },
+                                                                            );
+                                                                            renameColumnElistNames(std::ptr::addr_of_mut!(*__slate_slot_683), std::ptr::addr_of_mut!(*__slate_slot_673), *__slate_slot_695 as *const ExprList, *__slate_slot_681);
+                                                                        }
                                                                     }
                                                                     renameColumnIdlistNames(
                                                                         std::ptr::addr_of_mut!(
@@ -6030,7 +4879,7 @@ extern "C-unwind" fn renameColumnFunc(
                                                             break;
                                                         }
                                                     }
-                                                    // /* Find tokens to edit in UPDATE OF clause */
+                                                    // Find tokens to edit in UPDATE OF clause
                                                     if (*__slate_slot_683).pTriggerTab
                                                         == *__slate_slot_687
                                                     {
@@ -6049,7 +4898,7 @@ extern "C-unwind" fn renameColumnFunc(
                                                             *__slate_slot_681,
                                                         );
                                                     }
-                                                    // /* Find tokens to edit in various expressions and selects */
+                                                    // Find tokens to edit in various expressions and selects
                                                     renameWalkTrigger(
                                                         std::ptr::addr_of_mut!(*__slate_slot_684),
                                                         (*__slate_slot_683).pNewTrigger,
@@ -6112,9 +4961,7 @@ extern "C-unwind" fn renameColumnFunc(
     }
 }
 
-// /*
-// ** Walker expression callback used by "RENAME TABLE".
-// */
+/// Walker expression callback used by "RENAME TABLE".
 #[unsafe(link_section = ".text.slate_distinct.alter.renameTableExprCb")]
 extern "C-unwind" fn renameTableExprCb(mut pWalker: *mut Walker, mut pExpr: *mut Expr) -> i32 {
     let mut p: *mut RenameCtx = unsafe { (*pWalker).u.pRename };
@@ -6132,9 +4979,7 @@ extern "C-unwind" fn renameTableExprCb(mut pWalker: *mut Walker, mut pExpr: *mut
     return 0 as i32;
 }
 
-// /*
-// ** Walker select callback used by "RENAME TABLE".
-// */
+/// Walker select callback used by "RENAME TABLE".
 #[unsafe(link_section = ".text.slate_distinct.alter.renameTableSelectCb")]
 extern "C-unwind" fn renameTableSelectCb(
     mut pWalker: *mut Walker,
@@ -6177,25 +5022,23 @@ extern "C-unwind" fn renameTableSelectCb(
     return 0 as i32;
 }
 
-// /*
-// ** This C function implements an SQL user function that is used by SQL code
-// ** generated by the ALTER TABLE ... RENAME command to modify the definition
-// ** of any foreign key constraints that use the table being renamed as the
-// ** parent table. It is passed three arguments:
-// **
-// **   0: The database containing the table being renamed.
-// **   1. type:     Type of object ("table", "view" etc.)
-// **   2. object:   Name of object
-// **   3: The complete text of the schema statement being modified,
-// **   4: The old name of the table being renamed, and
-// **   5: The new name of the table being renamed.
-// **   6: True if the schema statement comes from the temp db.
-// **
-// ** It returns the new schema statement. For example:
-// **
-// ** sqlite_rename_table('main', 'CREATE TABLE t1(a REFERENCES t2)','t2','t3',0)
-// **       -> 'CREATE TABLE t1(a REFERENCES t3)'
-// */
+/// This C function implements an SQL user function that is used by SQL code
+/// generated by the ALTER TABLE ... RENAME command to modify the definition
+/// of any foreign key constraints that use the table being renamed as the
+/// parent table. It is passed three arguments:
+///
+///   0: The database containing the table being renamed.
+///   1. type:     Type of object ("table", "view" etc.)
+///   2. object:   Name of object
+///   3: The complete text of the schema statement being modified,
+///   4: The old name of the table being renamed, and
+///   5: The new name of the table being renamed.
+///   6: True if the schema statement comes from the temp db.
+///
+/// It returns the new schema statement. For example:
+///
+/// sqlite_rename_table('main', 'CREATE TABLE t1(a REFERENCES t2)','t2','t3',0)
+///       -> 'CREATE TABLE t1(a REFERENCES t3)'
 #[unsafe(link_section = ".text.slate_distinct.alter.renameTableFunc")]
 extern "C-unwind" fn renameTableFunc(
     mut context: *mut sqlite3_context,
@@ -6295,7 +5138,7 @@ extern "C-unwind" fn renameTableFunc(
                         }
                     }
                 } else {
-                    // /* Modify any FK definitions to point to the new table. */
+                    // Modify any FK definitions to point to the new table.
                     if (isLegacy == (0 as i32)
                         || (unsafe { (*db).flags }) & (((16384 as i32) as i64) as u64)
                             != (0 as u64))
@@ -6318,9 +5161,9 @@ extern "C-unwind" fn renameTableFunc(
                             pFKey = unsafe { (*pFKey).pNextFrom };
                         }
                     }
-                    // /* If this is the table being altered, fix any table refs in CHECK
-                    //           ** expressions. Also update the name that appears right after the
-                    //           ** "CREATE [VIRTUAL] TABLE" bit. */
+                    // If this is the table being altered, fix any table refs in CHECK
+                    // expressions. Also update the name that appears right after the
+                    // "CREATE [VIRTUAL] TABLE" bit.
                     if (unsafe { sqlite3_stricmp(zOld, (unsafe { (*pTab).zName }) as *const i8) })
                         == (0 as i32)
                     {
@@ -6474,33 +5317,32 @@ extern "C-unwind" fn renameQuotefixExprCb(mut pWalker: *mut Walker, mut pExpr: *
     return 0 as i32;
 }
 
-// /* SQL function: sqlite_rename_quotefix(DB,SQL)
-// **
-// ** Rewrite the DDL statement "SQL" so that any string literals that use
-// ** double-quotes use single quotes instead.
-// **
-// ** Two arguments must be passed:
-// **
-// **   0: Database name ("main", "temp" etc.).
-// **   1: SQL statement to edit.
-// **
-// ** The returned value is the modified SQL statement. For example, given
-// ** the database schema:
-// **
-// **   CREATE TABLE t1(a, b, c);
-// **
-// **   SELECT sqlite_rename_quotefix('main',
-// **       'CREATE VIEW v1 AS SELECT "a", "string" FROM t1'
-// **   );
-// **
-// ** returns the string:
-// **
-// **   CREATE VIEW v1 AS SELECT "a", 'string' FROM t1
-// **
-// ** If there is a error in the input SQL, then raise an error, except
-// ** if PRAGMA writable_schema=ON, then just return the input string
-// ** unmodified following an error.
-// */
+/// SQL function: sqlite_rename_quotefix(DB,SQL)
+///
+/// Rewrite the DDL statement "SQL" so that any string literals that use
+/// double-quotes use single quotes instead.
+///
+/// Two arguments must be passed:
+///
+///   0: Database name ("main", "temp" etc.).
+///   1: SQL statement to edit.
+///
+/// The returned value is the modified SQL statement. For example, given
+/// the database schema:
+///
+///   CREATE TABLE t1(a, b, c);
+///
+///   SELECT sqlite_rename_quotefix('main',
+///       'CREATE VIEW v1 AS SELECT "a", "string" FROM t1'
+///   );
+///
+/// returns the string:
+///
+///   CREATE VIEW v1 AS SELECT "a", 'string' FROM t1
+///
+/// If there is a error in the input SQL, then raise an error, except
+/// if PRAGMA writable_schema=ON, then just return the input string
+/// unmodified following an error.
 #[unsafe(link_section = ".text.slate_distinct.alter.renameQuotefixFunc")]
 extern "C-unwind" fn renameQuotefixFunc(
     mut context: *mut sqlite3_context,
@@ -6536,7 +5378,7 @@ extern "C-unwind" fn renameQuotefixFunc(
         if rc == (0 as i32) {
             let mut sCtx: RenameCtx = unsafe { std::mem::zeroed() };
             let mut sWalker: Walker = unsafe { std::mem::zeroed() };
-            // /* Walker to find tokens that need to be replaced. */
+            // Walker to find tokens that need to be replaced.
             unsafe { memset(std::ptr::addr_of_mut!(sCtx) as *mut (), 0 as i32, 32 as u64) };
             unsafe {
                 memset(
@@ -6599,7 +5441,6 @@ extern "C-unwind" fn renameQuotefixFunc(
                         let __v1443: i32 = __v1442 + (1 as i32);
                         i = __v1443;
                     }
-                    // /* SQLITE_OMIT_GENERATED_COLUMNS */
                 }
             } else {
                 if sParse.pNewIndex != std::ptr::null_mut::<Index>() {
@@ -6618,7 +5459,6 @@ extern "C-unwind" fn renameQuotefixFunc(
                     if rc == (0 as i32) {
                         renameWalkTrigger(std::ptr::addr_of_mut!(sWalker), sParse.pNewTrigger);
                     }
-                    // /* SQLITE_OMIT_TRIGGER */
                 }
             }
             if rc == (0 as i32) {
@@ -6651,30 +5491,29 @@ extern "C-unwind" fn renameQuotefixFunc(
     unsafe { sqlite3BtreeLeaveAll(db) };
 }
 
-// /* Function:  sqlite_rename_test(DB,SQL,TYPE,NAME,ISTEMP,WHEN,DQS)
-// **
-// ** An SQL user function that checks that there are no parse or symbol
-// ** resolution problems in a CREATE TRIGGER|TABLE|VIEW|INDEX statement.
-// ** After an ALTER TABLE .. RENAME operation is performed and the schema
-// ** reloaded, this function is called on each SQL statement in the schema
-// ** to ensure that it is still usable.
-// **
-// **   0: Database name ("main", "temp" etc.).
-// **   1: SQL statement.
-// **   2: Object type ("view", "table", "trigger" or "index").
-// **   3: Object name.
-// **   4: True if object is from temp schema.
-// **   5: "when" part of error message.
-// **   6: True to disable the DQS quirk when parsing SQL.
-// **
-// ** The return value is computed as follows:
-// **
-// **   A. If an error is seen and not in PRAGMA writable_schema=ON mode,
-// **      then raise the error.
-// **   B. Else if a trigger is created and the the table that the trigger is
-// **      attached to is in database zDb, then return 1.
-// **   C. Otherwise return NULL.
-// */
+/// Function:  sqlite_rename_test(DB,SQL,TYPE,NAME,ISTEMP,WHEN,DQS)
+///
+/// An SQL user function that checks that there are no parse or symbol
+/// resolution problems in a CREATE TRIGGER|TABLE|VIEW|INDEX statement.
+/// After an ALTER TABLE .. RENAME operation is performed and the schema
+/// reloaded, this function is called on each SQL statement in the schema
+/// to ensure that it is still usable.
+///
+///   0: Database name ("main", "temp" etc.).
+///   1: SQL statement.
+///   2: Object type ("view", "table", "trigger" or "index").
+///   3: Object name.
+///   4: True if object is from temp schema.
+///   5: "when" part of error message.
+///   6: True to disable the DQS quirk when parsing SQL.
+///
+/// The return value is computed as follows:
+///
+///   A. If an error is seen and not in PRAGMA writable_schema=ON mode,
+///      then raise the error.
+///   B. Else if a trigger is created and the the table that the trigger is
+///      attached to is in database zDb, then return 1.
+///   C. Otherwise return NULL.
 #[unsafe(link_section = ".text.slate_distinct.alter.renameTableTest")]
 extern "C-unwind" fn renameTableTest(
     mut context: *mut sqlite3_context,
@@ -6757,7 +5596,7 @@ extern "C-unwind" fn renameTableTest(
                         };
                         let mut i2: i32 = unsafe { sqlite3FindDbName(db, zDb) };
                         if i1 == i2 {
-                            // /* Handle output case B */
+                            // Handle output case B
                             unsafe { sqlite3_result_int(context, 1 as i32) };
                         }
                     }
@@ -6771,7 +5610,7 @@ extern "C-unwind" fn renameTableTest(
             __v1447 = false as bool;
         }
         if __v1447 {
-            // /* Output case A */
+            // Output case A
             renameColumnParseError(
                 context,
                 zWhen,
@@ -6787,28 +5626,26 @@ extern "C-unwind" fn renameTableTest(
     }
 }
 
-// /*
-// ** Return the number of bytes until the end of the next non-whitespace and
-// ** non-comment token.  For the purpose of this function, a "(" token includes
-// ** all of the bytes through and including the matching ")", or until the
-// ** first illegal token, whichever comes first.
-// **
-// ** Write the token type into *piToken.
-// **
-// ** The value returned is the number of bytes in the token itself plus
-// ** the number of bytes of leading whitespace and comments skipped plus
-// ** all bytes through the next matching ")" if the token is TK_LP.
-// **
-// ** Example:    (Note: '.' used in place of '*' in the example z[] text)
-// **
-// **                                    ,--------- *piToken := TK_RP
-// **                                    v
-// **    z[] = " /.comment./ --comment\n (two three four) five"
-// **          |                                        |
-// **          |<-------------------------------------->|
-// **                              |
-// **                              `--- return value
-// */
+/// Return the number of bytes until the end of the next non-whitespace and
+/// non-comment token.  For the purpose of this function, a "(" token includes
+/// all of the bytes through and including the matching ")", or until the
+/// first illegal token, whichever comes first.
+///
+/// Write the token type into *piToken.
+///
+/// The value returned is the number of bytes in the token itself plus
+/// the number of bytes of leading whitespace and comments skipped plus
+/// all bytes through the next matching ")" if the token is TK_LP.
+///
+/// Example:    (Note: '.' used in place of '*' in the example z[] text)
+///
+///                                    ,--------- *piToken := TK_RP
+///                                    v
+///    z[] = " /.comment./ --comment\n (two three four) five"
+///          |                                        |
+///          |<-------------------------------------->|
+///                              |
+///                              `--- return value
 fn getConstraintToken(mut z: *const u8, mut piToken: *mut i32) -> i32 {
     let mut iOff: i32 = 0 as i32;
     let mut t: i32 = 0 as i32;
@@ -6865,18 +5702,16 @@ fn getConstraintToken(mut z: *const u8, mut piToken: *mut i32) -> i32 {
     return iOff;
 }
 
-// /*
-// ** The implementation of internal UDF sqlite_drop_column().
-// **
-// ** Arguments:
-// **
-// **  argv[0]: An integer - the index of the schema containing the table
-// **  argv[1]: CREATE TABLE statement to modify.
-// **  argv[2]: An integer - the index of the column to remove.
-// **
-// ** The value returned is a string containing the CREATE TABLE statement
-// ** with column argv[2] removed.
-// */
+/// The implementation of internal UDF sqlite_drop_column().
+///
+/// Arguments:
+///
+///  argv[0]: An integer - the index of the schema containing the table
+///  argv[1]: CREATE TABLE statement to modify.
+///  argv[2]: An integer - the index of the column to remove.
+///
+/// The value returned is a string containing the CREATE TABLE statement
+/// with column argv[2] removed.
 #[unsafe(link_section = ".text.slate_distinct.alter.dropColumnFunc")]
 extern "C-unwind" fn dropColumnFunc(
     mut context: *mut sqlite3_context,
@@ -7023,7 +5858,7 @@ extern "C-unwind" fn dropColumnFunc(
                     || ((unsafe { (*(*__slate_slot_786)).nCol }) as i32) == (1 as i32)
                     || *__slate_slot_781 >= ((unsafe { (*(*__slate_slot_786)).nCol }) as i32)
                 {
-                    // /* This can happen if the sqlite_schema table is corrupt */
+                    // This can happen if the sqlite_schema table is corrupt
                     *__slate_slot_783 = unsafe { sqlite3CorruptError(2204 as i32) };
                 } else {
                     if *__slate_slot_781
@@ -7055,9 +5890,9 @@ extern "C-unwind" fn dropColumnFunc(
                     } else {
                         0 as i32;
                         0 as i32;
-                        // /* Point pCol->t.z at the "," immediately preceding the definition of
-                        //     ** the column being dropped. To do this, start at the name of the
-                        //     ** previous column, and tokenize until the next ",".  */
+                        // Point pCol->t.z at the "," immediately preceding the definition of
+                        // the column being dropped. To do this, start at the name of the
+                        // previous column, and tokenize until the next ",".
                         *__slate_slot_785 = renameTokenFind(
                             std::ptr::addr_of_mut!(*__slate_slot_784),
                             std::ptr::null_mut::<RenameCtx>(),
@@ -7141,9 +5976,657 @@ extern "C-unwind" fn dropColumnFunc(
     }
 }
 
-// /*
-// ** Return the number of bytes of leading whitespace/comments in string z[].
-// */
+/// This function is called by the parser upon parsing an
+///
+///     ALTER TABLE pSrc DROP COLUMN pName
+///
+/// statement. Argument pSrc contains the possibly qualified name of the
+/// table being edited, and token pName the name of the column to drop.
+#[unsafe(no_mangle)]
+extern "C-unwind" fn sqlite3AlterDropColumn(
+    mut pParse: *mut Parse,
+    mut pSrc: *mut SrcList,
+    mut pName: *const Token,
+) {
+    let mut __slate_storage_1386: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_1386: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_1386) as *mut i32;
+    let mut __slate_storage_1385: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_1385: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_1385) as *mut i32;
+    // dbsqlfuzz 5f09e7bcc78b4954d06bf9f2400d7715f48d1fef
+    let mut __slate_storage_1384: std::mem::MaybeUninit<*mut Parse> =
+        std::mem::MaybeUninit::uninit();
+    let __slate_slot_1384: *mut *mut Parse =
+        std::ptr::addr_of_mut!(__slate_storage_1384) as *mut *mut Parse;
+    let mut __slate_storage_1381: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_1381: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_1381) as *mut i32;
+    let mut __slate_storage_1380: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_1380: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_1380) as *mut i32;
+    let mut __slate_storage_1383: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_1383: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_1383) as *mut i32;
+    let mut __slate_storage_1382: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_1382: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_1382) as *mut i32;
+    let mut __slate_storage_813: std::mem::MaybeUninit<i8> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_813: *mut i8 = std::ptr::addr_of_mut!(__slate_storage_813) as *mut i8;
+    let mut __slate_storage_812: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_812: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_812) as *mut i32;
+    let mut __slate_storage_811: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_811: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_811) as *mut i32;
+    let mut __slate_storage_810: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_810: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_810) as *mut i32;
+    let mut __slate_storage_1379: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_1379: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_1379) as *mut i32;
+    let mut __slate_storage_1378: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_1378: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_1378) as *mut i32;
+    let mut __slate_storage_1377: std::mem::MaybeUninit<*mut Parse> =
+        std::mem::MaybeUninit::uninit();
+    let __slate_slot_1377: *mut *mut Parse =
+        std::ptr::addr_of_mut!(__slate_storage_1377) as *mut *mut Parse;
+    let mut __slate_storage_1371: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_1371: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_1371) as *mut i32;
+    let mut __slate_storage_1370: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_1370: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_1370) as *mut i32;
+    let mut __slate_storage_1369: std::mem::MaybeUninit<*mut Parse> =
+        std::mem::MaybeUninit::uninit();
+    let __slate_slot_1369: *mut *mut Parse =
+        std::ptr::addr_of_mut!(__slate_storage_1369) as *mut *mut Parse;
+    let mut __slate_storage_1376: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_1376: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_1376) as *mut i32;
+    let mut __slate_storage_1375: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_1375: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_1375) as *mut i32;
+    let mut __slate_storage_1374: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_1374: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_1374) as *mut i32;
+    let mut __slate_storage_1373: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_1373: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_1373) as *mut i32;
+    let mut __slate_storage_1372: std::mem::MaybeUninit<*mut Parse> =
+        std::mem::MaybeUninit::uninit();
+    let __slate_slot_1372: *mut *mut Parse =
+        std::ptr::addr_of_mut!(__slate_storage_1372) as *mut *mut Parse;
+    let mut __slate_storage_1368: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_1368: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_1368) as *mut i32;
+    let mut __slate_storage_1367: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_1367: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_1367) as *mut i32;
+    let mut __slate_storage_1366: std::mem::MaybeUninit<*mut Parse> =
+        std::mem::MaybeUninit::uninit();
+    let __slate_slot_1366: *mut *mut Parse =
+        std::ptr::addr_of_mut!(__slate_storage_1366) as *mut *mut Parse;
+    let mut __slate_storage_1365: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_1365: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_1365) as *mut i32;
+    let mut __slate_storage_1364: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_1364: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_1364) as *mut i32;
+    let mut __slate_storage_1363: std::mem::MaybeUninit<*mut Parse> =
+        std::mem::MaybeUninit::uninit();
+    let __slate_slot_1363: *mut *mut Parse =
+        std::ptr::addr_of_mut!(__slate_storage_1363) as *mut *mut Parse;
+    let mut __slate_storage_809: std::mem::MaybeUninit<*mut Vdbe> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_809: *mut *mut Vdbe =
+        std::ptr::addr_of_mut!(__slate_storage_809) as *mut *mut Vdbe;
+    let mut __slate_storage_808: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_808: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_808) as *mut i32; // Number of non-virtual columns after drop
+    let mut __slate_storage_807: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_807: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_807) as *mut i32;
+    let mut __slate_storage_806: std::mem::MaybeUninit<*mut Index> =
+        std::mem::MaybeUninit::uninit();
+    let __slate_slot_806: *mut *mut Index =
+        std::ptr::addr_of_mut!(__slate_storage_806) as *mut *mut Index;
+    let mut __slate_storage_805: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_805: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_805) as *mut i32;
+    let mut __slate_storage_804: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_804: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_804) as *mut i32;
+    let mut __slate_storage_803: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_803: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_803) as *mut i32;
+    let mut __slate_storage_802: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_802: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_802) as *mut i32; // Index of column zCol in pTab->aCol[]
+    let mut __slate_storage_801: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_801: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_801) as *mut i32; // Name of column to drop
+    let mut __slate_storage_800: std::mem::MaybeUninit<*mut i8> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_800: *mut *mut i8 =
+        std::ptr::addr_of_mut!(__slate_storage_800) as *mut *mut i8; // Database containing pTab ("main" etc.)
+    let mut __slate_storage_799: std::mem::MaybeUninit<*const i8> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_799: *mut *const i8 =
+        std::ptr::addr_of_mut!(__slate_storage_799) as *mut *const i8; // Index of db containing pTab in aDb[]
+    let mut __slate_storage_798: std::mem::MaybeUninit<i32> = std::mem::MaybeUninit::uninit();
+    let __slate_slot_798: *mut i32 = std::ptr::addr_of_mut!(__slate_storage_798) as *mut i32; // Table to modify
+    let mut __slate_storage_797: std::mem::MaybeUninit<*mut Table> =
+        std::mem::MaybeUninit::uninit();
+    let __slate_slot_797: *mut *mut Table =
+        std::ptr::addr_of_mut!(__slate_storage_797) as *mut *mut Table; // Database handle
+    let mut __slate_storage_796: std::mem::MaybeUninit<*mut sqlite3> =
+        std::mem::MaybeUninit::uninit();
+    let __slate_slot_796: *mut *mut sqlite3 =
+        std::ptr::addr_of_mut!(__slate_storage_796) as *mut *mut sqlite3;
+    unsafe {
+        '__join_0: {
+            std::ptr::write(__slate_slot_796, unsafe { (*pParse).db });
+            std::ptr::write(__slate_slot_800, std::ptr::null_mut::<i8>());
+            // Look up the table being altered.
+            0 as i32;
+            0 as i32;
+            if (unsafe { (*(*__slate_slot_796)).mallocFailed }) != (0 as u8) {
+            } else {
+                *__slate_slot_797 = unsafe {
+                    sqlite3LocateTableItem(pParse, (0 as i32) as u32, unsafe {
+                        unsafe { std::ptr::addr_of_mut!((*pSrc).a) as *mut SrcItem }
+                            .offset((0 as i32) as isize)
+                    })
+                };
+                if !(*__slate_slot_797 != std::ptr::null_mut::<Table>()) {
+                } else {
+                    // Make sure this is not an attempt to ALTER a view, virtual table or
+                    // system table.
+                    if (0 as i32) != isAlterableTable(pParse, *__slate_slot_797) {
+                    } else {
+                        if (0 as i32) != isRealTable(pParse, *__slate_slot_797, 1 as i32) {
+                        } else {
+                            // Find the index of the column being dropped.
+                            *__slate_slot_800 =
+                                unsafe { sqlite3NameFromToken(*__slate_slot_796, pName) };
+                            if *__slate_slot_800 == std::ptr::null_mut::<i8>() {
+                                0 as i32;
+                            } else {
+                                *__slate_slot_801 = unsafe {
+                                    sqlite3ColumnIndex(
+                                        *__slate_slot_797,
+                                        *__slate_slot_800 as *const i8,
+                                    )
+                                };
+                                if *__slate_slot_801 < (0 as i32) {
+                                    unsafe {
+                                        sqlite3ErrorMsg(
+                                            pParse,
+                                            (b"no such column: \"%T\"\0".as_ptr() as *mut i8)
+                                                as *const i8,
+                                            pName,
+                                        )
+                                    };
+                                } else {
+                                    // Do not allow the user to drop a PRIMARY KEY column or a column
+                                    // constrained by a UNIQUE constraint.
+                                    if (((unsafe {
+                                        (*unsafe {
+                                            unsafe { (*(*__slate_slot_797)).aCol }
+                                                .offset(*__slate_slot_801 as isize)
+                                        })
+                                        .colFlags
+                                    }) as u32) as i32)
+                                        & ((1 as i32) | (8 as i32))
+                                        != (0 as i32)
+                                    {
+                                        unsafe {
+                                            sqlite3ErrorMsg(
+                                                pParse,
+                                                (b"cannot drop %s column: \"%s\"\0".as_ptr()
+                                                    as *mut i8)
+                                                    as *const i8,
+                                                if (((unsafe {
+                                                    (*unsafe {
+                                                        unsafe { (*(*__slate_slot_797)).aCol }
+                                                            .offset(*__slate_slot_801 as isize)
+                                                    })
+                                                    .colFlags
+                                                })
+                                                    as u32)
+                                                    as i32)
+                                                    & (1 as i32)
+                                                    != (0 as i32)
+                                                {
+                                                    b"PRIMARY KEY\0".as_ptr() as *mut i8
+                                                } else {
+                                                    b"UNIQUE\0".as_ptr() as *mut i8
+                                                },
+                                                *__slate_slot_800,
+                                            )
+                                        };
+                                    } else {
+                                        // Do not allow the number of columns to go to zero
+                                        if ((unsafe { (*(*__slate_slot_797)).nCol }) as i32)
+                                            <= (1 as i32)
+                                        {
+                                            unsafe {
+                                                sqlite3ErrorMsg(pParse, (b"cannot drop column \"%s\": no other columns exist\0".as_ptr() as *mut i8) as *const i8, *__slate_slot_800)
+                                            };
+                                        } else {
+                                            // Edit the sqlite_schema table
+                                            *__slate_slot_798 = unsafe {
+                                                sqlite3SchemaToIndex(*__slate_slot_796, unsafe {
+                                                    (*(*__slate_slot_797)).pSchema
+                                                })
+                                            };
+                                            0 as i32;
+                                            *__slate_slot_799 = (unsafe {
+                                                (*unsafe {
+                                                    unsafe { (*(*__slate_slot_796)).aDb }
+                                                        .offset(*__slate_slot_798 as isize)
+                                                })
+                                                .zDbSName
+                                            })
+                                                as *const i8;
+                                            // Invoke the authorization callback.
+                                            if (unsafe {
+                                                sqlite3AuthCheck(
+                                                    pParse,
+                                                    26 as i32,
+                                                    *__slate_slot_799,
+                                                    (unsafe { (*(*__slate_slot_797)).zName })
+                                                        as *const i8,
+                                                    *__slate_slot_800 as *const i8,
+                                                )
+                                            }) != (0 as i32)
+                                            {
+                                            } else {
+                                                renameTestSchema(
+                                                    pParse,
+                                                    *__slate_slot_799,
+                                                    (*__slate_slot_798 == (1 as i32)) as i32,
+                                                    (b"\0".as_ptr() as *mut i8) as *const i8,
+                                                    0 as i32,
+                                                );
+                                                renameFixQuotes(
+                                                    pParse,
+                                                    *__slate_slot_799,
+                                                    (*__slate_slot_798 == (1 as i32)) as i32,
+                                                );
+                                                unsafe {
+                                                    sqlite3NestedParse(pParse, (b"UPDATE \"%w\".sqlite_master SET sql = sqlite_drop_column(%d, sql, %d) WHERE (type=='table' AND tbl_name=%Q COLLATE nocase)\0".as_ptr() as *mut i8) as *const i8, *__slate_slot_799, *__slate_slot_798, *__slate_slot_801, unsafe { (*(*__slate_slot_797)).zName })
+                                                };
+                                                // Drop and reload the database schema.
+                                                renameReloadSchema(
+                                                    pParse,
+                                                    *__slate_slot_798,
+                                                    ((2 as i32) as i16) as u16,
+                                                );
+                                                renameTestSchema(
+                                                    pParse,
+                                                    *__slate_slot_799,
+                                                    (*__slate_slot_798 == (1 as i32)) as i32,
+                                                    (b"after drop column\0".as_ptr() as *mut i8)
+                                                        as *const i8,
+                                                    1 as i32,
+                                                );
+                                                // Edit rows of table on disk
+                                                if (unsafe { (*pParse).nErr }) == (0 as i32)
+                                                    && (((unsafe {
+                                                        (*unsafe {
+                                                            unsafe { (*(*__slate_slot_797)).aCol }
+                                                                .offset(*__slate_slot_801 as isize)
+                                                        })
+                                                        .colFlags
+                                                    })
+                                                        as u32)
+                                                        as i32)
+                                                        & (32 as i32)
+                                                        == (0 as i32)
+                                                {
+                                                    std::ptr::write(
+                                                        __slate_slot_806,
+                                                        std::ptr::null_mut::<Index>(),
+                                                    );
+                                                    std::ptr::write(__slate_slot_807, 0 as i32);
+                                                    std::ptr::write(__slate_slot_809, unsafe {
+                                                        sqlite3GetVdbe(pParse)
+                                                    });
+                                                    std::ptr::write(__slate_slot_1363, pParse);
+                                                    std::ptr::write(__slate_slot_1364, unsafe {
+                                                        (*(*__slate_slot_1363)).nTab
+                                                    });
+                                                    std::ptr::write(
+                                                        __slate_slot_1365,
+                                                        *__slate_slot_1364 + (1 as i32),
+                                                    );
+                                                    unsafe {
+                                                        (*(*__slate_slot_1363)).nTab =
+                                                            *__slate_slot_1365;
+                                                    }
+                                                    *__slate_slot_808 = *__slate_slot_1364;
+                                                    unsafe {
+                                                        sqlite3OpenTable(
+                                                            pParse,
+                                                            *__slate_slot_808,
+                                                            *__slate_slot_798,
+                                                            *__slate_slot_797,
+                                                            116 as i32,
+                                                        )
+                                                    };
+                                                    *__slate_slot_803 = unsafe {
+                                                        sqlite3VdbeAddOp1(
+                                                            *__slate_slot_809,
+                                                            36 as i32,
+                                                            *__slate_slot_808,
+                                                        )
+                                                    };
+                                                    {}
+                                                    std::ptr::write(__slate_slot_1366, pParse);
+                                                    std::ptr::write(__slate_slot_1367, unsafe {
+                                                        (*(*__slate_slot_1366)).nMem
+                                                    });
+                                                    std::ptr::write(
+                                                        __slate_slot_1368,
+                                                        *__slate_slot_1367 + (1 as i32),
+                                                    );
+                                                    unsafe {
+                                                        (*(*__slate_slot_1366)).nMem =
+                                                            *__slate_slot_1368;
+                                                    }
+                                                    *__slate_slot_804 = *__slate_slot_1368;
+                                                    if (unsafe { (*(*__slate_slot_797)).tabFlags })
+                                                        & ((128 as i32) as u32)
+                                                        == ((0 as i32) as u32)
+                                                    {
+                                                        unsafe {
+                                                            sqlite3VdbeAddOp2(
+                                                                *__slate_slot_809,
+                                                                137 as i32,
+                                                                *__slate_slot_808,
+                                                                *__slate_slot_804,
+                                                            )
+                                                        };
+                                                        std::ptr::write(__slate_slot_1369, pParse);
+                                                        std::ptr::write(
+                                                            __slate_slot_1370,
+                                                            unsafe { (*(*__slate_slot_1369)).nMem },
+                                                        );
+                                                        std::ptr::write(
+                                                            __slate_slot_1371,
+                                                            *__slate_slot_1370
+                                                                + ((unsafe {
+                                                                    (*(*__slate_slot_797)).nCol
+                                                                })
+                                                                    as i32),
+                                                        );
+                                                        unsafe {
+                                                            (*(*__slate_slot_1369)).nMem =
+                                                                *__slate_slot_1371;
+                                                        }
+                                                    } else {
+                                                        *__slate_slot_806 = unsafe {
+                                                            sqlite3PrimaryKeyIndex(
+                                                                *__slate_slot_797,
+                                                            )
+                                                        };
+                                                        std::ptr::write(__slate_slot_1372, pParse);
+                                                        std::ptr::write(
+                                                            __slate_slot_1373,
+                                                            unsafe { (*(*__slate_slot_1372)).nMem },
+                                                        );
+                                                        std::ptr::write(
+                                                            __slate_slot_1374,
+                                                            *__slate_slot_1373
+                                                                + (((unsafe {
+                                                                    (*(*__slate_slot_806)).nColumn
+                                                                })
+                                                                    as u32)
+                                                                    as i32),
+                                                        );
+                                                        unsafe {
+                                                            (*(*__slate_slot_1372)).nMem =
+                                                                *__slate_slot_1374;
+                                                        }
+                                                        *__slate_slot_802 = 0 as i32;
+                                                        loop {
+                                                            if *__slate_slot_802
+                                                                < (((unsafe {
+                                                                    (*(*__slate_slot_806)).nKeyCol
+                                                                })
+                                                                    as u32)
+                                                                    as i32)
+                                                            {
+                                                                unsafe {
+                                                                    sqlite3VdbeAddOp3(
+                                                                        *__slate_slot_809,
+                                                                        96 as i32,
+                                                                        *__slate_slot_808,
+                                                                        *__slate_slot_802,
+                                                                        *__slate_slot_804
+                                                                            + *__slate_slot_802
+                                                                            + (1 as i32),
+                                                                    )
+                                                                };
+                                                                std::ptr::write(
+                                                                    __slate_slot_1375,
+                                                                    *__slate_slot_802,
+                                                                );
+                                                                std::ptr::write(
+                                                                    __slate_slot_1376,
+                                                                    *__slate_slot_1375 + (1 as i32),
+                                                                );
+                                                                *__slate_slot_802 =
+                                                                    *__slate_slot_1376;
+                                                            } else {
+                                                                break;
+                                                            }
+                                                        }
+                                                        *__slate_slot_807 = ((unsafe {
+                                                            (*(*__slate_slot_806)).nKeyCol
+                                                        })
+                                                            as u32)
+                                                            as i32;
+                                                    }
+                                                    std::ptr::write(__slate_slot_1377, pParse);
+                                                    std::ptr::write(__slate_slot_1378, unsafe {
+                                                        (*(*__slate_slot_1377)).nMem
+                                                    });
+                                                    std::ptr::write(
+                                                        __slate_slot_1379,
+                                                        *__slate_slot_1378 + (1 as i32),
+                                                    );
+                                                    unsafe {
+                                                        (*(*__slate_slot_1377)).nMem =
+                                                            *__slate_slot_1379;
+                                                    }
+                                                    *__slate_slot_805 = *__slate_slot_1379;
+                                                    *__slate_slot_802 = 0 as i32;
+                                                    loop {
+                                                        if *__slate_slot_802
+                                                            < ((unsafe {
+                                                                (*(*__slate_slot_797)).nCol
+                                                            })
+                                                                as i32)
+                                                        {
+                                                            '__join_8: {
+                                                                if *__slate_slot_802
+                                                                    != *__slate_slot_801
+                                                                    && (((unsafe {
+                                                                        (*unsafe { unsafe { (*(*__slate_slot_797)).aCol }.offset(*__slate_slot_802 as isize) }).colFlags
+                                                                    })
+                                                                        as u32)
+                                                                        as i32)
+                                                                        & (32 as i32)
+                                                                        == (0 as i32)
+                                                                {
+                                                                    if *__slate_slot_806
+                                                                        != std::ptr::null_mut::<Index>(
+                                                                        )
+                                                                    {
+                                                                        std::ptr::write(
+                                                                            __slate_slot_811,
+                                                                            unsafe {
+                                                                                sqlite3TableColumnToIndex(*__slate_slot_806, *__slate_slot_802)
+                                                                            },
+                                                                        );
+                                                                        std::ptr::write(
+                                                                            __slate_slot_812,
+                                                                            unsafe {
+                                                                                sqlite3TableColumnToIndex(*__slate_slot_806, *__slate_slot_801)
+                                                                            },
+                                                                        );
+                                                                        if *__slate_slot_811
+                                                                            < (((unsafe {
+                                                                                (*(*__slate_slot_806)).nKeyCol
+                                                                            })
+                                                                                as u32)
+                                                                                as i32)
+                                                                        {
+                                                                            break '__join_8;
+                                                                        } else {
+                                                                            *__slate_slot_810 = *__slate_slot_804 + (1 as i32) + *__slate_slot_811 - ((*__slate_slot_811 > *__slate_slot_812) as i32);
+                                                                        }
+                                                                    } else {
+                                                                        *__slate_slot_810 =
+                                                                            *__slate_slot_804
+                                                                                + (1 as i32)
+                                                                                + *__slate_slot_807;
+                                                                    }
+                                                                    if *__slate_slot_802
+                                                                        == ((unsafe {
+                                                                            (*(*__slate_slot_797))
+                                                                                .iPKey
+                                                                        })
+                                                                            as i32)
+                                                                    {
+                                                                        unsafe {
+                                                                            sqlite3VdbeAddOp2(
+                                                                                *__slate_slot_809,
+                                                                                77 as i32,
+                                                                                0 as i32,
+                                                                                *__slate_slot_810,
+                                                                            )
+                                                                        };
+                                                                    } else {
+                                                                        std::ptr::write(
+                                                                            __slate_slot_813,
+                                                                            unsafe {
+                                                                                (*unsafe { unsafe { (*(*__slate_slot_797)).aCol }.offset(*__slate_slot_802 as isize) }).affinity
+                                                                            },
+                                                                        );
+                                                                        if (*__slate_slot_813
+                                                                            as i32)
+                                                                            == (69 as i32)
+                                                                        {
+                                                                            unsafe {
+                                                                                (*unsafe { unsafe { (*(*__slate_slot_797)).aCol }.offset(*__slate_slot_802 as isize) }).affinity = (67 as i32) as i8;
+                                                                            }
+                                                                        }
+                                                                        unsafe {
+                                                                            sqlite3ExprCodeGetColumnOfTable(*__slate_slot_809, *__slate_slot_797, *__slate_slot_808, *__slate_slot_802, *__slate_slot_810)
+                                                                        };
+                                                                        unsafe {
+                                                                            (*unsafe { unsafe { (*(*__slate_slot_797)).aCol }.offset(*__slate_slot_802 as isize) }).affinity = *__slate_slot_813;
+                                                                        }
+                                                                    }
+                                                                    std::ptr::write(
+                                                                        __slate_slot_1382,
+                                                                        *__slate_slot_807,
+                                                                    );
+                                                                    std::ptr::write(
+                                                                        __slate_slot_1383,
+                                                                        *__slate_slot_1382
+                                                                            + (1 as i32),
+                                                                    );
+                                                                    *__slate_slot_807 =
+                                                                        *__slate_slot_1383;
+                                                                }
+                                                            }
+                                                            std::ptr::write(
+                                                                __slate_slot_1380,
+                                                                *__slate_slot_802,
+                                                            );
+                                                            std::ptr::write(
+                                                                __slate_slot_1381,
+                                                                *__slate_slot_1380 + (1 as i32),
+                                                            );
+                                                            *__slate_slot_802 = *__slate_slot_1381;
+                                                        } else {
+                                                            break;
+                                                        }
+                                                    }
+                                                    if *__slate_slot_807 == (0 as i32) {
+                                                        std::ptr::write(__slate_slot_1384, pParse);
+                                                        std::ptr::write(
+                                                            __slate_slot_1385,
+                                                            unsafe { (*(*__slate_slot_1384)).nMem },
+                                                        );
+                                                        std::ptr::write(
+                                                            __slate_slot_1386,
+                                                            *__slate_slot_1385 + (1 as i32),
+                                                        );
+                                                        unsafe {
+                                                            (*(*__slate_slot_1384)).nMem =
+                                                                *__slate_slot_1386;
+                                                        }
+                                                        unsafe {
+                                                            sqlite3VdbeAddOp2(
+                                                                *__slate_slot_809,
+                                                                77 as i32,
+                                                                0 as i32,
+                                                                *__slate_slot_804 + (1 as i32),
+                                                            )
+                                                        };
+                                                        *__slate_slot_807 = 1 as i32;
+                                                    }
+                                                    unsafe {
+                                                        sqlite3VdbeAddOp3(
+                                                            *__slate_slot_809,
+                                                            99 as i32,
+                                                            *__slate_slot_804 + (1 as i32),
+                                                            *__slate_slot_807,
+                                                            *__slate_slot_805,
+                                                        )
+                                                    };
+                                                    if *__slate_slot_806
+                                                        != std::ptr::null_mut::<Index>()
+                                                    {
+                                                        unsafe {
+                                                            sqlite3VdbeAddOp4Int(
+                                                                *__slate_slot_809,
+                                                                140 as i32,
+                                                                *__slate_slot_808,
+                                                                *__slate_slot_805,
+                                                                *__slate_slot_804 + (1 as i32),
+                                                                ((unsafe {
+                                                                    (*(*__slate_slot_806)).nKeyCol
+                                                                })
+                                                                    as u32)
+                                                                    as i32,
+                                                            )
+                                                        };
+                                                    } else {
+                                                        unsafe {
+                                                            sqlite3VdbeAddOp3(
+                                                                *__slate_slot_809,
+                                                                130 as i32,
+                                                                *__slate_slot_808,
+                                                                *__slate_slot_805,
+                                                                *__slate_slot_804,
+                                                            )
+                                                        };
+                                                    }
+                                                    unsafe {
+                                                        sqlite3VdbeChangeP5(
+                                                            *__slate_slot_809,
+                                                            ((2 as i32) as i16) as u16,
+                                                        )
+                                                    };
+                                                    unsafe {
+                                                        sqlite3VdbeAddOp2(
+                                                            *__slate_slot_809,
+                                                            40 as i32,
+                                                            *__slate_slot_808,
+                                                            *__slate_slot_803 + (1 as i32),
+                                                        )
+                                                    };
+                                                    {}
+                                                    unsafe {
+                                                        sqlite3VdbeJumpHere(
+                                                            *__slate_slot_809,
+                                                            *__slate_slot_803,
+                                                        )
+                                                    };
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        unsafe { sqlite3DbFree(*__slate_slot_796, *__slate_slot_800 as *mut ()) };
+        unsafe { sqlite3SrcListDelete(*__slate_slot_796, pSrc) };
+    }
+}
+
+/// Return the number of bytes of leading whitespace/comments in string z[].
 fn getWhitespace(mut z: *const u8) -> i32 {
     let mut nRet: i32 = 0 as i32;
     '__slate_break_1318: while (1 as i32) != (0 as i32) {
@@ -7164,28 +6647,26 @@ fn getWhitespace(mut z: *const u8) -> i32 {
     return nRet;
 }
 
-// /*
-// ** Argument z points into the body of a constraint - specifically the
-// ** second token of the constraint definition.  For a named constraint,
-// ** z points to the second token of the constraint definition. For an
-// ** unnamed NOT NULL constraint, z points to the first byte past the NOT
-// ** keyword.
-// **
-// ** Argument eTok may be the token value of the first token of the constraint
-// ** (e.g. TK_CHECK or TK_REFERENCES) or zero. If it is either TK_REFERENCES
-// ** or TK_FOREIGN, special parsing is enabled to find the end of the foreign-key
-// ** constraint definition.
-// **
-// ** Return the number of bytes until the end of the constraint.
-// */
+/// Argument z points into the body of a constraint - specifically the
+/// second token of the constraint definition.  For a named constraint,
+/// z points to the second token of the constraint definition. For an
+/// unnamed NOT NULL constraint, z points to the first byte past the NOT
+/// keyword.
+///
+/// Argument eTok may be the token value of the first token of the constraint
+/// (e.g. TK_CHECK or TK_REFERENCES) or zero. If it is either TK_REFERENCES
+/// or TK_FOREIGN, special parsing is enabled to find the end of the foreign-key
+/// constraint definition.
+///
+/// Return the number of bytes until the end of the constraint.
 fn getConstraint(mut z: *const u8, mut eTok: i32) -> i32 {
     let mut iOff: i32 = 0 as i32;
     let mut t: i32 = 0 as i32;
     if eTok == (133 as i32) {
-        // /* For a FOREIGN KEY constraint, use getConstraint() to parse everything
-        //     ** up to the REFERENCES keyword. Then getConstraintToken() to consume
-        //     ** the TK_REFERENCES token itself. Then fall through to the special
-        //     ** handling for TK_REFERENCES below.  */
+        // For a FOREIGN KEY constraint, use getConstraint() to parse everything
+        // up to the REFERENCES keyword. Then getConstraintToken() to consume
+        // the TK_REFERENCES token itself. Then fall through to the special
+        // handling for TK_REFERENCES below.
         iOff = getConstraint(z, 0 as i32);
         let __v1464: i32 = iOff;
         let __v1465: i32 = __v1464
@@ -7196,8 +6677,8 @@ fn getConstraint(mut z: *const u8, mut eTok: i32) -> i32 {
         iOff = __v1465;
     }
     if eTok == (126 as i32) {
-        // /* REFERENCES is followed by a table name. Gobble this up here in
-        //     ** case the table name is a fallback token like TK_GENERATED. */
+        // REFERENCES is followed by a table name. Gobble this up here in
+        // case the table name is a fallback token like TK_GENERATED.
         let __v1466: i32 = iOff;
         let __v1467: i32 = __v1466
             + getConstraintToken(
@@ -7206,14 +6687,13 @@ fn getConstraint(mut z: *const u8, mut eTok: i32) -> i32 {
             );
         iOff = __v1467;
     }
-    // /* Now, the current constraint proceeds until the next occurence of one
-    //   ** of the following tokens:
-    //   **
-    //   **   CONSTRAINT, PRIMARY, NOT, UNIQUE, CHECK, DEFAULT,
-    //   **   COLLATE, REFERENCES, FOREIGN, GENERATED, AS, RP, or COMMA
-    //   **
-    //   ** Also exit the loop if ILLEGAL turns up.
-    //   */
+    // Now, the current constraint proceeds until the next occurence of one
+    // of the following tokens:
+    //
+    //   CONSTRAINT, PRIMARY, NOT, UNIQUE, CHECK, DEFAULT,
+    //   COLLATE, REFERENCES, FOREIGN, GENERATED, AS, RP, or COMMA
+    //
+    // Also exit the loop if ILLEGAL turns up.
     '__slate_break_1319: while (1 as i32) != (0 as i32) {
         let mut n: i32 = getConstraintToken(
             unsafe { z.offset(iOff as isize) },
@@ -7243,17 +6723,24 @@ fn getConstraint(mut z: *const u8, mut eTok: i32) -> i32 {
     return iOff;
 }
 
-// /*
-// ** Compare two constraint names.
-// **
-// ** Summary:   *pRes := zQuote != zCmp
-// **
-// ** Details:
-// ** Compare the (possibly quoted) constraint name zQuote[0..nQuote-1]
-// ** against zCmp[].  Write zero into *pRes if they are the same and
-// ** non-zero if they differ.  Normally return SQLITE_OK, except if there
-// ** is an OOM, set the OOM error condition on ctx and return SQLITE_NOMEM.
-// */
+/// Compare two constraint names.
+///
+/// Summary:   *pRes := zQuote != zCmp
+///
+/// Details:
+/// Compare the (possibly quoted) constraint name zQuote[0..nQuote-1]
+/// against zCmp[].  Write zero into *pRes if they are the same and
+/// non-zero if they differ.  Normally return SQLITE_OK, except if there
+/// is an OOM, set the OOM error condition on ctx and return SQLITE_NOMEM.
+///
+/// # Arguments
+///
+/// * `ctx` - Function context on which to report errors
+/// * `t` - Token type
+/// * `zQuote` - Possibly quoted text.  Not zero-terminated.
+/// * `nQuote` - Length of zQuote in bytes
+/// * `zCmp` - Zero-terminated, unquoted name to compare against
+/// * `pRes` - OUT: Set to 0 if equal, non-zero if unequal
 fn quotedCompare(
     mut ctx: *mut sqlite3_context,
     mut t: i32,
@@ -7262,8 +6749,7 @@ fn quotedCompare(
     mut zCmp: *const u8,
     mut pRes: *mut i32,
 ) -> i32 {
-    // /* De-quoted, zero-terminated copy of zQuote[] */
-    let mut zCopy: *mut i8 = std::ptr::null_mut::<i8>();
+    let mut zCopy: *mut i8 = std::ptr::null_mut::<i8>(); // De-quoted, zero-terminated copy of zQuote[]
     if t == (186 as i32) {
         unsafe {
             *pRes = 1 as i32;
@@ -7290,24 +6776,16 @@ fn quotedCompare(
     return 0 as i32;
 }
 
-// /* Function context on which to report errors */
-// /* Token type */
-// /* Possibly quoted text.  Not zero-terminated. */
-// /* Length of zQuote in bytes */
-// /* Zero-terminated, unquoted name to compare against */
-// /* OUT: Set to 0 if equal, non-zero if unequal */
-// /*
-// ** zSql[] is a CREATE TABLE statement, supposedly.  Find the offset
-// ** into zSql[] of the first character past the first "(" and write
-// ** that offset into *piOff and return SQLITE_OK.  Or, if not found,
-// ** set the SQLITE_CORRUPT error code and return SQLITE_ERROR.
-// */
+/// zSql[] is a CREATE TABLE statement, supposedly.  Find the offset
+/// into zSql[] of the first character past the first "(" and write
+/// that offset into *piOff and return SQLITE_OK.  Or, if not found,
+/// set the SQLITE_CORRUPT error code and return SQLITE_ERROR.
 fn skipCreateTable(mut ctx: *mut sqlite3_context, mut zSql: *const u8, mut piOff: *mut i32) -> i32 {
     let mut iOff: i32 = 0 as i32;
     if zSql == std::ptr::null::<u8>() {
         return 1 as i32;
     }
-    // /* Jump past the "CREATE TABLE" bit. */
+    // Jump past the "CREATE TABLE" bit.
     '__slate_break_1320: while (1 as i32) != (0 as i32) {
         let mut t: i32 = 0 as i32;
         let __v1470: i32 = iOff;
@@ -7333,17 +6811,15 @@ fn skipCreateTable(mut ctx: *mut sqlite3_context, mut zSql: *const u8, mut piOff
     return 0 as i32;
 }
 
-// /*
-// ** Internal SQL function sqlite3_drop_constraint():  Given an input
-// ** CREATE TABLE statement, return a revised CREATE TABLE statement
-// ** with a constraint removed.  Two forms, depending on the datatype
-// ** of argv[2]:
-// **
-// **   sqlite_drop_constraint(SQL, INT)  -- Omit NOT NULL from the INT-th column
-// **   sqlite_drop_constraint(SQL, TEXT) -- OMIT constraint with name TEXT
-// **
-// ** In the first case, the left-most column is 0.
-// */
+/// Internal SQL function sqlite3_drop_constraint():  Given an input
+/// CREATE TABLE statement, return a revised CREATE TABLE statement
+/// with a constraint removed.  Two forms, depending on the datatype
+/// of argv[2]:
+///
+///   sqlite_drop_constraint(SQL, INT)  -- Omit NOT NULL from the INT-th column
+///   sqlite_drop_constraint(SQL, TEXT) -- OMIT constraint with name TEXT
+///
+/// In the first case, the left-most column is 0.
 #[unsafe(link_section = ".text.slate_distinct.alter.dropConstraintFunc")]
 extern "C-unwind" fn dropConstraintFunc(
     mut ctx: *mut sqlite3_context,
@@ -7365,7 +6841,7 @@ extern "C-unwind" fn dropConstraintFunc(
     if zSql == std::ptr::null::<u8>() {
         return;
     }
-    // /* Jump past the "CREATE TABLE" bit. */
+    // Jump past the "CREATE TABLE" bit.
     if skipCreateTable(ctx, zSql, std::ptr::addr_of_mut!(iOff)) != (0 as i32) {
         return;
     }
@@ -7378,15 +6854,15 @@ extern "C-unwind" fn dropConstraintFunc(
         zCons =
             unsafe { sqlite3_value_text(unsafe { *unsafe { argv.offset((1 as i32) as isize) } }) };
     }
-    // /* Search for the named constraint within column definitions. */
+    // Search for the named constraint within column definitions.
     ii = 0 as i32;
     '__slate_break_1321: loop {
         if !(iEnd == (0 as i32)) {
             break;
         }
-        // /* Now parse the column or table constraint definition. Search
-        //     ** for the token CONSTRAINT if this is a DROP CONSTRAINT command, or
-        //     ** NOT in the right column if this is a DROP NOT NULL. */
+        // Now parse the column or table constraint definition. Search
+        // for the token CONSTRAINT if this is a DROP CONSTRAINT command, or
+        // NOT in the right column if this is a DROP NOT NULL.
         '__slate_break_1322: while (1 as i32) != (0 as i32) {
             iStart = iOff;
             let __v1474: i32 = iOff;
@@ -7397,15 +6873,15 @@ extern "C-unwind" fn dropConstraintFunc(
                 );
             iOff = __v1475;
             if t == (120 as i32) && (zCons != std::ptr::null::<u8>() || iNotNull == ii) {
-                // /* Check if this is the constraint we are searching for. */
+                // Check if this is the constraint we are searching for.
                 let mut nTok: i32 = 0 as i32;
                 let mut cmp: i32 = 1 as i32;
-                // /* Skip past any whitespace. */
+                // Skip past any whitespace.
                 let __v1476: i32 = iOff;
                 let __v1477: i32 = __v1476 + getWhitespace(unsafe { zSql.offset(iOff as isize) });
                 iOff = __v1477;
-                // /* Compare the next token - which may be quoted - with the name of
-                //         ** the constraint being dropped.  */
+                // Compare the next token - which may be quoted - with the name of
+                // the constraint being dropped.
                 nTok = getConstraintToken(
                     unsafe { zSql.offset(iOff as isize) },
                     std::ptr::addr_of_mut!(t),
@@ -7426,20 +6902,20 @@ extern "C-unwind" fn dropConstraintFunc(
                 let __v1478: i32 = iOff;
                 let __v1479: i32 = __v1478 + nTok;
                 iOff = __v1479;
-                // /* The next token is usually the first token of the constraint
-                //         ** definition. This is enough to tell the type of the constraint -
-                //         ** TK_NOT means it is a NOT NULL, TK_CHECK a CHECK constraint etc.
-                //         **
-                //         ** There is also the chance that the next token is TK_CONSTRAINT
-                //         ** (or TK_DEFAULT or TK_COLLATE), for example if a table has been
-                //         ** created as follows:
-                //         **
-                //         **    CREATE TABLE t1(cols, CONSTRAINT one CONSTRAINT two NOT NULL);
-                //         **
-                //         ** In this case, allow the "CONSTRAINT one" bit to be dropped by
-                //         ** this command if that is what is requested, or to advance to
-                //         ** the next iteration of the loop with &zSql[iOff] still pointing
-                //         ** to the CONSTRAINT keyword.  */
+                // The next token is usually the first token of the constraint
+                // definition. This is enough to tell the type of the constraint -
+                // TK_NOT means it is a NOT NULL, TK_CHECK a CHECK constraint etc.
+                //
+                // There is also the chance that the next token is TK_CONSTRAINT
+                // (or TK_DEFAULT or TK_COLLATE), for example if a table has been
+                // created as follows:
+                //
+                //    CREATE TABLE t1(cols, CONSTRAINT one CONSTRAINT two NOT NULL);
+                //
+                // In this case, allow the "CONSTRAINT one" bit to be dropped by
+                // this command if that is what is requested, or to advance to
+                // the next iteration of the loop with &zSql[iOff] still pointing
+                // to the CONSTRAINT keyword.
                 nTok = getConstraintToken(
                     unsafe { zSql.offset(iOff as isize) },
                     std::ptr::addr_of_mut!(t),
@@ -7501,7 +6977,7 @@ extern "C-unwind" fn dropConstraintFunc(
         let __v1473: i32 = __v1472 + (1 as i32);
         ii = __v1473;
     }
-    // /* If the constraint has not been found it is an error. */
+    // If the constraint has not been found it is an error.
     if iEnd <= (0 as i32) {
         if zCons != std::ptr::null::<u8>() {
             unsafe {
@@ -7512,8 +6988,8 @@ extern "C-unwind" fn dropConstraintFunc(
                 )
             };
         } else {
-            // /* SQLite follows postgres in that a DROP NOT NULL on a column that is
-            //       ** not NOT NULL is not an error. So just return the original SQL here. */
+            // SQLite follows postgres in that a DROP NOT NULL on a column that is
+            // not NOT NULL is not an error. So just return the original SQL here.
             unsafe {
                 sqlite3_result_text(ctx, zSql as *const i8, -(1 as i32), unsafe {
                     std::mem::transmute::<usize, Option<unsafe extern "C-unwind" fn(*mut ())>>(
@@ -7523,9 +6999,9 @@ extern "C-unwind" fn dropConstraintFunc(
             };
         }
     } else {
-        // /* Figure out if an extra space should be inserted after the constraint
-        //     ** is removed. And if an additional comma preceding the constraint
-        //     ** should be removed. */
+        // Figure out if an extra space should be inserted after the constraint
+        // is removed. And if an additional comma preceding the constraint
+        // should be removed.
         let mut zSpace: *const i8 = (b" \0".as_ptr() as *mut i8) as *const i8;
         let __v1484: i32 = iEnd;
         let __v1485: i32 = __v1484 + getWhitespace(unsafe { zSql.offset(iEnd as isize) });
@@ -7568,15 +7044,13 @@ extern "C-unwind" fn dropConstraintFunc(
     }
 }
 
-// /*
-// ** Internal SQL function:
-// **
-// **     sqlite_add_constraint(SQL, CONSTRAINT-TEXT, ICOL)
-// **
-// ** SQL is a CREATE TABLE statement.  Return a modified version of
-// ** SQL that adds CONSTRAINT-TEXT at the end of the ICOL-th column
-// ** definition.  (The left-most column defintion is 0.)
-// */
+/// Internal SQL function:
+///
+///     sqlite_add_constraint(SQL, CONSTRAINT-TEXT, ICOL)
+///
+/// SQL is a CREATE TABLE statement.  Return a modified version of
+/// SQL that adds CONSTRAINT-TEXT at the end of the ICOL-th column
+/// definition.  (The left-most column defintion is 0.)
 #[unsafe(link_section = ".text.slate_distinct.alter.addConstraintFunc")]
 extern "C-unwind" fn addConstraintFunc(
     mut ctx: *mut sqlite3_context,
@@ -7651,12 +7125,10 @@ extern "C-unwind" fn addConstraintFunc(
     unsafe { sqlite3_result_str(ctx, pNew, 2 as i32) };
 }
 
-// /*
-// ** Find a column named pCol in table pTab. If successful, set output
-// ** parameter *piCol to the index of the column in the table and return
-// ** SQLITE_OK. Otherwise, set *piCol to -1 and return an SQLite error
-// ** code.
-// */
+/// Find a column named pCol in table pTab. If successful, set output
+/// parameter *piCol to the index of the column in the table and return
+/// SQLITE_OK. Otherwise, set *piCol to -1 and return an SQLite error
+/// code.
 fn alterFindCol(
     mut pParse: *mut Parse,
     mut pTab: *mut Table,
@@ -7714,15 +7186,21 @@ fn alterFindCol(
     return rc;
 }
 
-// /*
-// ** Find the table named by the first entry in source list pSrc. If successful,
-// ** return a pointer to the Table structure and set output variable (*pzDb)
-// ** to point to the name of the database containin the table (i.e. "main",
-// ** "temp" or the name of an attached database).
-// **
-// ** If the table cannot be located, return NULL. The value of the two output
-// ** parameters is undefined in this case.
-// */
+/// Find the table named by the first entry in source list pSrc. If successful,
+/// return a pointer to the Table structure and set output variable (*pzDb)
+/// to point to the name of the database containin the table (i.e. "main",
+/// "temp" or the name of an attached database).
+///
+/// If the table cannot be located, return NULL. The value of the two output
+/// parameters is undefined in this case.
+///
+/// # Arguments
+///
+/// * `pParse` - Parsing context
+/// * `pSrc` - Name of the table to look for
+/// * `piDb` - OUT: write the iDb here
+/// * `pzDb` - OUT: write name of schema here
+/// * `bAuth` - Do ALTER TABLE authorization checks if true
 fn alterFindTable(
     mut pParse: *mut Parse,
     mut pSrc: *mut SrcList,
@@ -7775,15 +7253,66 @@ fn alterFindTable(
     return pTab;
 }
 
-// /* Parsing context */
-// /* The table being altered */
-// /* Name of the constraint to drop */
-// /* Name of the column from which to remove the NOT NULL */
-// /*
-// ** The implementation of SQL function sqlite_fail(MSG). This takes a single
-// ** argument, and returns it as an error message with the error code set to
-// ** SQLITE_CONSTRAINT.
-// */
+/// Generate bytecode for one of:
+///
+///  (1)   ALTER TABLE pSrc DROP CONSTRAINT pCons
+///  (2)   ALTER TABLE pSrc ALTER pCol DROP NOT NULL
+///
+/// One of pCons and pCol must be NULL and the other non-null.
+///
+/// # Arguments
+///
+/// * `pParse` - Parsing context
+/// * `pSrc` - The table being altered
+/// * `pCons` - Name of the constraint to drop
+/// * `pCol` - Name of the column from which to remove the NOT NULL
+#[unsafe(no_mangle)]
+extern "C-unwind" fn sqlite3AlterDropConstraint(
+    mut pParse: *mut Parse,
+    mut pSrc: *mut SrcList,
+    mut pCons: *mut Token,
+    mut pCol: *mut Token,
+) {
+    let mut db: *mut sqlite3 = unsafe { (*pParse).db };
+    let mut pTab: *mut Table = std::ptr::null_mut::<Table>();
+    let mut iDb: i32 = 0 as i32;
+    let mut zDb: *const i8 = std::ptr::null::<i8>();
+    let mut zArg: *mut i8 = std::ptr::null_mut::<i8>();
+    0 as i32;
+    0 as i32;
+    pTab = alterFindTable(
+        pParse,
+        pSrc,
+        std::ptr::addr_of_mut!(iDb),
+        std::ptr::addr_of_mut!(zDb),
+        (pCons != std::ptr::null_mut::<Token>()) as i32,
+    );
+    if !(pTab != std::ptr::null_mut::<Table>()) {
+        return;
+    }
+    if pCons != std::ptr::null_mut::<Token>() {
+        let mut z: *mut i8 = unsafe { sqlite3NameFromToken(db, pCons as *const Token) };
+        zArg = unsafe { sqlite3MPrintf(db, (b"%Q\0".as_ptr() as *mut i8) as *const i8, z) };
+        unsafe { sqlite3DbFree(db, z as *mut ()) };
+    } else {
+        let mut iCol: i32 = 0 as i32;
+        if alterFindCol(pParse, pTab, pCol, std::ptr::addr_of_mut!(iCol)) != (0 as i32) {
+            return;
+        }
+        zArg = unsafe { sqlite3MPrintf(db, (b"%d\0".as_ptr() as *mut i8) as *const i8, iCol) };
+    }
+    // Edit the SQL for the named table.
+    unsafe {
+        sqlite3NestedParse(pParse, (b"UPDATE \"%w\".sqlite_master SET sql = sqlite_drop_constraint(sql, %s) WHERE type='table' AND tbl_name=%Q COLLATE nocase\0".as_ptr() as *mut i8) as *const i8, zDb, zArg, unsafe { (*pTab).zName })
+    };
+    unsafe { sqlite3DbFree(db, zArg as *mut ()) };
+    // Finally, reload the database schema.
+    renameReloadSchema(pParse, iDb, ((4 as i32) as i16) as u16);
+}
+
+/// The implementation of SQL function sqlite_fail(MSG). This takes a single
+/// argument, and returns it as an error message with the error code set to
+/// SQLITE_CONSTRAINT.
 #[unsafe(link_section = ".text.slate_distinct.alter.failConstraintFunc")]
 extern "C-unwind" fn failConstraintFunc(
     mut ctx: *mut sqlite3_context,
@@ -7800,19 +7329,23 @@ extern "C-unwind" fn failConstraintFunc(
     unsafe { sqlite3_result_error_code(ctx, err) };
 }
 
-// /*
-// ** Buffer pCons, which is nCons bytes in size, contains the text of a
-// ** NOT NULL or CHECK constraint that will be inserted into a CREATE TABLE
-// ** statement. If successful, this function returns the size of the buffer in
-// ** bytes not including any trailing whitespace or "--" style comments. Or,
-// ** if an OOM occurs, it returns 0 and sets db->mallocFailed to true.
-// **
-// ** C-style comments at the end are preserved.  "--" style comments are
-// ** removed because the comment terminator might be \000, and we are about
-// ** to insert the pCons[] text into the middle of a larger string, and that
-// ** will have the effect of removing the comment terminator and messing up
-// ** the syntax.
-// */
+/// Buffer pCons, which is nCons bytes in size, contains the text of a
+/// NOT NULL or CHECK constraint that will be inserted into a CREATE TABLE
+/// statement. If successful, this function returns the size of the buffer in
+/// bytes not including any trailing whitespace or "--" style comments. Or,
+/// if an OOM occurs, it returns 0 and sets db->mallocFailed to true.
+///
+/// C-style comments at the end are preserved.  "--" style comments are
+/// removed because the comment terminator might be \000, and we are about
+/// to insert the pCons[] text into the middle of a larger string, and that
+/// will have the effect of removing the comment terminator and messing up
+/// the syntax.
+///
+/// # Arguments
+///
+/// * `db` - used to record OOM error
+/// * `pCons` - Buffer containing constraint
+/// * `nCons` - Size of pCons in bytes
 fn alterRtrimConstraint(mut db: *mut sqlite3, mut pCons: *const i8, mut nCons: i32) -> i32 {
     let mut zTmp: *mut u8 = (unsafe {
         sqlite3MPrintf(
@@ -7853,19 +7386,81 @@ fn alterRtrimConstraint(mut db: *mut sqlite3, mut pCons: *const i8, mut nCons: i
     return iEnd;
 }
 
-// /* Parsing context */
-// /* Name of the table being altered */
-// /* Name of the column to add a NOT NULL constraint to */
-// /* The NOT token of the NOT NULL constraint text */
-// /*
-// ** Implementation of internal SQL function:
-// **
-// **     sqlite_find_constraint(SQL, CONSTRAINT-NAME)
-// **
-// ** This function returns true if the SQL passed as the first argument is a
-// ** CREATE TABLE that contains a constraint with the name CONSTRAINT-NAME,
-// ** or false otherwise.
-// */
+/// Prepare a statement of the form:
+///
+///   ALTER TABLE pSrc ALTER pCol SET NOT NULL
+///
+/// # Arguments
+///
+/// * `pParse` - Parsing context
+/// * `pSrc` - Name of the table being altered
+/// * `pCol` - Name of the column to add a NOT NULL constraint to
+/// * `pFirst` - The NOT token of the NOT NULL constraint text
+#[unsafe(no_mangle)]
+extern "C-unwind" fn sqlite3AlterSetNotNull(
+    mut pParse: *mut Parse,
+    mut pSrc: *mut SrcList,
+    mut pCol: *mut Token,
+    mut pFirst: *mut Token,
+) {
+    let mut pTab: *mut Table = std::ptr::null_mut::<Table>();
+    let mut iCol: i32 = 0 as i32;
+    let mut iDb: i32 = 0 as i32;
+    let mut zDb: *const i8 = std::ptr::null::<i8>();
+    let mut pCons: *const i8 = std::ptr::null::<i8>();
+    let mut nCons: i32 = 0 as i32;
+    // Look up the table being altered.
+    0 as i32;
+    pTab = alterFindTable(
+        pParse,
+        pSrc,
+        std::ptr::addr_of_mut!(iDb),
+        std::ptr::addr_of_mut!(zDb),
+        0 as i32,
+    );
+    if !(pTab != std::ptr::null_mut::<Table>()) {
+        return;
+    }
+    // Find the column being altered.
+    if alterFindCol(pParse, pTab, pCol, std::ptr::addr_of_mut!(iCol)) != (0 as i32) {
+        return;
+    }
+    // Find the length in bytes of the constraint definition
+    pCons = unsafe { (*pFirst).z };
+    nCons = alterRtrimConstraint(
+        unsafe { (*pParse).db },
+        pCons,
+        ((unsafe { unsafe { (*pParse).sLastToken.z }.offset_from(pCons as *const i8) }) as i64)
+            as i32,
+    );
+    // Search for a constraint violation. Throw an exception if one is found.
+    unsafe {
+        sqlite3NestedParse(
+            pParse,
+            (b"SELECT sqlite_fail('constraint failed', %d) FROM %Q.%Q AS x WHERE x.%.*s IS NULL\0"
+                .as_ptr() as *mut i8) as *const i8,
+            19 as i32,
+            zDb,
+            unsafe { (*pTab).zName },
+            (unsafe { (*pCol).n }) as i32,
+            unsafe { (*pCol).z },
+        )
+    };
+    // Edit the SQL for the named table.
+    unsafe {
+        sqlite3NestedParse(pParse, (b"UPDATE \"%w\".sqlite_master SET sql = sqlite_add_constraint(sqlite_drop_constraint(sql, %d), %.*Q, %d) WHERE type='table' AND tbl_name=%Q COLLATE nocase\0".as_ptr() as *mut i8) as *const i8, zDb, iCol, nCons, pCons, iCol, unsafe { (*pTab).zName })
+    };
+    // Finally, reload the database schema.
+    renameReloadSchema(pParse, iDb, ((4 as i32) as i16) as u16);
+}
+
+/// Implementation of internal SQL function:
+///
+///     sqlite_find_constraint(SQL, CONSTRAINT-NAME)
+///
+/// This function returns true if the SQL passed as the first argument is a
+/// CREATE TABLE that contains a constraint with the name CONSTRAINT-NAME,
+/// or false otherwise.
 #[unsafe(link_section = ".text.slate_distinct.alter.findConstraintFunc")]
 extern "C-unwind" fn findConstraintFunc(
     mut ctx: *mut sqlite3_context,
@@ -7934,3 +7529,259 @@ extern "C-unwind" fn findConstraintFunc(
     }
     unsafe { sqlite3_result_int(ctx, 0 as i32) };
 }
+
+/// Generate bytecode to implement:
+///
+///    ALTER TABLE pSrc ADD [CONSTRAINT pName] CHECK(pExpr)
+///
+/// Any "ON CONFLICT" text that occurs after the "CHECK(...)", up
+/// until pParse->sLastToken, is included as part of the new constraint.
+///
+/// # Arguments
+///
+/// * `pParse` - Parse context
+/// * `pSrc` - Table to add constraint to
+/// * `pFirst` - First token of new constraint
+/// * `pName` - Name of new constraint. NULL if name omitted.
+/// * `zExpr` - Text of CHECK expression
+/// * `nExpr` - Size of pExpr in bytes
+/// * `pExpr` - The parsed CHECK expression
+#[unsafe(no_mangle)]
+extern "C-unwind" fn sqlite3AlterAddConstraint(
+    mut pParse: *mut Parse,
+    mut pSrc: *mut SrcList,
+    mut pFirst: *mut Token,
+    mut pName: *mut Token,
+    mut zExpr: *const i8,
+    mut nExpr: i32,
+    mut pExpr: *mut Expr,
+) {
+    let mut pTab: *mut Table = std::ptr::null_mut::<Table>(); // Table identified by pSrc
+    let mut iDb: i32 = 0 as i32; // Which schema does pTab live in
+    let mut zDb: *const i8 = std::ptr::null::<i8>(); // Name of the schema in which pTab lives
+    let mut pCons: *const i8 = std::ptr::null::<i8>(); // Text of the constraint
+    let mut nCons: i32 = 0 as i32; // Bytes of text to use from pCons[]
+    let mut rc: i32 = 0 as i32; // Result from error checking pExpr
+    // Look up the table being altered.
+    0 as i32;
+    pTab = alterFindTable(
+        pParse,
+        pSrc,
+        std::ptr::addr_of_mut!(iDb),
+        std::ptr::addr_of_mut!(zDb),
+        1 as i32,
+    );
+    if !(pTab != std::ptr::null_mut::<Table>()) {
+        unsafe { sqlite3ExprDelete(unsafe { (*pParse).db }, pExpr) };
+        return;
+    }
+    // Verify that the new CHECK constraint does not contain any
+    // internal-use-only function.  Forum post 2026-05-10T01:11:28Z
+    rc = unsafe {
+        sqlite3ResolveSelfReference(
+            pParse,
+            pTab,
+            4 as i32,
+            pExpr,
+            std::ptr::null_mut::<ExprList>(),
+        )
+    };
+    unsafe { sqlite3ExprDelete(unsafe { (*pParse).db }, pExpr) };
+    if rc != (0 as i32) {
+        return;
+    }
+    // If this new constraint has a name, check that it is not a duplicate of
+    // an existing constraint. It is an error if it is.
+    if pName != std::ptr::null_mut::<Token>() {
+        let mut zName: *mut i8 =
+            unsafe { sqlite3NameFromToken(unsafe { (*pParse).db }, pName as *const Token) };
+        unsafe {
+            sqlite3NestedParse(pParse, (b"SELECT sqlite_fail('constraint %q already exists', %d) FROM \"%w\".sqlite_master WHERE type='table' AND tbl_name=%Q COLLATE nocase AND sqlite_find_constraint(sql, %Q)\0".as_ptr() as *mut i8) as *const i8, zName, 1 as i32, zDb, unsafe { (*pTab).zName }, zName)
+        };
+        unsafe { sqlite3DbFree(unsafe { (*pParse).db }, zName as *mut ()) };
+    }
+    // Search for a constraint violation. Throw an exception if one is found.
+    unsafe {
+        sqlite3NestedParse(
+            pParse,
+            (b"SELECT sqlite_fail('constraint failed', %d) FROM %Q.%Q WHERE (%.*s) IS NOT TRUE\0"
+                .as_ptr() as *mut i8) as *const i8,
+            19 as i32,
+            zDb,
+            unsafe { (*pTab).zName },
+            nExpr,
+            zExpr,
+        )
+    };
+    // Edit the SQL for the named table.
+    pCons = unsafe { (*pFirst).z };
+    nCons = alterRtrimConstraint(
+        unsafe { (*pParse).db },
+        pCons,
+        ((unsafe { unsafe { (*pParse).sLastToken.z }.offset_from(pCons as *const i8) }) as i64)
+            as i32,
+    );
+    unsafe {
+        sqlite3NestedParse(pParse, (b"UPDATE \"%w\".sqlite_master SET sql = sqlite_add_constraint(sql, %.*Q, -1) WHERE type='table' AND tbl_name=%Q COLLATE nocase\0".as_ptr() as *mut i8) as *const i8, zDb, nCons, pCons, unsafe { (*pTab).zName })
+    };
+    // Finally, reload the database schema.
+    renameReloadSchema(pParse, iDb, ((4 as i32) as i16) as u16);
+}
+
+/// Register built-in functions used to help implement ALTER TABLE
+#[unsafe(no_mangle)]
+extern "C-unwind" fn sqlite3AlterFunctions() {
+    unsafe {
+        sqlite3InsertBuiltinFuncs(
+            unsafe { std::ptr::addr_of_mut!(aAlterTableFuncs.0) as *mut FuncDef },
+            (((648 as u64) / (72 as u64)) as u32) as i32,
+        )
+    };
+}
+
+static mut aAlterTableFuncs: __SlateAlign16<[FuncDef; 9]> = __SlateAlign16([
+    FuncDef {
+        nArg: (9 as i32) as i16,
+        funcFlags: ((8388608 as i32) | (262144 as i32) | (1 as i32) | (2048 as i32)) as u32,
+        pUserData: std::ptr::null_mut::<()>(),
+        pNext: std::ptr::null_mut::<FuncDef>(),
+        xSFunc: Some(renameColumnFunc),
+        xFinalize: None,
+        xValue: None,
+        xInverse: None,
+        zName: (b"sqlite_rename_column\0".as_ptr() as *mut i8) as *const i8,
+        u: {
+            let mut __t0: __SlateRecord168 = unsafe { std::mem::zeroed() };
+            __t0.pHash = std::ptr::null_mut::<FuncDef>();
+            __t0
+        },
+    },
+    FuncDef {
+        nArg: (7 as i32) as i16,
+        funcFlags: ((8388608 as i32) | (262144 as i32) | (1 as i32) | (2048 as i32)) as u32,
+        pUserData: std::ptr::null_mut::<()>(),
+        pNext: std::ptr::null_mut::<FuncDef>(),
+        xSFunc: Some(renameTableFunc),
+        xFinalize: None,
+        xValue: None,
+        xInverse: None,
+        zName: (b"sqlite_rename_table\0".as_ptr() as *mut i8) as *const i8,
+        u: {
+            let mut __t1: __SlateRecord168 = unsafe { std::mem::zeroed() };
+            __t1.pHash = std::ptr::null_mut::<FuncDef>();
+            __t1
+        },
+    },
+    FuncDef {
+        nArg: (7 as i32) as i16,
+        funcFlags: ((8388608 as i32) | (262144 as i32) | (1 as i32) | (2048 as i32)) as u32,
+        pUserData: std::ptr::null_mut::<()>(),
+        pNext: std::ptr::null_mut::<FuncDef>(),
+        xSFunc: Some(renameTableTest),
+        xFinalize: None,
+        xValue: None,
+        xInverse: None,
+        zName: (b"sqlite_rename_test\0".as_ptr() as *mut i8) as *const i8,
+        u: {
+            let mut __t2: __SlateRecord168 = unsafe { std::mem::zeroed() };
+            __t2.pHash = std::ptr::null_mut::<FuncDef>();
+            __t2
+        },
+    },
+    FuncDef {
+        nArg: (3 as i32) as i16,
+        funcFlags: ((8388608 as i32) | (262144 as i32) | (1 as i32) | (2048 as i32)) as u32,
+        pUserData: std::ptr::null_mut::<()>(),
+        pNext: std::ptr::null_mut::<FuncDef>(),
+        xSFunc: Some(dropColumnFunc),
+        xFinalize: None,
+        xValue: None,
+        xInverse: None,
+        zName: (b"sqlite_drop_column\0".as_ptr() as *mut i8) as *const i8,
+        u: {
+            let mut __t3: __SlateRecord168 = unsafe { std::mem::zeroed() };
+            __t3.pHash = std::ptr::null_mut::<FuncDef>();
+            __t3
+        },
+    },
+    FuncDef {
+        nArg: (2 as i32) as i16,
+        funcFlags: ((8388608 as i32) | (262144 as i32) | (1 as i32) | (2048 as i32)) as u32,
+        pUserData: std::ptr::null_mut::<()>(),
+        pNext: std::ptr::null_mut::<FuncDef>(),
+        xSFunc: Some(renameQuotefixFunc),
+        xFinalize: None,
+        xValue: None,
+        xInverse: None,
+        zName: (b"sqlite_rename_quotefix\0".as_ptr() as *mut i8) as *const i8,
+        u: {
+            let mut __t4: __SlateRecord168 = unsafe { std::mem::zeroed() };
+            __t4.pHash = std::ptr::null_mut::<FuncDef>();
+            __t4
+        },
+    },
+    FuncDef {
+        nArg: (2 as i32) as i16,
+        funcFlags: ((8388608 as i32) | (262144 as i32) | (1 as i32) | (2048 as i32)) as u32,
+        pUserData: std::ptr::null_mut::<()>(),
+        pNext: std::ptr::null_mut::<FuncDef>(),
+        xSFunc: Some(dropConstraintFunc),
+        xFinalize: None,
+        xValue: None,
+        xInverse: None,
+        zName: (b"sqlite_drop_constraint\0".as_ptr() as *mut i8) as *const i8,
+        u: {
+            let mut __t5: __SlateRecord168 = unsafe { std::mem::zeroed() };
+            __t5.pHash = std::ptr::null_mut::<FuncDef>();
+            __t5
+        },
+    },
+    FuncDef {
+        nArg: (2 as i32) as i16,
+        funcFlags: ((8388608 as i32) | (262144 as i32) | (1 as i32) | (2048 as i32)) as u32,
+        pUserData: std::ptr::null_mut::<()>(),
+        pNext: std::ptr::null_mut::<FuncDef>(),
+        xSFunc: Some(failConstraintFunc),
+        xFinalize: None,
+        xValue: None,
+        xInverse: None,
+        zName: (b"sqlite_fail\0".as_ptr() as *mut i8) as *const i8,
+        u: {
+            let mut __t6: __SlateRecord168 = unsafe { std::mem::zeroed() };
+            __t6.pHash = std::ptr::null_mut::<FuncDef>();
+            __t6
+        },
+    },
+    FuncDef {
+        nArg: (3 as i32) as i16,
+        funcFlags: ((8388608 as i32) | (262144 as i32) | (1 as i32) | (2048 as i32)) as u32,
+        pUserData: std::ptr::null_mut::<()>(),
+        pNext: std::ptr::null_mut::<FuncDef>(),
+        xSFunc: Some(addConstraintFunc),
+        xFinalize: None,
+        xValue: None,
+        xInverse: None,
+        zName: (b"sqlite_add_constraint\0".as_ptr() as *mut i8) as *const i8,
+        u: {
+            let mut __t7: __SlateRecord168 = unsafe { std::mem::zeroed() };
+            __t7.pHash = std::ptr::null_mut::<FuncDef>();
+            __t7
+        },
+    },
+    FuncDef {
+        nArg: (2 as i32) as i16,
+        funcFlags: ((8388608 as i32) | (262144 as i32) | (1 as i32) | (2048 as i32)) as u32,
+        pUserData: std::ptr::null_mut::<()>(),
+        pNext: std::ptr::null_mut::<FuncDef>(),
+        xSFunc: Some(findConstraintFunc),
+        xFinalize: None,
+        xValue: None,
+        xInverse: None,
+        zName: (b"sqlite_find_constraint\0".as_ptr() as *mut i8) as *const i8,
+        u: {
+            let mut __t8: __SlateRecord168 = unsafe { std::mem::zeroed() };
+            __t8.pHash = std::ptr::null_mut::<FuncDef>();
+            __t8
+        },
+    },
+]);

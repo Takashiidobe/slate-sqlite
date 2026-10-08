@@ -1,3 +1,18 @@
+//! 2001 September 15
+//!
+//! The author disclaims copyright to this source code.  In place of
+//! a legal notice, here is a blessing:
+//!
+//!    May you do good and not evil.
+//!    May you find forgiveness for yourself and forgive others.
+//!    May you share freely, never taking more than you give.
+//!
+//!
+//! An tokenizer for SQL
+//!
+//! This file contains C code that splits an SQL input string up into
+//! individual tokens and sends those tokens one-by-one over to the
+//! parser for analysis.
 unsafe extern "C" {
     static mut sqlite3UpperToLower: [u8; 0];
     static mut sqlite3CtypeMap: [u8; 0];
@@ -18,6 +33,364 @@ unsafe extern "C" {
     fn sqlite3ParserFree(__v373: *mut (), __v374: Option<unsafe extern "C-unwind" fn(*mut ())>);
     fn sqlite3Parser(__v375: *mut (), __v376: i32, __v377: Token);
     fn sqlite3ParserFallback(__v378: i32) -> i32;
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_file {
+    pMethods: *const sqlite3_io_methods,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_io_methods {
+    iVersion: i32,
+    xClose: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file) -> i32>,
+    xRead: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, *mut (), i32, i64) -> i32>,
+    xWrite: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, *const (), i32, i64) -> i32>,
+    xTruncate: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i64) -> i32>,
+    xSync: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32) -> i32>,
+    xFileSize: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, *mut i64) -> i32>,
+    xLock: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32) -> i32>,
+    xUnlock: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32) -> i32>,
+    xCheckReservedLock: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, *mut i32) -> i32>,
+    xFileControl: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32, *mut ()) -> i32>,
+    xSectorSize: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file) -> i32>,
+    xDeviceCharacteristics: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file) -> i32>,
+    xShmMap:
+        Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32, i32, i32, *mut *mut ()) -> i32>,
+    xShmLock: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32, i32, i32) -> i32>,
+    xShmBarrier: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file)>,
+    xShmUnmap: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32) -> i32>,
+    xFetch: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i64, i32, *mut *mut ()) -> i32>,
+    xUnfetch: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i64, *mut ()) -> i32>,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_vfs {
+    iVersion: i32,
+    szOsFile: i32,
+    mxPathname: i32,
+    pNext: *mut sqlite3_vfs,
+    zName: *const i8,
+    pAppData: *mut (),
+    xOpen: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vfs,
+            *const i8,
+            *mut sqlite3_file,
+            i32,
+            *mut i32,
+        ) -> i32,
+    >,
+    xDelete: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8, i32) -> i32>,
+    xAccess: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8, i32, *mut i32) -> i32>,
+    xFullPathname:
+        Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8, i32, *mut i8) -> i32>,
+    xDlOpen: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8) -> *mut ()>,
+    xDlError: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, i32, *mut i8)>,
+    xDlSym: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vfs,
+            *mut (),
+            *const i8,
+        ) -> Option<unsafe extern "C-unwind" fn()>,
+    >,
+    xDlClose: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *mut ())>,
+    xRandomness: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, i32, *mut i8) -> i32>,
+    xSleep: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, i32) -> i32>,
+    xCurrentTime: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *mut f64) -> i32>,
+    xGetLastError: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, i32, *mut i8) -> i32>,
+    xCurrentTimeInt64: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *mut i64) -> i32>,
+    xSetSystemCall: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vfs,
+            *const i8,
+            Option<unsafe extern "C-unwind" fn()>,
+        ) -> i32,
+    >,
+    xGetSystemCall: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vfs,
+            *const i8,
+        ) -> Option<unsafe extern "C-unwind" fn()>,
+    >,
+    xNextSystemCall: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8) -> *const i8>,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_mutex {}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_module {
+    iVersion: i32,
+    xCreate: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3,
+            *mut (),
+            i32,
+            *const *const i8,
+            *mut *mut sqlite3_vtab,
+            *mut *mut i8,
+        ) -> i32,
+    >,
+    xConnect: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3,
+            *mut (),
+            i32,
+            *const *const i8,
+            *mut *mut sqlite3_vtab,
+            *mut *mut i8,
+        ) -> i32,
+    >,
+    xBestIndex:
+        Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, *mut sqlite3_index_info) -> i32>,
+    xDisconnect: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
+    xDestroy: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
+    xOpen: Option<
+        unsafe extern "C-unwind" fn(*mut sqlite3_vtab, *mut *mut sqlite3_vtab_cursor) -> i32,
+    >,
+    xClose: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor) -> i32>,
+    xFilter: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vtab_cursor,
+            i32,
+            *const i8,
+            i32,
+            *mut *mut sqlite3_value,
+        ) -> i32,
+    >,
+    xNext: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor) -> i32>,
+    xEof: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor) -> i32>,
+    xColumn: Option<
+        unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor, *mut sqlite3_context, i32) -> i32,
+    >,
+    xRowid: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor, *mut i64) -> i32>,
+    xUpdate: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vtab,
+            i32,
+            *mut *mut sqlite3_value,
+            *mut i64,
+        ) -> i32,
+    >,
+    xBegin: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
+    xSync: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
+    xCommit: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
+    xRollback: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
+    xFindFunction: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vtab,
+            i32,
+            *const i8,
+            *mut Option<
+                unsafe extern "C-unwind" fn(*mut sqlite3_context, i32, *mut *mut sqlite3_value),
+            >,
+            *mut *mut (),
+        ) -> i32,
+    >,
+    xRename: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, *const i8) -> i32>,
+    xSavepoint: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, i32) -> i32>,
+    xRelease: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, i32) -> i32>,
+    xRollbackTo: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, i32) -> i32>,
+    xShadowName: Option<unsafe extern "C-unwind" fn(*const i8) -> i32>,
+    xIntegrity: Option<
+        unsafe extern "C-unwind" fn(
+            *mut sqlite3_vtab,
+            *const i8,
+            *const i8,
+            i32,
+            *mut *mut i8,
+        ) -> i32,
+    >,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_value {}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_context {}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_index_info {
+    nConstraint: i32,
+    aConstraint: *mut sqlite3_index_constraint,
+    nOrderBy: i32,
+    aOrderBy: *mut sqlite3_index_orderby,
+    aConstraintUsage: *mut sqlite3_index_constraint_usage,
+    idxNum: i32,
+    idxStr: *mut i8,
+    needToFreeIdxStr: i32,
+    orderByConsumed: i32,
+    estimatedCost: f64,
+    estimatedRows: i64,
+    idxFlags: i32,
+    colUsed: u64,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_vtab {
+    pModule: *const sqlite3_module,
+    nRef: i32,
+    zErrMsg: *mut i8,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_vtab_cursor {
+    pVtab: *mut sqlite3_vtab,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Hash {
+    htsize: u32,
+    count: u32,
+    first: *mut HashElem,
+    ht: *mut _ht,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_index_constraint {
+    iColumn: i32,
+    op: u8,
+    usable: u8,
+    iTermOffset: i32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_index_orderby {
+    iColumn: i32,
+    desc: u8,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct sqlite3_index_constraint_usage {
+    argvIndex: i32,
+    omit: u8,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct HashElem {
+    next: *mut HashElem,
+    prev: *mut HashElem,
+    data: *mut (),
+    pKey: *const i8,
+    h: u32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct BusyHandler {
+    xBusyHandler: Option<unsafe extern "C-unwind" fn(*mut (), i32) -> i32>,
+    pBusyArg: *mut (),
+    nBusy: i32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct _ht {
+    count: u32,
+    chain: *mut HashElem,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct SubrtnSig {
+    selId: i32,
+    bComplete: u8,
+    zAff: *mut i8,
+    iTable: i32,
+    iAddr: i32,
+    regReturn: i32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct VdbeOp {
+    opcode: u8,
+    p4type: i8,
+    p5: u16,
+    p1: i32,
+    p2: i32,
+    p3: i32,
+    p4: p4union,
+    zComment: *mut i8,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct SubProgram {
+    aOp: *mut VdbeOp,
+    nOp: i32,
+    nMem: i32,
+    nCsr: i32,
+    aOnce: *mut u8,
+    token: *mut (),
+    pNext: *mut SubProgram,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Db {
+    zDbSName: *mut i8,
+    pBt: *mut Btree,
+    safety_level: u8,
+    bSyncSet: u8,
+    pSchema: *mut Schema,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Schema {
+    schema_cookie: i32,
+    iGeneration: i32,
+    tblHash: Hash,
+    idxHash: Hash,
+    trigHash: Hash,
+    fkeyHash: Hash,
+    pSeqTab: *mut Table,
+    file_format: u8,
+    enc: u8,
+    schemaFlags: u16,
+    cache_size: i32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Lookaside {
+    bDisable: u32,
+    sz: u16,
+    szTrue: u16,
+    bMalloced: u8,
+    nSlot: u32,
+    anStat: [u32; 3],
+    pInit: *mut LookasideSlot,
+    pFree: *mut LookasideSlot,
+    pSmallInit: *mut LookasideSlot,
+    pSmallFree: *mut LookasideSlot,
+    pMiddle: *mut (),
+    pStart: *mut (),
+    pEnd: *mut (),
+    pTrueEnd: *mut (),
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct LookasideSlot {
+    pNext: *mut LookasideSlot,
 }
 
 #[repr(C)]
@@ -127,273 +500,163 @@ struct sqlite3 {
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct sqlite3_file {
-    pMethods: *const sqlite3_io_methods,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct sqlite3_io_methods {
-    iVersion: i32,
-    xClose: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file) -> i32>,
-    xRead: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, *mut (), i32, i64) -> i32>,
-    xWrite: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, *const (), i32, i64) -> i32>,
-    xTruncate: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i64) -> i32>,
-    xSync: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32) -> i32>,
-    xFileSize: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, *mut i64) -> i32>,
-    xLock: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32) -> i32>,
-    xUnlock: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32) -> i32>,
-    xCheckReservedLock: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, *mut i32) -> i32>,
-    xFileControl: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32, *mut ()) -> i32>,
-    xSectorSize: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file) -> i32>,
-    xDeviceCharacteristics: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file) -> i32>,
-    xShmMap:
-        Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32, i32, i32, *mut *mut ()) -> i32>,
-    xShmLock: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32, i32, i32) -> i32>,
-    xShmBarrier: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file)>,
-    xShmUnmap: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i32) -> i32>,
-    xFetch: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i64, i32, *mut *mut ()) -> i32>,
-    xUnfetch: Option<unsafe extern "C-unwind" fn(*mut sqlite3_file, i64, *mut ()) -> i32>,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct sqlite3_mutex {}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct sqlite3_vfs {
-    iVersion: i32,
-    szOsFile: i32,
-    mxPathname: i32,
-    pNext: *mut sqlite3_vfs,
+struct FuncDef {
+    nArg: i16,
+    funcFlags: u32,
+    pUserData: *mut (),
+    pNext: *mut FuncDef,
+    xSFunc: Option<unsafe extern "C-unwind" fn(*mut sqlite3_context, i32, *mut *mut sqlite3_value)>,
+    xFinalize: Option<unsafe extern "C-unwind" fn(*mut sqlite3_context)>,
+    xValue: Option<unsafe extern "C-unwind" fn(*mut sqlite3_context)>,
+    xInverse:
+        Option<unsafe extern "C-unwind" fn(*mut sqlite3_context, i32, *mut *mut sqlite3_value)>,
     zName: *const i8,
-    pAppData: *mut (),
-    xOpen: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3_vfs,
-            *const i8,
-            *mut sqlite3_file,
-            i32,
-            *mut i32,
-        ) -> i32,
-    >,
-    xDelete: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8, i32) -> i32>,
-    xAccess: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8, i32, *mut i32) -> i32>,
-    xFullPathname:
-        Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8, i32, *mut i8) -> i32>,
-    xDlOpen: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8) -> *mut ()>,
-    xDlError: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, i32, *mut i8)>,
-    xDlSym: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3_vfs,
-            *mut (),
-            *const i8,
-        ) -> Option<unsafe extern "C-unwind" fn()>,
-    >,
-    xDlClose: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *mut ())>,
-    xRandomness: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, i32, *mut i8) -> i32>,
-    xSleep: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, i32) -> i32>,
-    xCurrentTime: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *mut f64) -> i32>,
-    xGetLastError: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, i32, *mut i8) -> i32>,
-    xCurrentTimeInt64: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *mut i64) -> i32>,
-    xSetSystemCall: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3_vfs,
-            *const i8,
-            Option<unsafe extern "C-unwind" fn()>,
-        ) -> i32,
-    >,
-    xGetSystemCall: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3_vfs,
-            *const i8,
-        ) -> Option<unsafe extern "C-unwind" fn()>,
-    >,
-    xNextSystemCall: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vfs, *const i8) -> *const i8>,
+    u: __SlateRecord155,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct sqlite3_value {}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct sqlite3_context {}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct sqlite3_vtab {
-    pModule: *const sqlite3_module,
+struct FuncDestructor {
     nRef: i32,
-    zErrMsg: *mut i8,
+    xDestroy: Option<unsafe extern "C-unwind" fn(*mut ())>,
+    pUserData: *mut (),
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct sqlite3_index_info {
-    nConstraint: i32,
-    aConstraint: *mut sqlite3_index_constraint,
-    nOrderBy: i32,
-    aOrderBy: *mut sqlite3_index_orderby,
-    aConstraintUsage: *mut sqlite3_index_constraint_usage,
-    idxNum: i32,
-    idxStr: *mut i8,
-    needToFreeIdxStr: i32,
-    orderByConsumed: i32,
-    estimatedCost: f64,
-    estimatedRows: i64,
-    idxFlags: i32,
-    colUsed: u64,
+struct Savepoint {
+    zName: *mut i8,
+    nDeferredCons: i64,
+    nDeferredImmCons: i64,
+    pNext: *mut Savepoint,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct sqlite3_vtab_cursor {
+struct Module {
+    pModule: *const sqlite3_module,
+    zName: *const i8,
+    nRefModule: i32,
+    pAux: *mut (),
+    xDestroy: Option<unsafe extern "C-unwind" fn(*mut ())>,
+    pEpoTab: *mut Table,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Column {
+    zCnName: *mut i8,
+    __slate_bits_0: __slate_bits::__SlateBits60U0,
+    affinity: i8,
+    szEst: u8,
+    hName: u8,
+    iDflt: u16,
+    colFlags: u16,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct CollSeq {
+    zName: *mut i8,
+    enc: u8,
+    pUser: *mut (),
+    xCmp: Option<unsafe extern "C-unwind" fn(*mut (), i32, *const (), i32, *const ()) -> i32>,
+    xDel: Option<unsafe extern "C-unwind" fn(*mut ())>,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct VTable {
+    db: *mut sqlite3,
+    pMod: *mut Module,
     pVtab: *mut sqlite3_vtab,
+    nRef: i32,
+    bConstraint: u8,
+    bAllSchemas: u8,
+    eVtabRisk: u8,
+    iSavepoint: i32,
+    pNext: *mut VTable,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct sqlite3_module {
-    iVersion: i32,
-    xCreate: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3,
-            *mut (),
-            i32,
-            *const *const i8,
-            *mut *mut sqlite3_vtab,
-            *mut *mut i8,
-        ) -> i32,
-    >,
-    xConnect: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3,
-            *mut (),
-            i32,
-            *const *const i8,
-            *mut *mut sqlite3_vtab,
-            *mut *mut i8,
-        ) -> i32,
-    >,
-    xBestIndex:
-        Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, *mut sqlite3_index_info) -> i32>,
-    xDisconnect: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
-    xDestroy: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
-    xOpen: Option<
-        unsafe extern "C-unwind" fn(*mut sqlite3_vtab, *mut *mut sqlite3_vtab_cursor) -> i32,
-    >,
-    xClose: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor) -> i32>,
-    xFilter: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3_vtab_cursor,
-            i32,
-            *const i8,
-            i32,
-            *mut *mut sqlite3_value,
-        ) -> i32,
-    >,
-    xNext: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor) -> i32>,
-    xEof: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor) -> i32>,
-    xColumn: Option<
-        unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor, *mut sqlite3_context, i32) -> i32,
-    >,
-    xRowid: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab_cursor, *mut i64) -> i32>,
-    xUpdate: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3_vtab,
-            i32,
-            *mut *mut sqlite3_value,
-            *mut i64,
-        ) -> i32,
-    >,
-    xBegin: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
-    xSync: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
-    xCommit: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
-    xRollback: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab) -> i32>,
-    xFindFunction: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3_vtab,
-            i32,
-            *const i8,
-            *mut Option<
-                unsafe extern "C-unwind" fn(*mut sqlite3_context, i32, *mut *mut sqlite3_value),
-            >,
-            *mut *mut (),
-        ) -> i32,
-    >,
-    xRename: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, *const i8) -> i32>,
-    xSavepoint: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, i32) -> i32>,
-    xRelease: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, i32) -> i32>,
-    xRollbackTo: Option<unsafe extern "C-unwind" fn(*mut sqlite3_vtab, i32) -> i32>,
-    xShadowName: Option<unsafe extern "C-unwind" fn(*const i8) -> i32>,
-    xIntegrity: Option<
-        unsafe extern "C-unwind" fn(
-            *mut sqlite3_vtab,
-            *const i8,
-            *const i8,
-            i32,
-            *mut *mut i8,
-        ) -> i32,
-    >,
+struct Table {
+    zName: *mut i8,
+    aCol: *mut Column,
+    pIndex: *mut Index,
+    zColAff: *mut i8,
+    pCheck: *mut ExprList,
+    tnum: u32,
+    nTabRef: u32,
+    tabFlags: u32,
+    iPKey: i16,
+    nCol: i16,
+    nNVCol: i16,
+    nRowLogEst: i16,
+    szTabRow: i16,
+    keyConf: u8,
+    eTabType: u8,
+    u: __SlateRecord156,
+    pTrigger: *mut Trigger,
+    pSchema: *mut Schema,
+    aHx: [u8; 16],
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct sqlite3_index_constraint {
-    iColumn: i32,
-    op: u8,
-    usable: u8,
-    iTermOffset: i32,
+struct FKey {
+    pFrom: *mut Table,
+    pNextFrom: *mut FKey,
+    zTo: *mut i8,
+    pNextTo: *mut FKey,
+    pPrevTo: *mut FKey,
+    nCol: i32,
+    isDeferred: u8,
+    aAction: [u8; 2],
+    apTrigger: [*mut Trigger; 2],
+    aCol: [sColMap; 0],
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct sqlite3_index_orderby {
-    iColumn: i32,
-    desc: u8,
+struct KeyInfo {
+    nRef: u32,
+    enc: u8,
+    nKeyField: u16,
+    nAllField: u16,
+    db: *mut sqlite3,
+    aSortFlags: *mut u8,
+    aColl: [*mut CollSeq; 0],
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct sqlite3_index_constraint_usage {
-    argvIndex: i32,
-    omit: u8,
+struct Index {
+    zName: *mut i8,
+    aiColumn: *mut i16,
+    aiRowLogEst: *mut i16,
+    pTable: *mut Table,
+    zColAff: *mut i8,
+    pNext: *mut Index,
+    pSchema: *mut Schema,
+    aSortOrder: *mut u8,
+    azColl: *mut *const i8,
+    pPartIdxWhere: *mut Expr,
+    aColExpr: *mut ExprList,
+    tnum: u32,
+    szIdxRow: i16,
+    nKeyCol: u16,
+    nColumn: u16,
+    onError: u8,
+    __slate_bits_0: __slate_bits::__SlateBits84U0,
+    colNotIdxed: u64,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct Hash {
-    htsize: u32,
-    count: u32,
-    first: *mut HashElem,
-    ht: *mut _ht,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct HashElem {
-    next: *mut HashElem,
-    prev: *mut HashElem,
-    data: *mut (),
-    pKey: *const i8,
-    h: u32,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct _ht {
-    count: u32,
-    chain: *mut HashElem,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct BusyHandler {
-    xBusyHandler: Option<unsafe extern "C-unwind" fn(*mut (), i32) -> i32>,
-    pBusyArg: *mut (),
-    nBusy: i32,
+struct Token {
+    z: *const i8,
+    n: u32,
 }
 
 #[repr(C)]
@@ -412,94 +675,6 @@ struct AggInfo {
     aFunc: *mut AggInfo_func,
     nFunc: i32,
     selId: u32,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct AutoincInfo {
-    pNext: *mut AutoincInfo,
-    pTab: *mut Table,
-    iDb: i32,
-    regCtr: i32,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct CollSeq {
-    zName: *mut i8,
-    enc: u8,
-    pUser: *mut (),
-    xCmp: Option<unsafe extern "C-unwind" fn(*mut (), i32, *const (), i32, *const ()) -> i32>,
-    xDel: Option<unsafe extern "C-unwind" fn(*mut ())>,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Column {
-    zCnName: *mut i8,
-    __slate_bits_0: __slate_bits::__SlateBits60U0,
-    affinity: i8,
-    szEst: u8,
-    hName: u8,
-    iDflt: u16,
-    colFlags: u16,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Cte {
-    zName: *mut i8,
-    pCols: *mut ExprList,
-    pSelect: *mut Select,
-    zCteErr: *const i8,
-    pUse: *mut CteUse,
-    eM10d: u8,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct CteUse {
-    nUse: i32,
-    addrM9e: i32,
-    regRtn: i32,
-    iCur: i32,
-    nRowEst: i16,
-    eM10d: u8,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Db {
-    zDbSName: *mut i8,
-    pBt: *mut Btree,
-    safety_level: u8,
-    bSyncSet: u8,
-    pSchema: *mut Schema,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct DbClientData {
-    pNext: *mut DbClientData,
-    pData: *mut (),
-    xDestructor: Option<unsafe extern "C-unwind" fn(*mut ())>,
-    zName: [i8; 0],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Schema {
-    schema_cookie: i32,
-    iGeneration: i32,
-    tblHash: Hash,
-    idxHash: Hash,
-    trigHash: Hash,
-    fkeyHash: Hash,
-    pSeqTab: *mut Table,
-    file_format: u8,
-    enc: u8,
-    schemaFlags: u16,
-    cache_size: i32,
 }
 
 #[repr(C)]
@@ -532,45 +707,6 @@ struct ExprList {
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct FKey {
-    pFrom: *mut Table,
-    pNextFrom: *mut FKey,
-    zTo: *mut i8,
-    pNextTo: *mut FKey,
-    pPrevTo: *mut FKey,
-    nCol: i32,
-    isDeferred: u8,
-    aAction: [u8; 2],
-    apTrigger: [*mut Trigger; 2],
-    aCol: [sColMap; 0],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct FuncDestructor {
-    nRef: i32,
-    xDestroy: Option<unsafe extern "C-unwind" fn(*mut ())>,
-    pUserData: *mut (),
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct FuncDef {
-    nArg: i16,
-    funcFlags: u32,
-    pUserData: *mut (),
-    pNext: *mut FuncDef,
-    xSFunc: Option<unsafe extern "C-unwind" fn(*mut sqlite3_context, i32, *mut *mut sqlite3_value)>,
-    xFinalize: Option<unsafe extern "C-unwind" fn(*mut sqlite3_context)>,
-    xValue: Option<unsafe extern "C-unwind" fn(*mut sqlite3_context)>,
-    xInverse:
-        Option<unsafe extern "C-unwind" fn(*mut sqlite3_context, i32, *mut *mut sqlite3_value)>,
-    zName: *const i8,
-    u: __SlateRecord155,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
 struct IdList {
     nId: i32,
     a: [IdList_item; 0],
@@ -578,26 +714,103 @@ struct IdList {
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct Index {
-    zName: *mut i8,
-    aiColumn: *mut i16,
-    aiRowLogEst: *mut i16,
-    pTable: *mut Table,
-    zColAff: *mut i8,
-    pNext: *mut Index,
-    pSchema: *mut Schema,
-    aSortOrder: *mut u8,
-    azColl: *mut *const i8,
-    pPartIdxWhere: *mut Expr,
-    aColExpr: *mut ExprList,
-    tnum: u32,
-    szIdxRow: i16,
-    nKeyCol: u16,
-    nColumn: u16,
-    onError: u8,
-    __slate_bits_0: __slate_bits::__SlateBits84U0,
-    colNotIdxed: u64,
+struct RenameToken {}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Subquery {
+    pSelect: *mut Select,
+    addrFillSub: i32,
+    regReturn: i32,
+    regResult: i32,
 }
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct SrcItem {
+    zName: *mut i8,
+    zAlias: *mut i8,
+    pSTab: *mut Table,
+    fg: __SlateRecord174,
+    iCursor: i32,
+    colUsed: u64,
+    u1: __SlateRecord175,
+    u2: __SlateRecord176,
+    u3: __SlateRecord177,
+    u4: __SlateRecord178,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct SrcList {
+    nSrc: i32,
+    nAlloc: u32,
+    a: [SrcItem; 0],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Upsert {
+    pUpsertTarget: *mut ExprList,
+    pUpsertTargetWhere: *mut Expr,
+    pUpsertSet: *mut ExprList,
+    pUpsertWhere: *mut Expr,
+    pNextUpsert: *mut Upsert,
+    isDoUpdate: u8,
+    isDup: u8,
+    pToFree: *mut (),
+    pUpsertIdx: *mut Index,
+    pUpsertSrc: *mut SrcList,
+    regData: i32,
+    iDataCur: i32,
+    iIdxCur: i32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Select {
+    op: u8,
+    nSelectRow: i16,
+    selFlags: u32,
+    iLimit: i32,
+    iOffset: i32,
+    selId: u32,
+    pEList: *mut ExprList,
+    pSrc: *mut SrcList,
+    pWhere: *mut Expr,
+    pGroupBy: *mut ExprList,
+    pHaving: *mut Expr,
+    pOrderBy: *mut ExprList,
+    pPrior: *mut Select,
+    pNext: *mut Select,
+    pLimit: *mut Expr,
+    pWith: *mut With,
+    pWin: *mut Window,
+    pWinDefn: *mut Window,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct AutoincInfo {
+    pNext: *mut AutoincInfo,
+    pTab: *mut Table,
+    iDb: i32,
+    regCtr: i32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct TriggerPrg {
+    pTrigger: *mut Trigger,
+    pNext: *mut TriggerPrg,
+    pProgram: *mut SubProgram,
+    orconf: i32,
+    aColmask: [u32; 2],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct TableLock {}
 
 #[repr(C)]
 #[derive(Clone, Copy)]
@@ -609,54 +822,15 @@ struct IndexedExpr {
     bMaybeNullRow: u8,
     aff: u8,
     pIENext: *mut IndexedExpr,
+    zIdxName: *const i8,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct KeyInfo {
-    nRef: u32,
-    enc: u8,
-    nKeyField: u16,
-    nAllField: u16,
-    db: *mut sqlite3,
-    aSortFlags: *mut u8,
-    aColl: [*mut CollSeq; 0],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Lookaside {
-    bDisable: u32,
-    sz: u16,
-    szTrue: u16,
-    bMalloced: u8,
-    nSlot: u32,
-    anStat: [u32; 3],
-    pInit: *mut LookasideSlot,
-    pFree: *mut LookasideSlot,
-    pSmallInit: *mut LookasideSlot,
-    pSmallFree: *mut LookasideSlot,
-    pMiddle: *mut (),
-    pStart: *mut (),
-    pEnd: *mut (),
-    pTrueEnd: *mut (),
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct LookasideSlot {
-    pNext: *mut LookasideSlot,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Module {
-    pModule: *const sqlite3_module,
-    zName: *const i8,
-    nRefModule: i32,
-    pAux: *mut (),
-    xDestroy: Option<unsafe extern "C-unwind" fn(*mut ())>,
-    pEpoTab: *mut Table,
+struct ParseCleanup {
+    pNext: *mut ParseCleanup,
+    pPtr: *mut (),
+    xCleanup: Option<unsafe extern "C-unwind" fn(*mut sqlite3, *mut ())>,
 }
 
 #[repr(C)]
@@ -732,130 +906,6 @@ struct Parse {
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct ParseCleanup {
-    pNext: *mut ParseCleanup,
-    pPtr: *mut (),
-    xCleanup: Option<unsafe extern "C-unwind" fn(*mut sqlite3, *mut ())>,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct RenameToken {}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Returning {
-    pParse: *mut Parse,
-    pReturnEL: *mut ExprList,
-    retTrig: Trigger,
-    retTStep: TriggerStep,
-    iRetCur: i32,
-    nRetCol: i32,
-    iRetReg: i32,
-    zName: [i8; 40],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Savepoint {
-    zName: *mut i8,
-    nDeferredCons: i64,
-    nDeferredImmCons: i64,
-    pNext: *mut Savepoint,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Select {
-    op: u8,
-    nSelectRow: i16,
-    selFlags: u32,
-    iLimit: i32,
-    iOffset: i32,
-    selId: u32,
-    pEList: *mut ExprList,
-    pSrc: *mut SrcList,
-    pWhere: *mut Expr,
-    pGroupBy: *mut ExprList,
-    pHaving: *mut Expr,
-    pOrderBy: *mut ExprList,
-    pPrior: *mut Select,
-    pNext: *mut Select,
-    pLimit: *mut Expr,
-    pWith: *mut With,
-    pWin: *mut Window,
-    pWinDefn: *mut Window,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Subquery {
-    pSelect: *mut Select,
-    addrFillSub: i32,
-    regReturn: i32,
-    regResult: i32,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct SrcItem {
-    zName: *mut i8,
-    zAlias: *mut i8,
-    pSTab: *mut Table,
-    fg: __SlateRecord174,
-    iCursor: i32,
-    colUsed: u64,
-    u1: __SlateRecord175,
-    u2: __SlateRecord176,
-    u3: __SlateRecord177,
-    u4: __SlateRecord178,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct SrcList {
-    nSrc: i32,
-    nAlloc: u32,
-    a: [SrcItem; 0],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Table {
-    zName: *mut i8,
-    aCol: *mut Column,
-    pIndex: *mut Index,
-    zColAff: *mut i8,
-    pCheck: *mut ExprList,
-    tnum: u32,
-    nTabRef: u32,
-    tabFlags: u32,
-    iPKey: i16,
-    nCol: i16,
-    nNVCol: i16,
-    nRowLogEst: i16,
-    szTabRow: i16,
-    keyConf: u8,
-    eTabType: u8,
-    u: __SlateRecord156,
-    pTrigger: *mut Trigger,
-    pSchema: *mut Schema,
-    aHx: [u8; 16],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct TableLock {}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Token {
-    z: *const i8,
-    n: u32,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
 struct Trigger {
     zName: *mut i8,
     table: *mut i8,
@@ -868,16 +918,6 @@ struct Trigger {
     pTabSchema: *mut Schema,
     step_list: *mut TriggerStep,
     pNext: *mut Trigger,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct TriggerPrg {
-    pTrigger: *mut Trigger,
-    pNext: *mut TriggerPrg,
-    pProgram: *mut SubProgram,
-    orconf: i32,
-    aColmask: [u32; 2],
 }
 
 #[repr(C)]
@@ -899,39 +939,68 @@ struct TriggerStep {
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct Upsert {
-    pUpsertTarget: *mut ExprList,
-    pUpsertTargetWhere: *mut Expr,
-    pUpsertSet: *mut ExprList,
-    pUpsertWhere: *mut Expr,
-    pNextUpsert: *mut Upsert,
-    isDoUpdate: u8,
-    isDup: u8,
-    pToFree: *mut (),
-    pUpsertIdx: *mut Index,
-    pUpsertSrc: *mut SrcList,
-    regData: i32,
-    iDataCur: i32,
-    iIdxCur: i32,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct VTable {
-    db: *mut sqlite3,
-    pMod: *mut Module,
-    pVtab: *mut sqlite3_vtab,
-    nRef: i32,
-    bConstraint: u8,
-    bAllSchemas: u8,
-    eVtabRisk: u8,
-    iSavepoint: i32,
-    pNext: *mut VTable,
+struct Returning {
+    pParse: *mut Parse,
+    pReturnEL: *mut ExprList,
+    retTrig: Trigger,
+    retTStep: TriggerStep,
+    iRetCur: i32,
+    nRetCol: i32,
+    iRetReg: i32,
+    zName: [i8; 40],
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
 struct VtabCtx {}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Cte {
+    zName: *mut i8,
+    pCols: *mut ExprList,
+    pSelect: *mut Select,
+    zCteErr: *const i8,
+    pUse: *mut CteUse,
+    eM10d: u8,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct With {
+    nCte: i32,
+    bView: i32,
+    pOuter: *mut With,
+    a: [Cte; 0],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Btree {}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Vdbe {}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct CteUse {
+    nUse: i32,
+    addrM9e: i32,
+    regRtn: i32,
+    iCur: i32,
+    nRowEst: i16,
+    eM10d: u8,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct DbClientData {
+    pNext: *mut DbClientData,
+    pData: *mut (),
+    xDestructor: Option<unsafe extern "C-unwind" fn(*mut ())>,
+    zName: [i8; 0],
+}
 
 #[repr(C)]
 #[derive(Clone, Copy)]
@@ -964,58 +1033,6 @@ struct Window {
     regStartRowid: i32,
     regEndRowid: i32,
     bExprArgs: u8,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct With {
-    nCte: i32,
-    bView: i32,
-    pOuter: *mut With,
-    a: [Cte; 0],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Btree {}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct Vdbe {}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct SubProgram {
-    aOp: *mut VdbeOp,
-    nOp: i32,
-    nMem: i32,
-    nCsr: i32,
-    aOnce: *mut u8,
-    token: *mut (),
-    pNext: *mut SubProgram,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct SubrtnSig {
-    selId: i32,
-    bComplete: u8,
-    zAff: *mut i8,
-    iTable: i32,
-    iAddr: i32,
-    regReturn: i32,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct VdbeOp {
-    opcode: u8,
-    p4type: i8,
-    p5: u16,
-    p1: i32,
-    p2: i32,
-    p3: i32,
-    p4: p4union,
 }
 
 #[repr(C)]
@@ -1420,62 +1437,62 @@ mod __slate_bits {
     }
 }
 
-// /*
-// ** 2001 September 15
-// **
-// ** The author disclaims copyright to this source code.  In place of
-// ** a legal notice, here is a blessing:
-// **
-// **    May you do good and not evil.
-// **    May you find forgiveness for yourself and forgive others.
-// **    May you share freely, never taking more than you give.
-// **
-// *************************************************************************
-// ** An tokenizer for SQL
-// **
-// ** This file contains C code that splits an SQL input string up into
-// ** individual tokens and sends those tokens one-by-one over to the
-// ** parser for analysis.
-// */
-// /* Character classes for tokenizing
-// **
-// ** In the sqlite3GetToken() function, a switch() on aiClass[c] is implemented
-// ** using a lookup table, whereas a switch() directly on c uses a binary search.
-// ** The lookup table is much faster.  To maximize speed, and to ensure that
-// ** a lookup table is used, all of the classes need to be small integers and
-// ** all of them need to be used within the switch.
-// */
-// /* The letter 'x', or start of BLOB literal */
-// /* First letter of a keyword */
-// /* Alphabetics or '_'.  Usable in a keyword */
-// /* Digits */
-// /* '$' */
-// /* '@', '#', ':'.  Alphabetic SQL variables */
-// /* '?'.  Numeric SQL variables */
-// /* Space characters */
-// /* '"', '\'', or '`'.  String literals, quoted ids */
-// /* '['.   [...] style quoted ids */
-// /* '|'.   Bitwise OR or concatenate */
-// /* '-'.  Minus or SQL-style comment */
-// /* '<'.  Part of < or <= or <> */
-// /* '>'.  Part of > or >= */
-// /* '='.  Part of = or == */
-// /* '!'.  Part of != */
-// /* '/'.  / or c-style comment */
-// /* '(' */
-// /* ')' */
-// /* ';' */
-// /* '+' */
-// /* '*' */
-// /* '%' */
-// /* ',' */
-// /* '&' */
-// /* '~' */
-// /* '.' */
-// /* unicode characters usable in IDs */
-// /* Illegal character */
-// /* 0x00 */
-// /* First byte of UTF8 BOM:  0xEF 0xBB 0xBF */
+// Character classes for tokenizing
+//
+// In the sqlite3GetToken() function, a switch() on aiClass[c] is implemented
+// using a lookup table, whereas a switch() directly on c uses a binary search.
+// The lookup table is much faster.  To maximize speed, and to ensure that
+// a lookup table is used, all of the classes need to be small integers and
+// all of them need to be used within the switch.
+// The letter 'x', or start of BLOB literal
+// First letter of a keyword
+// Alphabetics or '_'.  Usable in a keyword
+// Digits
+// '$'
+// '@', '#', ':'.  Alphabetic SQL variables
+// '?'.  Numeric SQL variables
+// Space characters
+// '"', '\'', or '`'.  String literals, quoted ids
+// '['.   [...] style quoted ids
+// '|'.   Bitwise OR or concatenate
+// '-'.  Minus or SQL-style comment
+// '<'.  Part of < or <= or <>
+// '>'.  Part of > or >=
+// '='.  Part of = or ==
+// '!'.  Part of !=
+// '/'.  / or c-style comment
+// '('
+// ')'
+// ';'
+// '+'
+// '*'
+// '%'
+// ','
+// '&'
+// '~'
+// '.'
+// unicode characters usable in IDs
+// Illegal character
+// 0x00
+// First byte of UTF8 BOM:  0xEF 0xBB 0xBF
+///         x0  x1  x2  x3  x4  x5  x6  x7  x8  x9  xa  xb  xc  xd  xe  xf
+///
+/// 0x
+/// 1x
+/// 2x
+/// 3x
+/// 4x
+/// 5x
+/// 6x
+/// 7x
+/// 8x
+/// 9x
+/// Ax
+/// Bx
+/// Cx
+/// Dx
+/// Ex
+/// Fx
 static mut aiClass: __SlateAlign16<[u8; 256]> = __SlateAlign16([
     ((29 as i32) as i8) as u8,
     ((28 as i32) as i8) as u8,
@@ -3138,10 +3155,395 @@ static mut aKWCode: __SlateAlign16<[u8; 148]> = __SlateAlign16([
     ((123 as i32) as i8) as u8,
 ]);
 
+fn keywordCode(mut z: *const i8, mut n: i64, mut pType: *mut i32) -> i64 {
+    let mut i: i64 = 0 as i64;
+    let mut j: i64 = 0 as i64;
+    let mut zKW: *const i8 = unsafe { std::mem::zeroed() };
+    0 as i32;
+    i = ((((((unsafe {
+        *unsafe {
+            unsafe { std::ptr::addr_of!(sqlite3UpperToLower) as *const u8 }.offset(
+                ((((unsafe { *unsafe { z.offset((0 as i32) as isize) } }) as u8) as u32) as i32)
+                    as isize,
+            )
+        }
+    }) as u32) as i32)
+        * (4 as i32)
+        ^ (((unsafe {
+            *unsafe {
+                unsafe { std::ptr::addr_of!(sqlite3UpperToLower) as *const u8 }.offset(
+                    ((((unsafe { *unsafe { z.offset((n - ((1 as i32) as i64)) as isize) } }) as u8)
+                        as u32) as i32) as isize,
+                )
+            }
+        }) as u32) as i32)
+            * (3 as i32)) as i64)
+        ^ n * ((1 as i32) as i64))
+        % ((127 as i32) as i64);
+    i = (((unsafe {
+        *unsafe { unsafe { std::ptr::addr_of!(aKWHash.0) as *const u8 }.offset(i as isize) }
+    }) as u32) as i32) as i64;
+    '__slate_break_379: while i > ((0 as i32) as i64) {
+        if ((((unsafe {
+            *unsafe { unsafe { std::ptr::addr_of!(aKWLen.0) as *const u8 }.offset(i as isize) }
+        }) as u32) as i32) as i64)
+            != n
+        {
+        } else {
+            zKW = unsafe {
+                unsafe { std::ptr::addr_of!(zKWText.0) as *const i8 }.offset(
+                    (((unsafe {
+                        *unsafe {
+                            unsafe { std::ptr::addr_of!(aKWOffset.0) as *const u16 }
+                                .offset(i as isize)
+                        }
+                    }) as u32) as i32) as isize,
+                )
+            };
+            if ((unsafe { *unsafe { z.offset((0 as i32) as isize) } }) as i32) & !(32 as i32)
+                != ((unsafe { *unsafe { zKW.offset((0 as i32) as isize) } }) as i32)
+            {
+            } else {
+                if ((unsafe { *unsafe { z.offset((1 as i32) as isize) } }) as i32) & !(32 as i32)
+                    != ((unsafe { *unsafe { zKW.offset((1 as i32) as isize) } }) as i32)
+                {
+                } else {
+                    j = (2 as i32) as i64;
+                    '__slate_break_380: while j < n
+                        && ((unsafe { *unsafe { z.offset(j as isize) } }) as i32) & !(32 as i32)
+                            == ((unsafe { *unsafe { zKW.offset(j as isize) } }) as i32)
+                    {
+                        let __v485: i64 = j;
+                        let __v486: i64 = __v485 + ((1 as i32) as i64);
+                        j = __v486;
+                    }
+                    if j < n {
+                    } else {
+                        {}
+                        // REINDEX
+                        {}
+                        // INDEXED
+                        {}
+                        // INDEX
+                        {}
+                        // DESC
+                        {}
+                        // ESCAPE
+                        {}
+                        // EACH
+                        {}
+                        // CHECK
+                        {}
+                        // KEY
+                        {}
+                        // BEFORE
+                        {}
+                        // FOREIGN
+                        {}
+                        // FOR
+                        {}
+                        // IGNORE
+                        {}
+                        // REGEXP
+                        {}
+                        // EXPLAIN
+                        {}
+                        // INSTEAD
+                        {}
+                        // ADD
+                        {}
+                        // DATABASE
+                        {}
+                        // AS
+                        {}
+                        // SELECT
+                        {}
+                        // TABLE
+                        {}
+                        // LEFT
+                        {}
+                        // THEN
+                        {}
+                        // END
+                        {}
+                        // DEFERRABLE
+                        {}
+                        // ELSE
+                        {}
+                        // EXCLUDE
+                        {}
+                        // DELETE
+                        {}
+                        // TEMPORARY
+                        {}
+                        // TEMP
+                        {}
+                        // OR
+                        {}
+                        // ISNULL
+                        {}
+                        // NULLS
+                        {}
+                        // SAVEPOINT
+                        {}
+                        // INTERSECT
+                        {}
+                        // TIES
+                        {}
+                        // NOTNULL
+                        {}
+                        // NOT
+                        {}
+                        // NO
+                        {}
+                        // NULL
+                        {}
+                        // LIKE
+                        {}
+                        // EXCEPT
+                        {}
+                        // TRANSACTION
+                        {}
+                        // ACTION
+                        {}
+                        // ON
+                        {}
+                        // NATURAL
+                        {}
+                        // ALTER
+                        {}
+                        // RAISE
+                        {}
+                        // EXCLUSIVE
+                        {}
+                        // EXISTS
+                        {}
+                        // CONSTRAINT
+                        {}
+                        // INTO
+                        {}
+                        // OFFSET
+                        {}
+                        // OF
+                        {}
+                        // SET
+                        {}
+                        // TRIGGER
+                        {}
+                        // RANGE
+                        {}
+                        // GENERATED
+                        {}
+                        // DETACH
+                        {}
+                        // HAVING
+                        {}
+                        // GLOB
+                        {}
+                        // BEGIN
+                        {}
+                        // INNER
+                        {}
+                        // REFERENCES
+                        {}
+                        // UNIQUE
+                        {}
+                        // QUERY
+                        {}
+                        // WITHOUT
+                        {}
+                        // WITH
+                        {}
+                        // OUTER
+                        {}
+                        // RELEASE
+                        {}
+                        // ATTACH
+                        {}
+                        // BETWEEN
+                        {}
+                        // NOTHING
+                        {}
+                        // GROUPS
+                        {}
+                        // GROUP
+                        {}
+                        // CASCADE
+                        {}
+                        // ASC
+                        {}
+                        // DEFAULT
+                        {}
+                        // CASE
+                        {}
+                        // COLLATE
+                        {}
+                        // CREATE
+                        {}
+                        // CURRENT_DATE
+                        {}
+                        // IMMEDIATE
+                        {}
+                        // JOIN
+                        {}
+                        // INSERT
+                        {}
+                        // MATCH
+                        {}
+                        // PLAN
+                        {}
+                        // ANALYZE
+                        {}
+                        // PRAGMA
+                        {}
+                        // MATERIALIZED
+                        {}
+                        // DEFERRED
+                        {}
+                        // DISTINCT
+                        {}
+                        // IS
+                        {}
+                        // UPDATE
+                        {}
+                        // VALUES
+                        {}
+                        // VIRTUAL
+                        {}
+                        // ALWAYS
+                        {}
+                        // WHEN
+                        {}
+                        // WHERE
+                        {}
+                        // RECURSIVE
+                        {}
+                        // ABORT
+                        {}
+                        // AFTER
+                        {}
+                        // RENAME
+                        {}
+                        // AND
+                        {}
+                        // DROP
+                        {}
+                        // PARTITION
+                        {}
+                        // AUTOINCREMENT
+                        {}
+                        // TO
+                        {}
+                        // IN
+                        {}
+                        // CAST
+                        {}
+                        // COLUMN
+                        {}
+                        // COMMIT
+                        {}
+                        // CONFLICT
+                        {}
+                        // CROSS
+                        {}
+                        // CURRENT_TIMESTAMP
+                        {}
+                        // CURRENT_TIME
+                        {}
+                        // CURRENT
+                        {}
+                        // PRECEDING
+                        {}
+                        // FAIL
+                        {}
+                        // LAST
+                        {}
+                        // FILTER
+                        {}
+                        // REPLACE
+                        {}
+                        // FIRST
+                        {}
+                        // FOLLOWING
+                        {}
+                        // FROM
+                        {}
+                        // FULL
+                        {}
+                        // LIMIT
+                        {}
+                        // IF
+                        {}
+                        // ORDER
+                        {}
+                        // RESTRICT
+                        {}
+                        // OTHERS
+                        {}
+                        // OVER
+                        {}
+                        // RETURNING
+                        {}
+                        // RIGHT
+                        {}
+                        // ROLLBACK
+                        {}
+                        // ROWS
+                        {}
+                        // ROW
+                        {}
+                        // UNBOUNDED
+                        {}
+                        // UNION
+                        {}
+                        // USING
+                        {}
+                        // VACUUM
+                        {}
+                        // VIEW
+                        {}
+                        // WINDOW
+                        {}
+                        // DO
+                        {}
+                        // BY
+                        {}
+                        // INITIALLY
+                        {}
+                        // ALL
+                        {}
+                        // PRIMARY
+                        unsafe {
+                            *pType = ((unsafe {
+                                *unsafe {
+                                    unsafe { std::ptr::addr_of!(aKWCode.0) as *const u8 }
+                                        .offset(i as isize)
+                                }
+                            }) as u32) as i32;
+                        }
+                        break '__slate_break_379;
+                    }
+                }
+            }
+        }
+        i = ((unsafe {
+            *unsafe { unsafe { std::ptr::addr_of!(aKWNext.0) as *const u8 }.offset(i as isize) }
+        }) as u64) as i64;
+    }
+    return n;
+}
+
 #[unsafe(no_mangle)]
-#[unsafe(link_section = ".text.slate_distinct.tokenize.sqlite3_keyword_count")]
-extern "C-unwind" fn sqlite3_keyword_count() -> i32 {
-    return 147 as i32;
+extern "C-unwind" fn sqlite3KeywordCode(mut z: *const u8, mut n: i32) -> i32 {
+    let mut id: i32 = 60 as i32;
+    if n >= (2 as i32) {
+        keywordCode(
+            (z as *mut i8) as *const i8,
+            n as i64,
+            std::ptr::addr_of_mut!(id),
+        );
+    }
+    return id;
 }
 
 #[unsafe(no_mangle)]
@@ -3177,65 +3579,48 @@ extern "C-unwind" fn sqlite3_keyword_name(
 }
 
 #[unsafe(no_mangle)]
+#[unsafe(link_section = ".text.slate_distinct.tokenize.sqlite3_keyword_count")]
+extern "C-unwind" fn sqlite3_keyword_count() -> i32 {
+    return 147 as i32;
+}
+
+#[unsafe(no_mangle)]
 #[unsafe(link_section = ".text.slate_distinct.tokenize.sqlite3_keyword_check")]
 extern "C-unwind" fn sqlite3_keyword_check(mut zName: *const i8, mut nName: i32) -> i32 {
     return ((60 as i32) != sqlite3KeywordCode(zName as *const u8, nName)) as i32;
 }
 
-// /*         x0  x1  x2  x3  x4  x5  x6  x7  x8  x9  xa  xb  xc  xd  xe  xf */
-// /* 0x */
-// /* 1x */
-// /* 2x */
-// /* 3x */
-// /* 4x */
-// /* 5x */
-// /* 6x */
-// /* 7x */
-// /* 8x */
-// /* 9x */
-// /* Ax */
-// /* Bx */
-// /* Cx */
-// /* Dx */
-// /* Ex */
-// /* Fx */
-// /*
-// ** The charMap() macro maps alphabetic characters (only) into their
-// ** lower-case ASCII equivalent.  On ASCII machines, this is just
-// ** an upper-to-lower case map.  On EBCDIC machines we also need
-// ** to adjust the encoding.  The mapping is only valid for alphabetics
-// ** which are the only characters for which this feature is used.
-// **
-// ** Used by keywordhash.h
-// */
-// /*
-// ** The sqlite3KeywordCode function looks up an identifier to determine if
-// ** it is a keyword.  If it is a keyword, the token code of that keyword is
-// ** returned.  If the input is not a keyword, TK_ID is returned.
-// **
-// ** The implementation of this routine was generated by a program,
-// ** mkkeywordhash.c, located in the tool subdirectory of the distribution.
-// ** The output of the mkkeywordhash.c program is written into a file
-// ** named keywordhash.h and then included into this source file by
-// ** the #include below.
-// */
-// /*
-// ** If X is a character that can be used in an identifier then
-// ** IdChar(X) will be true.  Otherwise it is false.
-// **
-// ** For ASCII, any character with the high-order bit set is
-// ** allowed in an identifier.  For 7-bit characters,
-// ** sqlite3IsIdChar[X] must be 1.
-// **
-// ** For EBCDIC, the rules are more complex but have the same
-// ** end result.
-// **
-// ** Ticket #1066.  the SQL standard does not allow '$' in the
-// ** middle of identifiers.  But many SQL implementations do.
-// ** SQLite will allow '$' in identifiers for compatibility.
-// ** But the feature is undocumented.
-// */
-// /* Make the IdChar function accessible from ctime.c and alter.c */
+// The charMap() macro maps alphabetic characters (only) into their
+// lower-case ASCII equivalent.  On ASCII machines, this is just
+// an upper-to-lower case map.  On EBCDIC machines we also need
+// to adjust the encoding.  The mapping is only valid for alphabetics
+// which are the only characters for which this feature is used.
+//
+// Used by keywordhash.h
+// The sqlite3KeywordCode function looks up an identifier to determine if
+// it is a keyword.  If it is a keyword, the token code of that keyword is
+// returned.  If the input is not a keyword, TK_ID is returned.
+//
+// The implementation of this routine was generated by a program,
+// mkkeywordhash.c, located in the tool subdirectory of the distribution.
+// The output of the mkkeywordhash.c program is written into a file
+// named keywordhash.h and then included into this source file by
+// the #include below.
+// If X is a character that can be used in an identifier then
+// IdChar(X) will be true.  Otherwise it is false.
+//
+// For ASCII, any character with the high-order bit set is
+// allowed in an identifier.  For 7-bit characters,
+// sqlite3IsIdChar[X] must be 1.
+//
+// For EBCDIC, the rules are more complex but have the same
+// end result.
+//
+// Ticket #1066.  the SQL standard does not allow '$' in the
+// middle of identifiers.  But many SQL implementations do.
+// SQLite will allow '$' in identifiers for compatibility.
+// But the feature is undocumented.
+/// Make the IdChar function accessible from ctime.c and alter.c
 #[unsafe(no_mangle)]
 extern "C-unwind" fn sqlite3IsIdChar(mut c: u8) -> i32 {
     return ((((unsafe {
@@ -3248,40 +3633,1578 @@ extern "C-unwind" fn sqlite3IsIdChar(mut c: u8) -> i32 {
         != (0 as i32)) as i32;
 }
 
-#[unsafe(no_mangle)]
-extern "C-unwind" fn sqlite3KeywordCode(mut z: *const u8, mut n: i32) -> i32 {
-    let mut id: i32 = 60 as i32;
-    if n >= (2 as i32) {
-        keywordCode(
-            (z as *mut i8) as *const i8,
-            n as i64,
-            std::ptr::addr_of_mut!(id),
-        );
+/// Return the id of the next token in string (*pz). Before returning, set
+/// (*pz) to point to the byte following the parsed token.
+fn getToken(mut pz: *mut *const u8) -> i32 {
+    let mut z: *const u8 = unsafe { *pz };
+    let mut t: i32 = 0 as i32; // Token type to return
+    '__slate_break_381: loop {
+        let __v487: *const u8 = z;
+        let __v488: *const u8 =
+            unsafe { __v487.offset(sqlite3GetToken(z, std::ptr::addr_of_mut!(t)) as isize) };
+        z = __v488;
+        if !(t == (184 as i32) || t == (185 as i32)) {
+            break;
+        }
     }
-    return id;
+    let __v489: bool;
+    if t == (60 as i32)
+        || t == (118 as i32)
+        || t == (119 as i32)
+        || t == (165 as i32)
+        || t == (166 as i32)
+    {
+        __v489 = true as bool;
+    } else {
+        __v489 = (unsafe { sqlite3ParserFallback(t) }) == (60 as i32);
+    }
+    if __v489 {
+        t = 60 as i32;
+    }
+    unsafe {
+        *pz = z;
+    }
+    return t;
 }
 
-// /*
-// ** Run the parser on the given SQL string.
-// */
+/// The following three functions are called immediately after the tokenizer
+/// reads the keywords WINDOW, OVER and FILTER, respectively, to determine
+/// whether the token should be treated as a keyword or an SQL identifier.
+/// This cannot be handled by the usual lemon %fallback method, due to
+/// the ambiguity in some constructions. e.g.
+///
+///   SELECT sum(x) OVER ...
+///
+/// In the above, "OVER" might be a keyword, or it might be an alias for the
+/// sum(x) expression. If a "%fallback ID OVER" directive were added to
+/// grammar, then SQLite would always treat "OVER" as an alias, making it
+/// impossible to call a window-function without a FILTER clause.
+///
+/// WINDOW is treated as a keyword if:
+///
+///   * the following token is an identifier, or a keyword that can fallback
+///     to being an identifier, and
+///   * the token after than one is TK_AS.
+///
+/// OVER is a keyword if:
+///
+///   * the previous token was TK_RP, and
+///   * the next token is either TK_LP or an identifier.
+///
+/// FILTER is a keyword if:
+///
+///   * the previous token was TK_RP, and
+///   * the next token is TK_LP.
+fn analyzeWindowKeyword(mut z: *const u8) -> i32 {
+    let mut t: i32 = 0 as i32;
+    t = getToken(std::ptr::addr_of_mut!(z));
+    if t != (60 as i32) {
+        return 60 as i32;
+    }
+    t = getToken(std::ptr::addr_of_mut!(z));
+    if t != (24 as i32) {
+        return 60 as i32;
+    }
+    return 165 as i32;
+}
+
+fn analyzeOverKeyword(mut z: *const u8, mut lastToken: i32) -> i32 {
+    if lastToken == (23 as i32) {
+        let mut t: i32 = getToken(std::ptr::addr_of_mut!(z));
+        if t == (22 as i32) || t == (60 as i32) {
+            return 166 as i32;
+        }
+    }
+    return 60 as i32;
+}
+
+fn analyzeFilterKeyword(mut z: *const u8, mut lastToken: i32) -> i32 {
+    let __v490: bool;
+    if lastToken == (23 as i32) {
+        __v490 = getToken(std::ptr::addr_of_mut!(z)) == (22 as i32);
+    } else {
+        __v490 = false as bool;
+    }
+    if __v490 {
+        return 167 as i32;
+    }
+    return 60 as i32;
+}
+
+/// Return the length (in bytes) of the token that begins at z[0].
+/// Store the token type in *tokenType before returning.
+#[unsafe(no_mangle)]
+extern "C-unwind" fn sqlite3GetToken(mut z: *const u8, mut tokenType: *mut i32) -> i64 {
+    let mut i: i64 = 0 as i64;
+    let mut c: i32 = 0 as i32;
+    // Switch on the character-class of the first byte
+    // of the token. See the comment on the CC_ defines
+    // above.
+    // If the next character is a digit, this is a floating point
+    // number that begins with ".".  Fall thru into the next case
+    //
+    // no break
+    // This token started out using characters that can appear in keywords,
+    // but z[i] is a character not allowed within keywords, so this must
+    // be an identifier instead
+    // If it is not a BLOB literal, then it must be an ID, since no
+    // SQL keywords start with the letter 'x'.  Fall through
+    //
+    // no break
+    match ((unsafe {
+        *unsafe {
+            unsafe { std::ptr::addr_of!(aiClass.0) as *const u8 }
+                .offset((((unsafe { *z }) as u32) as i32) as isize)
+        }
+    }) as u32) as i32
+    {
+        7 => {
+            // Switch on the character-class of the first byte
+            // of the token. See the comment on the CC_ defines
+            // above.
+            {}
+            {}
+            {}
+            {}
+            {}
+            i = (1 as i32) as i64;
+            '__slate_break_383: loop {
+                if !((((unsafe {
+                    *unsafe {
+                        unsafe { std::ptr::addr_of!(sqlite3CtypeMap) as *const u8 }.offset(
+                            (((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32)
+                                as isize,
+                        )
+                    }
+                }) as u32) as i32)
+                    & (1 as i32)
+                    != (0 as i32))
+                {
+                    break;
+                }
+                let __v421: i64 = i;
+                let __v422: i64 = __v421 + ((1 as i32) as i64);
+                i = __v422;
+            }
+            unsafe {
+                *tokenType = 184 as i32;
+            }
+            return i;
+        }
+        11 => {
+            if (((unsafe { *unsafe { z.offset((1 as i32) as isize) } }) as u32) as i32)
+                == (45 as i32)
+            {
+                i = (2 as i32) as i64;
+                '__slate_break_384: loop {
+                    let __v423: i32 = ((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32;
+                    c = __v423;
+                    if !(__v423 != (0 as i32) && c != (10 as i32)) {
+                        break;
+                    }
+                    let __v424: i64 = i;
+                    let __v425: i64 = __v424 + ((1 as i32) as i64);
+                    i = __v425;
+                }
+                unsafe {
+                    *tokenType = 185 as i32;
+                }
+                return i;
+            } else {
+                if (((unsafe { *unsafe { z.offset((1 as i32) as isize) } }) as u32) as i32)
+                    == (62 as i32)
+                {
+                    unsafe {
+                        *tokenType = 113 as i32;
+                    }
+                    return ((2 as i32)
+                        + (((((unsafe { *unsafe { z.offset((2 as i32) as isize) } }) as u32)
+                            as i32)
+                            == (62 as i32)) as i32)) as i64;
+                }
+            }
+            unsafe {
+                *tokenType = 108 as i32;
+            }
+            return (1 as i32) as i64;
+        }
+        17 => {
+            unsafe {
+                *tokenType = 22 as i32;
+            }
+            return (1 as i32) as i64;
+        }
+        18 => {
+            unsafe {
+                *tokenType = 23 as i32;
+            }
+            return (1 as i32) as i64;
+        }
+        19 => {
+            unsafe {
+                *tokenType = 1 as i32;
+            }
+            return (1 as i32) as i64;
+        }
+        20 => {
+            unsafe {
+                *tokenType = 107 as i32;
+            }
+            return (1 as i32) as i64;
+        }
+        21 => {
+            unsafe {
+                *tokenType = 109 as i32;
+            }
+            return (1 as i32) as i64;
+        }
+        16 => {
+            if (((unsafe { *unsafe { z.offset((1 as i32) as isize) } }) as u32) as i32)
+                != (42 as i32)
+                || (((unsafe { *unsafe { z.offset((2 as i32) as isize) } }) as u32) as i32)
+                    == (0 as i32)
+            {
+                unsafe {
+                    *tokenType = 110 as i32;
+                }
+                return (1 as i32) as i64;
+            }
+            i = (3 as i32) as i64;
+            let __v426: i32 =
+                ((unsafe { *unsafe { z.offset((2 as i32) as isize) } }) as u32) as i32;
+            c = __v426;
+            '__slate_break_385: loop {
+                let __v427: bool;
+                if c != (42 as i32)
+                    || (((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32)
+                        != (47 as i32)
+                {
+                    let __v428: i32 = ((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32;
+                    c = __v428;
+                    __v427 = __v428 != (0 as i32);
+                } else {
+                    __v427 = false as bool;
+                }
+                if !__v427 {
+                    break;
+                }
+                let __v429: i64 = i;
+                let __v430: i64 = __v429 + ((1 as i32) as i64);
+                i = __v430;
+            }
+            if c != (0 as i32) {
+                let __v431: i64 = i;
+                let __v432: i64 = __v431 + ((1 as i32) as i64);
+                i = __v432;
+            }
+            unsafe {
+                *tokenType = 185 as i32;
+            }
+            return i;
+        }
+        22 => {
+            unsafe {
+                *tokenType = 111 as i32;
+            }
+            return (1 as i32) as i64;
+        }
+        14 => {
+            unsafe {
+                *tokenType = 54 as i32;
+            }
+            return ((1 as i32)
+                + (((((unsafe { *unsafe { z.offset((1 as i32) as isize) } }) as u32) as i32)
+                    == (61 as i32)) as i32)) as i64;
+        }
+        12 => {
+            let __v433: i32 =
+                ((unsafe { *unsafe { z.offset((1 as i32) as isize) } }) as u32) as i32;
+            c = __v433;
+            if __v433 == (61 as i32) {
+                unsafe {
+                    *tokenType = 56 as i32;
+                }
+                return (2 as i32) as i64;
+            } else {
+                if c == (62 as i32) {
+                    unsafe {
+                        *tokenType = 53 as i32;
+                    }
+                    return (2 as i32) as i64;
+                } else {
+                    if c == (60 as i32) {
+                        unsafe {
+                            *tokenType = 105 as i32;
+                        }
+                        return (2 as i32) as i64;
+                    } else {
+                        unsafe {
+                            *tokenType = 57 as i32;
+                        }
+                        return (1 as i32) as i64;
+                    }
+                }
+            }
+            let _v485: i32 = ((unsafe { *unsafe { z.offset((1 as i32) as isize) } }) as u32) as i32;
+            c = _v485;
+            if _v485 == (61 as i32) {
+                unsafe {
+                    *tokenType = 58 as i32;
+                }
+                return (2 as i32) as i64;
+            } else {
+                if c == (62 as i32) {
+                    unsafe {
+                        *tokenType = 106 as i32;
+                    }
+                    return (2 as i32) as i64;
+                } else {
+                    unsafe {
+                        *tokenType = 55 as i32;
+                    }
+                    return (1 as i32) as i64;
+                }
+            }
+            if (((unsafe { *unsafe { z.offset((1 as i32) as isize) } }) as u32) as i32)
+                != (61 as i32)
+            {
+                unsafe {
+                    *tokenType = 186 as i32;
+                }
+                return (1 as i32) as i64;
+            } else {
+                unsafe {
+                    *tokenType = 53 as i32;
+                }
+                return (2 as i32) as i64;
+            }
+            if (((unsafe { *unsafe { z.offset((1 as i32) as isize) } }) as u32) as i32)
+                != (124 as i32)
+            {
+                unsafe {
+                    *tokenType = 104 as i32;
+                }
+                return (1 as i32) as i64;
+            } else {
+                unsafe {
+                    *tokenType = 112 as i32;
+                }
+                return (2 as i32) as i64;
+            }
+            unsafe {
+                *tokenType = 25 as i32;
+            }
+            return (1 as i32) as i64;
+        }
+        13 => {
+            let __v434: i32 =
+                ((unsafe { *unsafe { z.offset((1 as i32) as isize) } }) as u32) as i32;
+            c = __v434;
+            if __v434 == (61 as i32) {
+                unsafe {
+                    *tokenType = 58 as i32;
+                }
+                return (2 as i32) as i64;
+            } else {
+                if c == (62 as i32) {
+                    unsafe {
+                        *tokenType = 106 as i32;
+                    }
+                    return (2 as i32) as i64;
+                } else {
+                    unsafe {
+                        *tokenType = 55 as i32;
+                    }
+                    return (1 as i32) as i64;
+                }
+            }
+            if (((unsafe { *unsafe { z.offset((1 as i32) as isize) } }) as u32) as i32)
+                != (61 as i32)
+            {
+                unsafe {
+                    *tokenType = 186 as i32;
+                }
+                return (1 as i32) as i64;
+            } else {
+                unsafe {
+                    *tokenType = 53 as i32;
+                }
+                return (2 as i32) as i64;
+            }
+            if (((unsafe { *unsafe { z.offset((1 as i32) as isize) } }) as u32) as i32)
+                != (124 as i32)
+            {
+                unsafe {
+                    *tokenType = 104 as i32;
+                }
+                return (1 as i32) as i64;
+            } else {
+                unsafe {
+                    *tokenType = 112 as i32;
+                }
+                return (2 as i32) as i64;
+            }
+            unsafe {
+                *tokenType = 25 as i32;
+            }
+            return (1 as i32) as i64;
+        }
+        15 => {
+            if (((unsafe { *unsafe { z.offset((1 as i32) as isize) } }) as u32) as i32)
+                != (61 as i32)
+            {
+                unsafe {
+                    *tokenType = 186 as i32;
+                }
+                return (1 as i32) as i64;
+            } else {
+                unsafe {
+                    *tokenType = 53 as i32;
+                }
+                return (2 as i32) as i64;
+            }
+            if (((unsafe { *unsafe { z.offset((1 as i32) as isize) } }) as u32) as i32)
+                != (124 as i32)
+            {
+                unsafe {
+                    *tokenType = 104 as i32;
+                }
+                return (1 as i32) as i64;
+            } else {
+                unsafe {
+                    *tokenType = 112 as i32;
+                }
+                return (2 as i32) as i64;
+            }
+            unsafe {
+                *tokenType = 25 as i32;
+            }
+            return (1 as i32) as i64;
+        }
+        10 => {
+            if (((unsafe { *unsafe { z.offset((1 as i32) as isize) } }) as u32) as i32)
+                != (124 as i32)
+            {
+                unsafe {
+                    *tokenType = 104 as i32;
+                }
+                return (1 as i32) as i64;
+            } else {
+                unsafe {
+                    *tokenType = 112 as i32;
+                }
+                return (2 as i32) as i64;
+            }
+            unsafe {
+                *tokenType = 25 as i32;
+            }
+            return (1 as i32) as i64;
+        }
+        23 => {
+            unsafe {
+                *tokenType = 25 as i32;
+            }
+            return (1 as i32) as i64;
+        }
+        24 => {
+            unsafe {
+                *tokenType = 103 as i32;
+            }
+            return (1 as i32) as i64;
+        }
+        25 => {
+            unsafe {
+                *tokenType = 115 as i32;
+            }
+            return (1 as i32) as i64;
+        }
+        8 => {
+            let mut delim: i32 =
+                ((unsafe { *unsafe { z.offset((0 as i32) as isize) } }) as u32) as i32;
+            {}
+            {}
+            {}
+            i = (1 as i32) as i64;
+            '__slate_break_386: loop {
+                let __v435: i32 = ((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32;
+                c = __v435;
+                if !(__v435 != (0 as i32)) {
+                    break;
+                }
+                if c == delim {
+                    if (((unsafe { *unsafe { z.offset((i + ((1 as i32) as i64)) as isize) } })
+                        as u32) as i32)
+                        == delim
+                    {
+                        let __v438: i64 = i;
+                        let __v439: i64 = __v438 + ((1 as i32) as i64);
+                        i = __v439;
+                    } else {
+                        break '__slate_break_386;
+                    }
+                }
+                let __v436: i64 = i;
+                let __v437: i64 = __v436 + ((1 as i32) as i64);
+                i = __v437;
+            }
+            if c == (39 as i32) {
+                unsafe {
+                    *tokenType = 118 as i32;
+                }
+                return i + ((1 as i32) as i64);
+            } else {
+                if c != (0 as i32) {
+                    unsafe {
+                        *tokenType = 60 as i32;
+                    }
+                    return i + ((1 as i32) as i64);
+                } else {
+                    unsafe {
+                        *tokenType = 186 as i32;
+                    }
+                    return i;
+                }
+            }
+            if !((((unsafe {
+                *unsafe {
+                    unsafe { std::ptr::addr_of!(sqlite3CtypeMap) as *const u8 }.offset(
+                        (((unsafe { *unsafe { z.offset((1 as i32) as isize) } }) as u32) as i32)
+                            as isize,
+                    )
+                }
+            }) as u32) as i32)
+                & (4 as i32)
+                != (0 as i32))
+            {
+                unsafe {
+                    *tokenType = 142 as i32;
+                }
+                return (1 as i32) as i64;
+            }
+            // If the next character is a digit, this is a floating point
+            // number that begins with ".".  Fall thru into the next case
+            //
+            // no break
+            {}
+            {}
+            {}
+            {}
+            {}
+            {}
+            {}
+            {}
+            {}
+            {}
+            {}
+            {}
+            unsafe {
+                *tokenType = 156 as i32;
+            }
+            if (((unsafe { *unsafe { z.offset((0 as i32) as isize) } }) as u32) as i32)
+                == (48 as i32)
+                && ((((unsafe { *unsafe { z.offset((1 as i32) as isize) } }) as u32) as i32)
+                    == (120 as i32)
+                    || (((unsafe { *unsafe { z.offset((1 as i32) as isize) } }) as u32) as i32)
+                        == (88 as i32))
+                && (((unsafe {
+                    *unsafe {
+                        unsafe { std::ptr::addr_of!(sqlite3CtypeMap) as *const u8 }.offset(
+                            (((unsafe { *unsafe { z.offset((2 as i32) as isize) } }) as u32) as i32)
+                                as isize,
+                        )
+                    }
+                }) as u32) as i32)
+                    & (8 as i32)
+                    != (0 as i32)
+            {
+                i = (3 as i32) as i64;
+                '__slate_break_387: loop {
+                    if !((1 as i32) != (0 as i32)) {
+                        break;
+                    }
+                    if (((unsafe {
+                        *unsafe {
+                            unsafe { std::ptr::addr_of!(sqlite3CtypeMap) as *const u8 }.offset(
+                                (((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32)
+                                    as isize,
+                            )
+                        }
+                    }) as u32) as i32)
+                        & (8 as i32)
+                        == (0 as i32)
+                    {
+                        if (((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32)
+                            == (95 as i32)
+                        {
+                            unsafe {
+                                *tokenType = 183 as i32;
+                            }
+                        } else {
+                            break '__slate_break_387;
+                        }
+                    }
+                    let _v486: i64 = i;
+                    let _v487: i64 = _v486 + ((1 as i32) as i64);
+                    i = _v487;
+                }
+            } else {
+                i = (0 as i32) as i64;
+                '__slate_break_388: loop {
+                    if !((1 as i32) != (0 as i32)) {
+                        break;
+                    }
+                    if (((unsafe {
+                        *unsafe {
+                            unsafe { std::ptr::addr_of!(sqlite3CtypeMap) as *const u8 }.offset(
+                                (((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32)
+                                    as isize,
+                            )
+                        }
+                    }) as u32) as i32)
+                        & (4 as i32)
+                        == (0 as i32)
+                    {
+                        if (((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32)
+                            == (95 as i32)
+                        {
+                            unsafe {
+                                *tokenType = 183 as i32;
+                            }
+                        } else {
+                            break '__slate_break_388;
+                        }
+                    }
+                    let _v488: i64 = i;
+                    let _v489: i64 = _v488 + ((1 as i32) as i64);
+                    i = _v489;
+                }
+                if (((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32) == (46 as i32) {
+                    if (unsafe { *tokenType }) == (156 as i32) {
+                        unsafe {
+                            *tokenType = 154 as i32;
+                        }
+                    }
+                    let _v490: i64 = i;
+                    let _v491: i64 = _v490 + ((1 as i32) as i64);
+                    i = _v491;
+                    '__slate_break_389: loop {
+                        if !((1 as i32) != (0 as i32)) {
+                            break;
+                        }
+                        if (((unsafe {
+                            *unsafe {
+                                unsafe { std::ptr::addr_of!(sqlite3CtypeMap) as *const u8 }.offset(
+                                    (((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32)
+                                        as isize,
+                                )
+                            }
+                        }) as u32) as i32)
+                            & (4 as i32)
+                            == (0 as i32)
+                        {
+                            if (((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32)
+                                == (95 as i32)
+                            {
+                                unsafe {
+                                    *tokenType = 183 as i32;
+                                }
+                            } else {
+                                break '__slate_break_389;
+                            }
+                        }
+                        let _v492: i64 = i;
+                        let _v493: i64 = _v492 + ((1 as i32) as i64);
+                        i = _v493;
+                    }
+                }
+                if ((((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32) == (101 as i32)
+                    || (((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32)
+                        == (69 as i32))
+                    && ((((unsafe {
+                        *unsafe {
+                            unsafe { std::ptr::addr_of!(sqlite3CtypeMap) as *const u8 }.offset(
+                                (((unsafe {
+                                    *unsafe { z.offset((i + ((1 as i32) as i64)) as isize) }
+                                }) as u32) as i32) as isize,
+                            )
+                        }
+                    }) as u32) as i32)
+                        & (4 as i32)
+                        != (0 as i32)
+                        || ((((unsafe { *unsafe { z.offset((i + ((1 as i32) as i64)) as isize) } })
+                            as u32) as i32)
+                            == (43 as i32)
+                            || (((unsafe {
+                                *unsafe { z.offset((i + ((1 as i32) as i64)) as isize) }
+                            }) as u32) as i32)
+                                == (45 as i32))
+                            && (((unsafe {
+                                *unsafe {
+                                    unsafe { std::ptr::addr_of!(sqlite3CtypeMap) as *const u8 }
+                                        .offset(
+                                            (((unsafe {
+                                                *unsafe {
+                                                    z.offset((i + ((2 as i32) as i64)) as isize)
+                                                }
+                                            }) as u32)
+                                                as i32)
+                                                as isize,
+                                        )
+                                }
+                            }) as u32) as i32)
+                                & (4 as i32)
+                                != (0 as i32))
+                {
+                    if (unsafe { *tokenType }) == (156 as i32) {
+                        unsafe {
+                            *tokenType = 154 as i32;
+                        }
+                    }
+                    let _v494: i64 = i;
+                    let _v495: i64 = _v494 + ((2 as i32) as i64);
+                    i = _v495;
+                    '__slate_break_390: loop {
+                        if !((1 as i32) != (0 as i32)) {
+                            break;
+                        }
+                        if (((unsafe {
+                            *unsafe {
+                                unsafe { std::ptr::addr_of!(sqlite3CtypeMap) as *const u8 }.offset(
+                                    (((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32)
+                                        as isize,
+                                )
+                            }
+                        }) as u32) as i32)
+                            & (4 as i32)
+                            == (0 as i32)
+                        {
+                            if (((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32)
+                                == (95 as i32)
+                            {
+                                unsafe {
+                                    *tokenType = 183 as i32;
+                                }
+                            } else {
+                                break '__slate_break_390;
+                            }
+                        }
+                        let _v496: i64 = i;
+                        let _v497: i64 = _v496 + ((1 as i32) as i64);
+                        i = _v497;
+                    }
+                }
+            }
+            '__slate_break_391: while (((unsafe {
+                *unsafe {
+                    unsafe { std::ptr::addr_of!(sqlite3CtypeMap) as *const u8 }.offset(
+                        (((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32) as isize,
+                    )
+                }
+            }) as u32) as i32)
+                & (70 as i32)
+                != (0 as i32)
+            {
+                unsafe {
+                    *tokenType = 186 as i32;
+                }
+                let _v498: i64 = i;
+                let _v499: i64 = _v498 + ((1 as i32) as i64);
+                i = _v499;
+            }
+            return i;
+        }
+        26 => {
+            if !((((unsafe {
+                *unsafe {
+                    unsafe { std::ptr::addr_of!(sqlite3CtypeMap) as *const u8 }.offset(
+                        (((unsafe { *unsafe { z.offset((1 as i32) as isize) } }) as u32) as i32)
+                            as isize,
+                    )
+                }
+            }) as u32) as i32)
+                & (4 as i32)
+                != (0 as i32))
+            {
+                unsafe {
+                    *tokenType = 142 as i32;
+                }
+                return (1 as i32) as i64;
+            }
+            // If the next character is a digit, this is a floating point
+            // number that begins with ".".  Fall thru into the next case
+            //
+            // no break
+            {}
+            {}
+            {}
+            {}
+            {}
+            {}
+            {}
+            {}
+            {}
+            {}
+            {}
+            {}
+            unsafe {
+                *tokenType = 156 as i32;
+            }
+            if (((unsafe { *unsafe { z.offset((0 as i32) as isize) } }) as u32) as i32)
+                == (48 as i32)
+                && ((((unsafe { *unsafe { z.offset((1 as i32) as isize) } }) as u32) as i32)
+                    == (120 as i32)
+                    || (((unsafe { *unsafe { z.offset((1 as i32) as isize) } }) as u32) as i32)
+                        == (88 as i32))
+                && (((unsafe {
+                    *unsafe {
+                        unsafe { std::ptr::addr_of!(sqlite3CtypeMap) as *const u8 }.offset(
+                            (((unsafe { *unsafe { z.offset((2 as i32) as isize) } }) as u32) as i32)
+                                as isize,
+                        )
+                    }
+                }) as u32) as i32)
+                    & (8 as i32)
+                    != (0 as i32)
+            {
+                i = (3 as i32) as i64;
+                '__slate_break_387: loop {
+                    if !((1 as i32) != (0 as i32)) {
+                        break;
+                    }
+                    if (((unsafe {
+                        *unsafe {
+                            unsafe { std::ptr::addr_of!(sqlite3CtypeMap) as *const u8 }.offset(
+                                (((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32)
+                                    as isize,
+                            )
+                        }
+                    }) as u32) as i32)
+                        & (8 as i32)
+                        == (0 as i32)
+                    {
+                        if (((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32)
+                            == (95 as i32)
+                        {
+                            unsafe {
+                                *tokenType = 183 as i32;
+                            }
+                        } else {
+                            break '__slate_break_387;
+                        }
+                    }
+                    let _v500: i64 = i;
+                    let _v501: i64 = _v500 + ((1 as i32) as i64);
+                    i = _v501;
+                }
+            } else {
+                i = (0 as i32) as i64;
+                '__slate_break_388: loop {
+                    if !((1 as i32) != (0 as i32)) {
+                        break;
+                    }
+                    if (((unsafe {
+                        *unsafe {
+                            unsafe { std::ptr::addr_of!(sqlite3CtypeMap) as *const u8 }.offset(
+                                (((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32)
+                                    as isize,
+                            )
+                        }
+                    }) as u32) as i32)
+                        & (4 as i32)
+                        == (0 as i32)
+                    {
+                        if (((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32)
+                            == (95 as i32)
+                        {
+                            unsafe {
+                                *tokenType = 183 as i32;
+                            }
+                        } else {
+                            break '__slate_break_388;
+                        }
+                    }
+                    let _v502: i64 = i;
+                    let _v503: i64 = _v502 + ((1 as i32) as i64);
+                    i = _v503;
+                }
+                if (((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32) == (46 as i32) {
+                    if (unsafe { *tokenType }) == (156 as i32) {
+                        unsafe {
+                            *tokenType = 154 as i32;
+                        }
+                    }
+                    let _v504: i64 = i;
+                    let _v505: i64 = _v504 + ((1 as i32) as i64);
+                    i = _v505;
+                    '__slate_break_389: loop {
+                        if !((1 as i32) != (0 as i32)) {
+                            break;
+                        }
+                        if (((unsafe {
+                            *unsafe {
+                                unsafe { std::ptr::addr_of!(sqlite3CtypeMap) as *const u8 }.offset(
+                                    (((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32)
+                                        as isize,
+                                )
+                            }
+                        }) as u32) as i32)
+                            & (4 as i32)
+                            == (0 as i32)
+                        {
+                            if (((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32)
+                                == (95 as i32)
+                            {
+                                unsafe {
+                                    *tokenType = 183 as i32;
+                                }
+                            } else {
+                                break '__slate_break_389;
+                            }
+                        }
+                        let _v506: i64 = i;
+                        let _v507: i64 = _v506 + ((1 as i32) as i64);
+                        i = _v507;
+                    }
+                }
+                if ((((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32) == (101 as i32)
+                    || (((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32)
+                        == (69 as i32))
+                    && ((((unsafe {
+                        *unsafe {
+                            unsafe { std::ptr::addr_of!(sqlite3CtypeMap) as *const u8 }.offset(
+                                (((unsafe {
+                                    *unsafe { z.offset((i + ((1 as i32) as i64)) as isize) }
+                                }) as u32) as i32) as isize,
+                            )
+                        }
+                    }) as u32) as i32)
+                        & (4 as i32)
+                        != (0 as i32)
+                        || ((((unsafe { *unsafe { z.offset((i + ((1 as i32) as i64)) as isize) } })
+                            as u32) as i32)
+                            == (43 as i32)
+                            || (((unsafe {
+                                *unsafe { z.offset((i + ((1 as i32) as i64)) as isize) }
+                            }) as u32) as i32)
+                                == (45 as i32))
+                            && (((unsafe {
+                                *unsafe {
+                                    unsafe { std::ptr::addr_of!(sqlite3CtypeMap) as *const u8 }
+                                        .offset(
+                                            (((unsafe {
+                                                *unsafe {
+                                                    z.offset((i + ((2 as i32) as i64)) as isize)
+                                                }
+                                            }) as u32)
+                                                as i32)
+                                                as isize,
+                                        )
+                                }
+                            }) as u32) as i32)
+                                & (4 as i32)
+                                != (0 as i32))
+                {
+                    if (unsafe { *tokenType }) == (156 as i32) {
+                        unsafe {
+                            *tokenType = 154 as i32;
+                        }
+                    }
+                    let _v508: i64 = i;
+                    let _v509: i64 = _v508 + ((2 as i32) as i64);
+                    i = _v509;
+                    '__slate_break_390: loop {
+                        if !((1 as i32) != (0 as i32)) {
+                            break;
+                        }
+                        if (((unsafe {
+                            *unsafe {
+                                unsafe { std::ptr::addr_of!(sqlite3CtypeMap) as *const u8 }.offset(
+                                    (((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32)
+                                        as isize,
+                                )
+                            }
+                        }) as u32) as i32)
+                            & (4 as i32)
+                            == (0 as i32)
+                        {
+                            if (((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32)
+                                == (95 as i32)
+                            {
+                                unsafe {
+                                    *tokenType = 183 as i32;
+                                }
+                            } else {
+                                break '__slate_break_390;
+                            }
+                        }
+                        let _v510: i64 = i;
+                        let _v511: i64 = _v510 + ((1 as i32) as i64);
+                        i = _v511;
+                    }
+                }
+            }
+            '__slate_break_391: while (((unsafe {
+                *unsafe {
+                    unsafe { std::ptr::addr_of!(sqlite3CtypeMap) as *const u8 }.offset(
+                        (((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32) as isize,
+                    )
+                }
+            }) as u32) as i32)
+                & (70 as i32)
+                != (0 as i32)
+            {
+                unsafe {
+                    *tokenType = 186 as i32;
+                }
+                let _v512: i64 = i;
+                let _v513: i64 = _v512 + ((1 as i32) as i64);
+                i = _v513;
+            }
+            return i;
+        }
+        3 => {
+            {}
+            {}
+            {}
+            {}
+            {}
+            {}
+            {}
+            {}
+            {}
+            {}
+            {}
+            unsafe {
+                *tokenType = 156 as i32;
+            }
+            if (((unsafe { *unsafe { z.offset((0 as i32) as isize) } }) as u32) as i32)
+                == (48 as i32)
+                && ((((unsafe { *unsafe { z.offset((1 as i32) as isize) } }) as u32) as i32)
+                    == (120 as i32)
+                    || (((unsafe { *unsafe { z.offset((1 as i32) as isize) } }) as u32) as i32)
+                        == (88 as i32))
+                && (((unsafe {
+                    *unsafe {
+                        unsafe { std::ptr::addr_of!(sqlite3CtypeMap) as *const u8 }.offset(
+                            (((unsafe { *unsafe { z.offset((2 as i32) as isize) } }) as u32) as i32)
+                                as isize,
+                        )
+                    }
+                }) as u32) as i32)
+                    & (8 as i32)
+                    != (0 as i32)
+            {
+                i = (3 as i32) as i64;
+                '__slate_break_387: loop {
+                    if !((1 as i32) != (0 as i32)) {
+                        break;
+                    }
+                    if (((unsafe {
+                        *unsafe {
+                            unsafe { std::ptr::addr_of!(sqlite3CtypeMap) as *const u8 }.offset(
+                                (((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32)
+                                    as isize,
+                            )
+                        }
+                    }) as u32) as i32)
+                        & (8 as i32)
+                        == (0 as i32)
+                    {
+                        if (((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32)
+                            == (95 as i32)
+                        {
+                            unsafe {
+                                *tokenType = 183 as i32;
+                            }
+                        } else {
+                            break '__slate_break_387;
+                        }
+                    }
+                    let __v440: i64 = i;
+                    let __v441: i64 = __v440 + ((1 as i32) as i64);
+                    i = __v441;
+                }
+            } else {
+                i = (0 as i32) as i64;
+                '__slate_break_388: loop {
+                    if !((1 as i32) != (0 as i32)) {
+                        break;
+                    }
+                    if (((unsafe {
+                        *unsafe {
+                            unsafe { std::ptr::addr_of!(sqlite3CtypeMap) as *const u8 }.offset(
+                                (((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32)
+                                    as isize,
+                            )
+                        }
+                    }) as u32) as i32)
+                        & (4 as i32)
+                        == (0 as i32)
+                    {
+                        if (((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32)
+                            == (95 as i32)
+                        {
+                            unsafe {
+                                *tokenType = 183 as i32;
+                            }
+                        } else {
+                            break '__slate_break_388;
+                        }
+                    }
+                    let __v442: i64 = i;
+                    let __v443: i64 = __v442 + ((1 as i32) as i64);
+                    i = __v443;
+                }
+                if (((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32) == (46 as i32) {
+                    if (unsafe { *tokenType }) == (156 as i32) {
+                        unsafe {
+                            *tokenType = 154 as i32;
+                        }
+                    }
+                    let __v444: i64 = i;
+                    let __v445: i64 = __v444 + ((1 as i32) as i64);
+                    i = __v445;
+                    '__slate_break_389: loop {
+                        if !((1 as i32) != (0 as i32)) {
+                            break;
+                        }
+                        if (((unsafe {
+                            *unsafe {
+                                unsafe { std::ptr::addr_of!(sqlite3CtypeMap) as *const u8 }.offset(
+                                    (((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32)
+                                        as isize,
+                                )
+                            }
+                        }) as u32) as i32)
+                            & (4 as i32)
+                            == (0 as i32)
+                        {
+                            if (((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32)
+                                == (95 as i32)
+                            {
+                                unsafe {
+                                    *tokenType = 183 as i32;
+                                }
+                            } else {
+                                break '__slate_break_389;
+                            }
+                        }
+                        let __v446: i64 = i;
+                        let __v447: i64 = __v446 + ((1 as i32) as i64);
+                        i = __v447;
+                    }
+                }
+                if ((((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32) == (101 as i32)
+                    || (((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32)
+                        == (69 as i32))
+                    && ((((unsafe {
+                        *unsafe {
+                            unsafe { std::ptr::addr_of!(sqlite3CtypeMap) as *const u8 }.offset(
+                                (((unsafe {
+                                    *unsafe { z.offset((i + ((1 as i32) as i64)) as isize) }
+                                }) as u32) as i32) as isize,
+                            )
+                        }
+                    }) as u32) as i32)
+                        & (4 as i32)
+                        != (0 as i32)
+                        || ((((unsafe { *unsafe { z.offset((i + ((1 as i32) as i64)) as isize) } })
+                            as u32) as i32)
+                            == (43 as i32)
+                            || (((unsafe {
+                                *unsafe { z.offset((i + ((1 as i32) as i64)) as isize) }
+                            }) as u32) as i32)
+                                == (45 as i32))
+                            && (((unsafe {
+                                *unsafe {
+                                    unsafe { std::ptr::addr_of!(sqlite3CtypeMap) as *const u8 }
+                                        .offset(
+                                            (((unsafe {
+                                                *unsafe {
+                                                    z.offset((i + ((2 as i32) as i64)) as isize)
+                                                }
+                                            }) as u32)
+                                                as i32)
+                                                as isize,
+                                        )
+                                }
+                            }) as u32) as i32)
+                                & (4 as i32)
+                                != (0 as i32))
+                {
+                    if (unsafe { *tokenType }) == (156 as i32) {
+                        unsafe {
+                            *tokenType = 154 as i32;
+                        }
+                    }
+                    let __v448: i64 = i;
+                    let __v449: i64 = __v448 + ((2 as i32) as i64);
+                    i = __v449;
+                    '__slate_break_390: loop {
+                        if !((1 as i32) != (0 as i32)) {
+                            break;
+                        }
+                        if (((unsafe {
+                            *unsafe {
+                                unsafe { std::ptr::addr_of!(sqlite3CtypeMap) as *const u8 }.offset(
+                                    (((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32)
+                                        as isize,
+                                )
+                            }
+                        }) as u32) as i32)
+                            & (4 as i32)
+                            == (0 as i32)
+                        {
+                            if (((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32)
+                                == (95 as i32)
+                            {
+                                unsafe {
+                                    *tokenType = 183 as i32;
+                                }
+                            } else {
+                                break '__slate_break_390;
+                            }
+                        }
+                        let __v450: i64 = i;
+                        let __v451: i64 = __v450 + ((1 as i32) as i64);
+                        i = __v451;
+                    }
+                }
+            }
+            '__slate_break_391: while (((unsafe {
+                *unsafe {
+                    unsafe { std::ptr::addr_of!(sqlite3CtypeMap) as *const u8 }.offset(
+                        (((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32) as isize,
+                    )
+                }
+            }) as u32) as i32)
+                & (70 as i32)
+                != (0 as i32)
+            {
+                unsafe {
+                    *tokenType = 186 as i32;
+                }
+                let __v452: i64 = i;
+                let __v453: i64 = __v452 + ((1 as i32) as i64);
+                i = __v453;
+            }
+            return i;
+        }
+        9 => {
+            i = (1 as i32) as i64;
+            let __v454: i32 =
+                ((unsafe { *unsafe { z.offset((0 as i32) as isize) } }) as u32) as i32;
+            c = __v454;
+            '__slate_break_392: loop {
+                let __v455: bool;
+                if c != (93 as i32) {
+                    let __v456: i32 = ((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32;
+                    c = __v456;
+                    __v455 = __v456 != (0 as i32);
+                } else {
+                    __v455 = false as bool;
+                }
+                if !__v455 {
+                    break;
+                }
+                let __v457: i64 = i;
+                let __v458: i64 = __v457 + ((1 as i32) as i64);
+                i = __v458;
+            }
+            unsafe {
+                *tokenType = if c == (93 as i32) {
+                    60 as i32
+                } else {
+                    186 as i32
+                };
+            }
+            return i;
+        }
+        6 => {
+            unsafe {
+                *tokenType = 157 as i32;
+            }
+            i = (1 as i32) as i64;
+            '__slate_break_393: loop {
+                if !((((unsafe {
+                    *unsafe {
+                        unsafe { std::ptr::addr_of!(sqlite3CtypeMap) as *const u8 }.offset(
+                            (((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32)
+                                as isize,
+                        )
+                    }
+                }) as u32) as i32)
+                    & (4 as i32)
+                    != (0 as i32))
+                {
+                    break;
+                }
+                let __v459: i64 = i;
+                let __v460: i64 = __v459 + ((1 as i32) as i64);
+                i = __v460;
+            }
+            return i;
+        }
+        4 | 5 => {
+            let mut n: i64 = (0 as i32) as i64;
+            {}
+            {}
+            {}
+            {}
+            unsafe {
+                *tokenType = 157 as i32;
+            }
+            i = (1 as i32) as i64;
+            '__slate_break_394: loop {
+                let __v461: i32 = ((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32;
+                c = __v461;
+                if !(__v461 != (0 as i32)) {
+                    break;
+                }
+                if (((unsafe {
+                    *unsafe {
+                        unsafe { std::ptr::addr_of!(sqlite3CtypeMap) as *const u8 }
+                            .offset(((((c as i8) as u8) as u32) as i32) as isize)
+                    }
+                }) as u32) as i32)
+                    & (70 as i32)
+                    != (0 as i32)
+                {
+                    let __v464: i64 = n;
+                    let __v465: i64 = __v464 + ((1 as i32) as i64);
+                    n = __v465;
+                } else {
+                    if c == (40 as i32) && n > ((0 as i32) as i64) {
+                        '__slate_break_395: loop {
+                            let __v466: i64 = i;
+                            let __v467: i64 = __v466 + ((1 as i32) as i64);
+                            i = __v467;
+                            let __v468: i32 =
+                                ((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32;
+                            c = __v468;
+                            if !(__v468 != (0 as i32)
+                                && !((((unsafe {
+                                    *unsafe {
+                                        unsafe { std::ptr::addr_of!(sqlite3CtypeMap) as *const u8 }
+                                            .offset(((((c as i8) as u8) as u32) as i32) as isize)
+                                    }
+                                }) as u32) as i32)
+                                    & (1 as i32)
+                                    != (0 as i32))
+                                && c != (41 as i32))
+                            {
+                                break;
+                            }
+                        }
+                        if c == (41 as i32) {
+                            let __v469: i64 = i;
+                            let __v470: i64 = __v469 + ((1 as i32) as i64);
+                            i = __v470;
+                        } else {
+                            unsafe {
+                                *tokenType = 186 as i32;
+                            }
+                        }
+                        break '__slate_break_394;
+                    } else {
+                        if c == (58 as i32)
+                            && (((unsafe {
+                                *unsafe { z.offset((i + ((1 as i32) as i64)) as isize) }
+                            }) as u32) as i32)
+                                == (58 as i32)
+                        {
+                            let __v471: i64 = i;
+                            let __v472: i64 = __v471 + ((1 as i32) as i64);
+                            i = __v472;
+                        } else {
+                            break '__slate_break_394;
+                        }
+                    }
+                }
+                let __v462: i64 = i;
+                let __v463: i64 = __v462 + ((1 as i32) as i64);
+                i = __v463;
+            }
+            if n == ((0 as i32) as i64) {
+                unsafe {
+                    *tokenType = 186 as i32;
+                }
+            }
+            return i;
+        }
+        1 => {
+            if (((unsafe {
+                *unsafe {
+                    unsafe { std::ptr::addr_of!(aiClass.0) as *const u8 }.offset(
+                        (((unsafe { *unsafe { z.offset((1 as i32) as isize) } }) as u32) as i32)
+                            as isize,
+                    )
+                }
+            }) as u32) as i32)
+                > (2 as i32)
+            {
+                i = (1 as i32) as i64;
+            } else {
+                i = (2 as i32) as i64;
+                '__slate_break_396: loop {
+                    if !((((unsafe {
+                        *unsafe {
+                            unsafe { std::ptr::addr_of!(aiClass.0) as *const u8 }.offset(
+                                (((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32)
+                                    as isize,
+                            )
+                        }
+                    }) as u32) as i32)
+                        <= (2 as i32))
+                    {
+                        break;
+                    }
+                    let __v473: i64 = i;
+                    let __v474: i64 = __v473 + ((1 as i32) as i64);
+                    i = __v474;
+                }
+                if (((unsafe {
+                    *unsafe {
+                        unsafe { std::ptr::addr_of!(sqlite3CtypeMap) as *const u8 }.offset(
+                            (((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32)
+                                as isize,
+                        )
+                    }
+                }) as u32) as i32)
+                    & (70 as i32)
+                    != (0 as i32)
+                {
+                    // This token started out using characters that can appear in keywords,
+                    // but z[i] is a character not allowed within keywords, so this must
+                    // be an identifier instead
+                    let __v475: i64 = i;
+                    let __v476: i64 = __v475 + ((1 as i32) as i64);
+                    i = __v476;
+                } else {
+                    unsafe {
+                        *tokenType = 60 as i32;
+                    }
+                    return keywordCode((z as *mut i8) as *const i8, i, tokenType);
+                }
+            }
+        }
+        0 => {
+            {}
+            {}
+            if (((unsafe { *unsafe { z.offset((1 as i32) as isize) } }) as u32) as i32)
+                == (39 as i32)
+            {
+                unsafe {
+                    *tokenType = 155 as i32;
+                }
+                i = (2 as i32) as i64;
+                '__slate_break_397: loop {
+                    if !((((unsafe {
+                        *unsafe {
+                            unsafe { std::ptr::addr_of!(sqlite3CtypeMap) as *const u8 }.offset(
+                                (((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32)
+                                    as isize,
+                            )
+                        }
+                    }) as u32) as i32)
+                        & (8 as i32)
+                        != (0 as i32))
+                    {
+                        break;
+                    }
+                    let __v477: i64 = i;
+                    let __v478: i64 = __v477 + ((1 as i32) as i64);
+                    i = __v478;
+                }
+                if (((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32) != (39 as i32)
+                    || i % ((2 as i32) as i64) != (0 as i64)
+                {
+                    unsafe {
+                        *tokenType = 186 as i32;
+                    }
+                    '__slate_break_398: while (unsafe { *unsafe { z.offset(i as isize) } })
+                        != (0 as u8)
+                        && (((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32)
+                            != (39 as i32)
+                    {
+                        let __v479: i64 = i;
+                        let __v480: i64 = __v479 + ((1 as i32) as i64);
+                        i = __v480;
+                    }
+                }
+                if (unsafe { *unsafe { z.offset(i as isize) } }) != (0 as u8) {
+                    let __v481: i64 = i;
+                    let __v482: i64 = __v481 + ((1 as i32) as i64);
+                    i = __v482;
+                }
+                return i;
+            }
+            // If it is not a BLOB literal, then it must be an ID, since no
+            // SQL keywords start with the letter 'x'.  Fall through
+            //
+            // no break
+            {}
+            i = (1 as i32) as i64;
+        }
+        2 | 27 => {
+            i = (1 as i32) as i64;
+        }
+        30 => {
+            if (((unsafe { *unsafe { z.offset((1 as i32) as isize) } }) as u32) as i32)
+                == (187 as i32)
+                && (((unsafe { *unsafe { z.offset((2 as i32) as isize) } }) as u32) as i32)
+                    == (191 as i32)
+            {
+                unsafe {
+                    *tokenType = 184 as i32;
+                }
+                return (3 as i32) as i64;
+            }
+            i = (1 as i32) as i64;
+        }
+        29 => {
+            unsafe {
+                *tokenType = 186 as i32;
+            }
+            return (0 as i32) as i64;
+        }
+        _ => {
+            unsafe {
+                *tokenType = 186 as i32;
+            }
+            return (1 as i32) as i64;
+        }
+    }
+    '__slate_break_399: while (((unsafe {
+        *unsafe {
+            unsafe { std::ptr::addr_of!(sqlite3CtypeMap) as *const u8 }
+                .offset((((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32) as isize)
+        }
+    }) as u32) as i32)
+        & (70 as i32)
+        != (0 as i32)
+    {
+        let __v483: i64 = i;
+        let __v484: i64 = __v483 + ((1 as i32) as i64);
+        i = __v484;
+    }
+    unsafe {
+        *tokenType = 60 as i32;
+    }
+    return i;
+}
+
+/// Run the parser on the given SQL string.
 #[unsafe(no_mangle)]
 extern "C-unwind" fn sqlite3RunParser(mut pParse: *mut Parse, mut zSql: *const i8) -> i32 {
-    // /* Number of errors encountered */
-    let mut nErr: i32 = 0 as i32;
-    // /* The LEMON-generated LALR(1) parser */
-    let mut pEngine: *mut () = unsafe { std::mem::zeroed() };
-    // /* Length of the next token token */
-    let mut n: i64 = (0 as i32) as i64;
-    // /* type of the next token */
-    let mut tokenType: i32 = 0 as i32;
-    // /* type of the previous token */
-    let mut lastTokenParsed: i32 = -(1 as i32);
-    // /* The database connection */
-    let mut db: *mut sqlite3 = unsafe { (*pParse).db };
-    // /* Max length of an SQL string */
-    let mut mxSqlLen: i64 = 0 as i64;
-    // /* Outer parse context, if any */
-    let mut pParentParse: *mut Parse = std::ptr::null_mut::<Parse>();
+    let mut nErr: i32 = 0 as i32; // Number of errors encountered
+    let mut pEngine: *mut () = unsafe { std::mem::zeroed() }; // The LEMON-generated LALR(1) parser
+    let mut n: i64 = (0 as i32) as i64; // Length of the next token token
+    let mut tokenType: i32 = 0 as i32; // type of the next token
+    let mut lastTokenParsed: i32 = -(1 as i32); // type of the previous token
+    let mut db: *mut sqlite3 = unsafe { (*pParse).db }; // The database connection
+    let mut mxSqlLen: i64 = 0 as i64; // Max length of an SQL string
+    let mut pParentParse: *mut Parse = std::ptr::null_mut::<Parse>(); // Outer parse context, if any
     {}
     0 as i32;
     mxSqlLen = (unsafe {
@@ -3377,8 +5300,8 @@ extern "C-unwind" fn sqlite3RunParser(mut pParse: *mut Parse, mut zSql: *const i
                 }
                 if ((unsafe { *unsafe { zSql.offset((0 as i32) as isize) } }) as i32) == (0 as i32)
                 {
-                    // /* Upon reaching the end of input, call the parser two more times
-                    //         ** with tokens TK_SEMI and 0, in that order. */
+                    // Upon reaching the end of input, call the parser two more times
+                    // with tokens TK_SEMI and 0, in that order.
                     if lastTokenParsed == (1 as i32) {
                         tokenType = 0 as i32;
                     } else {
@@ -3409,7 +5332,6 @@ extern "C-unwind" fn sqlite3RunParser(mut pParse: *mut Parse, mut zSql: *const i
                                     (unsafe { zSql.offset((6 as i32) as isize) }) as *const u8,
                                     lastTokenParsed,
                                 );
-                            // /* SQLITE_OMIT_WINDOWFUNC */
                             } else {
                                 if tokenType == (185 as i32)
                                     && ((unsafe { (*db).init.busy }) != (0 as u8)
@@ -3417,8 +5339,8 @@ extern "C-unwind" fn sqlite3RunParser(mut pParse: *mut Parse, mut zSql: *const i
                                             & (((64 as i32) as i64) as u64) << (32 as i32)
                                             != (((0 as i32) as i64) as u64))
                                 {
-                                    // /* Ignore SQL comments if either (1) we are reparsing the schema or
-                                    //         ** (2) SQLITE_DBCONFIG_ENABLE_COMMENTS is turned on (the default). */
+                                    // Ignore SQL comments if either (1) we are reparsing the schema or
+                                    // (2) SQLITE_DBCONFIG_ENABLE_COMMENTS is turned on (the default).
                                     let __v415: *const i8 = zSql;
                                     let __v416: *const i8 = unsafe { __v415.offset(n as isize) };
                                     zSql = __v416;
@@ -3506,10 +5428,9 @@ extern "C-unwind" fn sqlite3RunParser(mut pParse: *mut Parse, mut zSql: *const i
     if (unsafe { (*pParse).pNewTable }) != std::ptr::null_mut::<Table>()
         && !((((unsafe { (*pParse).eParseMode }) as u32) as i32) != (0 as i32))
     {
-        // /* If the pParse->declareVtab flag is set, do not delete any table
-        //     ** structure built up in pParse->pNewTable. The calling code (see vtab.c)
-        //     ** will take responsibility for freeing the Table structure.
-        //     */
+        // If the pParse->declareVtab flag is set, do not delete any table
+        // structure built up in pParse->pNewTable. The calling code (see vtab.c)
+        // will take responsibility for freeing the Table structure.
         unsafe { sqlite3DeleteTable(db, unsafe { (*pParse).pNewTable }) };
     }
     if (unsafe { (*pParse).pNewTrigger }) != std::ptr::null_mut::<Trigger>()
@@ -3525,2150 +5446,4 @@ extern "C-unwind" fn sqlite3RunParser(mut pParse: *mut Parse, mut zSql: *const i
     }
     0 as i32;
     return nErr;
-}
-
-// /* SQLITE_OMIT_WINDOWFUNC */
-// /*
-// ** Return the length (in bytes) of the token that begins at z[0].
-// ** Store the token type in *tokenType before returning.
-// */
-#[unsafe(no_mangle)]
-extern "C-unwind" fn sqlite3GetToken(mut z: *const u8, mut tokenType: *mut i32) -> i64 {
-    let mut i: i64 = 0 as i64;
-    let mut c: i32 = 0 as i32;
-    // /* Switch on the character-class of the first byte
-    //                           ** of the token. See the comment on the CC_ defines
-    //                           ** above. */
-    '__slate_break_382: {
-        match ((unsafe {
-            *unsafe {
-                unsafe { std::ptr::addr_of!(aiClass.0) as *const u8 }
-                    .offset((((unsafe { *z }) as u32) as i32) as isize)
-            }
-        }) as u32) as i32
-        {
-            7 => {
-                {}
-                {}
-                {}
-                {}
-                {}
-                i = (1 as i32) as i64;
-                '__slate_break_383: loop {
-                    if !((((unsafe {
-                        *unsafe {
-                            unsafe { std::ptr::addr_of!(sqlite3CtypeMap) as *const u8 }.offset(
-                                (((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32)
-                                    as isize,
-                            )
-                        }
-                    }) as u32) as i32)
-                        & (1 as i32)
-                        != (0 as i32))
-                    {
-                        break;
-                    }
-                    let __v421: i64 = i;
-                    let __v422: i64 = __v421 + ((1 as i32) as i64);
-                    i = __v422;
-                }
-                unsafe {
-                    *tokenType = 184 as i32;
-                }
-                return i;
-            }
-            11 => {
-                if (((unsafe { *unsafe { z.offset((1 as i32) as isize) } }) as u32) as i32)
-                    == (45 as i32)
-                {
-                    i = (2 as i32) as i64;
-                    '__slate_break_384: loop {
-                        let __v423: i32 =
-                            ((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32;
-                        c = __v423;
-                        if !(__v423 != (0 as i32) && c != (10 as i32)) {
-                            break;
-                        }
-                        let __v424: i64 = i;
-                        let __v425: i64 = __v424 + ((1 as i32) as i64);
-                        i = __v425;
-                    }
-                    unsafe {
-                        *tokenType = 185 as i32;
-                    }
-                    return i;
-                } else {
-                    if (((unsafe { *unsafe { z.offset((1 as i32) as isize) } }) as u32) as i32)
-                        == (62 as i32)
-                    {
-                        unsafe {
-                            *tokenType = 113 as i32;
-                        }
-                        return ((2 as i32)
-                            + (((((unsafe { *unsafe { z.offset((2 as i32) as isize) } }) as u32)
-                                as i32)
-                                == (62 as i32)) as i32)) as i64;
-                    }
-                }
-                unsafe {
-                    *tokenType = 108 as i32;
-                }
-                return (1 as i32) as i64;
-            }
-            17 => {
-                unsafe {
-                    *tokenType = 22 as i32;
-                }
-                return (1 as i32) as i64;
-            }
-            18 => {
-                unsafe {
-                    *tokenType = 23 as i32;
-                }
-                return (1 as i32) as i64;
-            }
-            19 => {
-                unsafe {
-                    *tokenType = 1 as i32;
-                }
-                return (1 as i32) as i64;
-            }
-            20 => {
-                unsafe {
-                    *tokenType = 107 as i32;
-                }
-                return (1 as i32) as i64;
-            }
-            21 => {
-                unsafe {
-                    *tokenType = 109 as i32;
-                }
-                return (1 as i32) as i64;
-            }
-            16 => {
-                if (((unsafe { *unsafe { z.offset((1 as i32) as isize) } }) as u32) as i32)
-                    != (42 as i32)
-                    || (((unsafe { *unsafe { z.offset((2 as i32) as isize) } }) as u32) as i32)
-                        == (0 as i32)
-                {
-                    unsafe {
-                        *tokenType = 110 as i32;
-                    }
-                    return (1 as i32) as i64;
-                }
-                i = (3 as i32) as i64;
-                let __v426: i32 =
-                    ((unsafe { *unsafe { z.offset((2 as i32) as isize) } }) as u32) as i32;
-                c = __v426;
-                '__slate_break_385: loop {
-                    let __v427: bool;
-                    if c != (42 as i32)
-                        || (((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32)
-                            != (47 as i32)
-                    {
-                        let __v428: i32 =
-                            ((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32;
-                        c = __v428;
-                        __v427 = __v428 != (0 as i32);
-                    } else {
-                        __v427 = false as bool;
-                    }
-                    if !__v427 {
-                        break;
-                    }
-                    let __v429: i64 = i;
-                    let __v430: i64 = __v429 + ((1 as i32) as i64);
-                    i = __v430;
-                }
-                if c != (0 as i32) {
-                    let __v431: i64 = i;
-                    let __v432: i64 = __v431 + ((1 as i32) as i64);
-                    i = __v432;
-                }
-                unsafe {
-                    *tokenType = 185 as i32;
-                }
-                return i;
-            }
-            22 => {
-                unsafe {
-                    *tokenType = 111 as i32;
-                }
-                return (1 as i32) as i64;
-            }
-            14 => {
-                unsafe {
-                    *tokenType = 54 as i32;
-                }
-                return ((1 as i32)
-                    + (((((unsafe { *unsafe { z.offset((1 as i32) as isize) } }) as u32) as i32)
-                        == (61 as i32)) as i32)) as i64;
-            }
-            12 => {
-                let __v433: i32 =
-                    ((unsafe { *unsafe { z.offset((1 as i32) as isize) } }) as u32) as i32;
-                c = __v433;
-                if __v433 == (61 as i32) {
-                    unsafe {
-                        *tokenType = 56 as i32;
-                    }
-                    return (2 as i32) as i64;
-                } else {
-                    if c == (62 as i32) {
-                        unsafe {
-                            *tokenType = 53 as i32;
-                        }
-                        return (2 as i32) as i64;
-                    } else {
-                        if c == (60 as i32) {
-                            unsafe {
-                                *tokenType = 105 as i32;
-                            }
-                            return (2 as i32) as i64;
-                        } else {
-                            unsafe {
-                                *tokenType = 57 as i32;
-                            }
-                            return (1 as i32) as i64;
-                        }
-                    }
-                }
-                let _v485: i32 =
-                    ((unsafe { *unsafe { z.offset((1 as i32) as isize) } }) as u32) as i32;
-                c = _v485;
-                if _v485 == (61 as i32) {
-                    unsafe {
-                        *tokenType = 58 as i32;
-                    }
-                    return (2 as i32) as i64;
-                } else {
-                    if c == (62 as i32) {
-                        unsafe {
-                            *tokenType = 106 as i32;
-                        }
-                        return (2 as i32) as i64;
-                    } else {
-                        unsafe {
-                            *tokenType = 55 as i32;
-                        }
-                        return (1 as i32) as i64;
-                    }
-                }
-                if (((unsafe { *unsafe { z.offset((1 as i32) as isize) } }) as u32) as i32)
-                    != (61 as i32)
-                {
-                    unsafe {
-                        *tokenType = 186 as i32;
-                    }
-                    return (1 as i32) as i64;
-                } else {
-                    unsafe {
-                        *tokenType = 53 as i32;
-                    }
-                    return (2 as i32) as i64;
-                }
-                if (((unsafe { *unsafe { z.offset((1 as i32) as isize) } }) as u32) as i32)
-                    != (124 as i32)
-                {
-                    unsafe {
-                        *tokenType = 104 as i32;
-                    }
-                    return (1 as i32) as i64;
-                } else {
-                    unsafe {
-                        *tokenType = 112 as i32;
-                    }
-                    return (2 as i32) as i64;
-                }
-                unsafe {
-                    *tokenType = 25 as i32;
-                }
-                return (1 as i32) as i64;
-            }
-            13 => {
-                let __v434: i32 =
-                    ((unsafe { *unsafe { z.offset((1 as i32) as isize) } }) as u32) as i32;
-                c = __v434;
-                if __v434 == (61 as i32) {
-                    unsafe {
-                        *tokenType = 58 as i32;
-                    }
-                    return (2 as i32) as i64;
-                } else {
-                    if c == (62 as i32) {
-                        unsafe {
-                            *tokenType = 106 as i32;
-                        }
-                        return (2 as i32) as i64;
-                    } else {
-                        unsafe {
-                            *tokenType = 55 as i32;
-                        }
-                        return (1 as i32) as i64;
-                    }
-                }
-                if (((unsafe { *unsafe { z.offset((1 as i32) as isize) } }) as u32) as i32)
-                    != (61 as i32)
-                {
-                    unsafe {
-                        *tokenType = 186 as i32;
-                    }
-                    return (1 as i32) as i64;
-                } else {
-                    unsafe {
-                        *tokenType = 53 as i32;
-                    }
-                    return (2 as i32) as i64;
-                }
-                if (((unsafe { *unsafe { z.offset((1 as i32) as isize) } }) as u32) as i32)
-                    != (124 as i32)
-                {
-                    unsafe {
-                        *tokenType = 104 as i32;
-                    }
-                    return (1 as i32) as i64;
-                } else {
-                    unsafe {
-                        *tokenType = 112 as i32;
-                    }
-                    return (2 as i32) as i64;
-                }
-                unsafe {
-                    *tokenType = 25 as i32;
-                }
-                return (1 as i32) as i64;
-            }
-            15 => {
-                if (((unsafe { *unsafe { z.offset((1 as i32) as isize) } }) as u32) as i32)
-                    != (61 as i32)
-                {
-                    unsafe {
-                        *tokenType = 186 as i32;
-                    }
-                    return (1 as i32) as i64;
-                } else {
-                    unsafe {
-                        *tokenType = 53 as i32;
-                    }
-                    return (2 as i32) as i64;
-                }
-                if (((unsafe { *unsafe { z.offset((1 as i32) as isize) } }) as u32) as i32)
-                    != (124 as i32)
-                {
-                    unsafe {
-                        *tokenType = 104 as i32;
-                    }
-                    return (1 as i32) as i64;
-                } else {
-                    unsafe {
-                        *tokenType = 112 as i32;
-                    }
-                    return (2 as i32) as i64;
-                }
-                unsafe {
-                    *tokenType = 25 as i32;
-                }
-                return (1 as i32) as i64;
-            }
-            10 => {
-                if (((unsafe { *unsafe { z.offset((1 as i32) as isize) } }) as u32) as i32)
-                    != (124 as i32)
-                {
-                    unsafe {
-                        *tokenType = 104 as i32;
-                    }
-                    return (1 as i32) as i64;
-                } else {
-                    unsafe {
-                        *tokenType = 112 as i32;
-                    }
-                    return (2 as i32) as i64;
-                }
-                unsafe {
-                    *tokenType = 25 as i32;
-                }
-                return (1 as i32) as i64;
-            }
-            23 => {
-                unsafe {
-                    *tokenType = 25 as i32;
-                }
-                return (1 as i32) as i64;
-            }
-            24 => {
-                unsafe {
-                    *tokenType = 103 as i32;
-                }
-                return (1 as i32) as i64;
-            }
-            25 => {
-                unsafe {
-                    *tokenType = 115 as i32;
-                }
-                return (1 as i32) as i64;
-            }
-            8 => {
-                let mut delim: i32 =
-                    ((unsafe { *unsafe { z.offset((0 as i32) as isize) } }) as u32) as i32;
-                {}
-                {}
-                {}
-                i = (1 as i32) as i64;
-                '__slate_break_386: loop {
-                    let __v435: i32 = ((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32;
-                    c = __v435;
-                    if !(__v435 != (0 as i32)) {
-                        break;
-                    }
-                    if c == delim {
-                        if (((unsafe { *unsafe { z.offset((i + ((1 as i32) as i64)) as isize) } })
-                            as u32) as i32)
-                            == delim
-                        {
-                            let __v438: i64 = i;
-                            let __v439: i64 = __v438 + ((1 as i32) as i64);
-                            i = __v439;
-                        } else {
-                            break '__slate_break_386;
-                        }
-                    }
-                    let __v436: i64 = i;
-                    let __v437: i64 = __v436 + ((1 as i32) as i64);
-                    i = __v437;
-                }
-                if c == (39 as i32) {
-                    unsafe {
-                        *tokenType = 118 as i32;
-                    }
-                    return i + ((1 as i32) as i64);
-                } else {
-                    if c != (0 as i32) {
-                        unsafe {
-                            *tokenType = 60 as i32;
-                        }
-                        return i + ((1 as i32) as i64);
-                    } else {
-                        unsafe {
-                            *tokenType = 186 as i32;
-                        }
-                        return i;
-                    }
-                }
-                if !((((unsafe {
-                    *unsafe {
-                        unsafe { std::ptr::addr_of!(sqlite3CtypeMap) as *const u8 }.offset(
-                            (((unsafe { *unsafe { z.offset((1 as i32) as isize) } }) as u32) as i32)
-                                as isize,
-                        )
-                    }
-                }) as u32) as i32)
-                    & (4 as i32)
-                    != (0 as i32))
-                {
-                    unsafe {
-                        *tokenType = 142 as i32;
-                    }
-                    return (1 as i32) as i64;
-                }
-                // /* If the next character is a digit, this is a floating point
-                //       ** number that begins with ".".  Fall thru into the next case */
-                // /* no break */
-                {}
-                {}
-                {}
-                {}
-                {}
-                {}
-                {}
-                {}
-                {}
-                {}
-                {}
-                {}
-                unsafe {
-                    *tokenType = 156 as i32;
-                }
-                if (((unsafe { *unsafe { z.offset((0 as i32) as isize) } }) as u32) as i32)
-                    == (48 as i32)
-                    && ((((unsafe { *unsafe { z.offset((1 as i32) as isize) } }) as u32) as i32)
-                        == (120 as i32)
-                        || (((unsafe { *unsafe { z.offset((1 as i32) as isize) } }) as u32) as i32)
-                            == (88 as i32))
-                    && (((unsafe {
-                        *unsafe {
-                            unsafe { std::ptr::addr_of!(sqlite3CtypeMap) as *const u8 }.offset(
-                                (((unsafe { *unsafe { z.offset((2 as i32) as isize) } }) as u32)
-                                    as i32) as isize,
-                            )
-                        }
-                    }) as u32) as i32)
-                        & (8 as i32)
-                        != (0 as i32)
-                {
-                    i = (3 as i32) as i64;
-                    '__slate_break_387: loop {
-                        if !((1 as i32) != (0 as i32)) {
-                            break;
-                        }
-                        if (((unsafe {
-                            *unsafe {
-                                unsafe { std::ptr::addr_of!(sqlite3CtypeMap) as *const u8 }.offset(
-                                    (((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32)
-                                        as isize,
-                                )
-                            }
-                        }) as u32) as i32)
-                            & (8 as i32)
-                            == (0 as i32)
-                        {
-                            if (((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32)
-                                == (95 as i32)
-                            {
-                                unsafe {
-                                    *tokenType = 183 as i32;
-                                }
-                            } else {
-                                break '__slate_break_387;
-                            }
-                        }
-                        let _v486: i64 = i;
-                        let _v487: i64 = _v486 + ((1 as i32) as i64);
-                        i = _v487;
-                    }
-                } else {
-                    i = (0 as i32) as i64;
-                    '__slate_break_388: loop {
-                        if !((1 as i32) != (0 as i32)) {
-                            break;
-                        }
-                        if (((unsafe {
-                            *unsafe {
-                                unsafe { std::ptr::addr_of!(sqlite3CtypeMap) as *const u8 }.offset(
-                                    (((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32)
-                                        as isize,
-                                )
-                            }
-                        }) as u32) as i32)
-                            & (4 as i32)
-                            == (0 as i32)
-                        {
-                            if (((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32)
-                                == (95 as i32)
-                            {
-                                unsafe {
-                                    *tokenType = 183 as i32;
-                                }
-                            } else {
-                                break '__slate_break_388;
-                            }
-                        }
-                        let _v488: i64 = i;
-                        let _v489: i64 = _v488 + ((1 as i32) as i64);
-                        i = _v489;
-                    }
-                    if (((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32)
-                        == (46 as i32)
-                    {
-                        if (unsafe { *tokenType }) == (156 as i32) {
-                            unsafe {
-                                *tokenType = 154 as i32;
-                            }
-                        }
-                        let _v490: i64 = i;
-                        let _v491: i64 = _v490 + ((1 as i32) as i64);
-                        i = _v491;
-                        '__slate_break_389: loop {
-                            if !((1 as i32) != (0 as i32)) {
-                                break;
-                            }
-                            if (((unsafe {
-                                *unsafe {
-                                    unsafe { std::ptr::addr_of!(sqlite3CtypeMap) as *const u8 }
-                                        .offset(
-                                            (((unsafe { *unsafe { z.offset(i as isize) } }) as u32)
-                                                as i32)
-                                                as isize,
-                                        )
-                                }
-                            }) as u32) as i32)
-                                & (4 as i32)
-                                == (0 as i32)
-                            {
-                                if (((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32)
-                                    == (95 as i32)
-                                {
-                                    unsafe {
-                                        *tokenType = 183 as i32;
-                                    }
-                                } else {
-                                    break '__slate_break_389;
-                                }
-                            }
-                            let _v492: i64 = i;
-                            let _v493: i64 = _v492 + ((1 as i32) as i64);
-                            i = _v493;
-                        }
-                    }
-                    if ((((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32)
-                        == (101 as i32)
-                        || (((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32)
-                            == (69 as i32))
-                        && ((((unsafe {
-                            *unsafe {
-                                unsafe { std::ptr::addr_of!(sqlite3CtypeMap) as *const u8 }.offset(
-                                    (((unsafe {
-                                        *unsafe { z.offset((i + ((1 as i32) as i64)) as isize) }
-                                    }) as u32) as i32) as isize,
-                                )
-                            }
-                        }) as u32) as i32)
-                            & (4 as i32)
-                            != (0 as i32)
-                            || ((((unsafe {
-                                *unsafe { z.offset((i + ((1 as i32) as i64)) as isize) }
-                            }) as u32) as i32)
-                                == (43 as i32)
-                                || (((unsafe {
-                                    *unsafe { z.offset((i + ((1 as i32) as i64)) as isize) }
-                                }) as u32) as i32)
-                                    == (45 as i32))
-                                && (((unsafe {
-                                    *unsafe {
-                                        unsafe { std::ptr::addr_of!(sqlite3CtypeMap) as *const u8 }
-                                            .offset(
-                                                (((unsafe {
-                                                    *unsafe {
-                                                        z.offset((i + ((2 as i32) as i64)) as isize)
-                                                    }
-                                                })
-                                                    as u32)
-                                                    as i32)
-                                                    as isize,
-                                            )
-                                    }
-                                }) as u32) as i32)
-                                    & (4 as i32)
-                                    != (0 as i32))
-                    {
-                        if (unsafe { *tokenType }) == (156 as i32) {
-                            unsafe {
-                                *tokenType = 154 as i32;
-                            }
-                        }
-                        let _v494: i64 = i;
-                        let _v495: i64 = _v494 + ((2 as i32) as i64);
-                        i = _v495;
-                        '__slate_break_390: loop {
-                            if !((1 as i32) != (0 as i32)) {
-                                break;
-                            }
-                            if (((unsafe {
-                                *unsafe {
-                                    unsafe { std::ptr::addr_of!(sqlite3CtypeMap) as *const u8 }
-                                        .offset(
-                                            (((unsafe { *unsafe { z.offset(i as isize) } }) as u32)
-                                                as i32)
-                                                as isize,
-                                        )
-                                }
-                            }) as u32) as i32)
-                                & (4 as i32)
-                                == (0 as i32)
-                            {
-                                if (((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32)
-                                    == (95 as i32)
-                                {
-                                    unsafe {
-                                        *tokenType = 183 as i32;
-                                    }
-                                } else {
-                                    break '__slate_break_390;
-                                }
-                            }
-                            let _v496: i64 = i;
-                            let _v497: i64 = _v496 + ((1 as i32) as i64);
-                            i = _v497;
-                        }
-                    }
-                }
-                '__slate_break_391: loop {
-                    if !((((unsafe {
-                        *unsafe {
-                            unsafe { std::ptr::addr_of!(sqlite3CtypeMap) as *const u8 }.offset(
-                                (((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32)
-                                    as isize,
-                            )
-                        }
-                    }) as u32) as i32)
-                        & (70 as i32)
-                        != (0 as i32))
-                    {
-                        break;
-                    }
-                    unsafe {
-                        *tokenType = 186 as i32;
-                    }
-                    let _v498: i64 = i;
-                    let _v499: i64 = _v498 + ((1 as i32) as i64);
-                    i = _v499;
-                }
-                return i;
-            }
-            26 => {
-                if !((((unsafe {
-                    *unsafe {
-                        unsafe { std::ptr::addr_of!(sqlite3CtypeMap) as *const u8 }.offset(
-                            (((unsafe { *unsafe { z.offset((1 as i32) as isize) } }) as u32) as i32)
-                                as isize,
-                        )
-                    }
-                }) as u32) as i32)
-                    & (4 as i32)
-                    != (0 as i32))
-                {
-                    unsafe {
-                        *tokenType = 142 as i32;
-                    }
-                    return (1 as i32) as i64;
-                }
-                // /* If the next character is a digit, this is a floating point
-                //       ** number that begins with ".".  Fall thru into the next case */
-                // /* no break */
-                {}
-                {}
-                {}
-                {}
-                {}
-                {}
-                {}
-                {}
-                {}
-                {}
-                {}
-                {}
-                unsafe {
-                    *tokenType = 156 as i32;
-                }
-                if (((unsafe { *unsafe { z.offset((0 as i32) as isize) } }) as u32) as i32)
-                    == (48 as i32)
-                    && ((((unsafe { *unsafe { z.offset((1 as i32) as isize) } }) as u32) as i32)
-                        == (120 as i32)
-                        || (((unsafe { *unsafe { z.offset((1 as i32) as isize) } }) as u32) as i32)
-                            == (88 as i32))
-                    && (((unsafe {
-                        *unsafe {
-                            unsafe { std::ptr::addr_of!(sqlite3CtypeMap) as *const u8 }.offset(
-                                (((unsafe { *unsafe { z.offset((2 as i32) as isize) } }) as u32)
-                                    as i32) as isize,
-                            )
-                        }
-                    }) as u32) as i32)
-                        & (8 as i32)
-                        != (0 as i32)
-                {
-                    i = (3 as i32) as i64;
-                    '__slate_break_387: loop {
-                        if !((1 as i32) != (0 as i32)) {
-                            break;
-                        }
-                        if (((unsafe {
-                            *unsafe {
-                                unsafe { std::ptr::addr_of!(sqlite3CtypeMap) as *const u8 }.offset(
-                                    (((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32)
-                                        as isize,
-                                )
-                            }
-                        }) as u32) as i32)
-                            & (8 as i32)
-                            == (0 as i32)
-                        {
-                            if (((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32)
-                                == (95 as i32)
-                            {
-                                unsafe {
-                                    *tokenType = 183 as i32;
-                                }
-                            } else {
-                                break '__slate_break_387;
-                            }
-                        }
-                        let _v500: i64 = i;
-                        let _v501: i64 = _v500 + ((1 as i32) as i64);
-                        i = _v501;
-                    }
-                } else {
-                    i = (0 as i32) as i64;
-                    '__slate_break_388: loop {
-                        if !((1 as i32) != (0 as i32)) {
-                            break;
-                        }
-                        if (((unsafe {
-                            *unsafe {
-                                unsafe { std::ptr::addr_of!(sqlite3CtypeMap) as *const u8 }.offset(
-                                    (((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32)
-                                        as isize,
-                                )
-                            }
-                        }) as u32) as i32)
-                            & (4 as i32)
-                            == (0 as i32)
-                        {
-                            if (((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32)
-                                == (95 as i32)
-                            {
-                                unsafe {
-                                    *tokenType = 183 as i32;
-                                }
-                            } else {
-                                break '__slate_break_388;
-                            }
-                        }
-                        let _v502: i64 = i;
-                        let _v503: i64 = _v502 + ((1 as i32) as i64);
-                        i = _v503;
-                    }
-                    if (((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32)
-                        == (46 as i32)
-                    {
-                        if (unsafe { *tokenType }) == (156 as i32) {
-                            unsafe {
-                                *tokenType = 154 as i32;
-                            }
-                        }
-                        let _v504: i64 = i;
-                        let _v505: i64 = _v504 + ((1 as i32) as i64);
-                        i = _v505;
-                        '__slate_break_389: loop {
-                            if !((1 as i32) != (0 as i32)) {
-                                break;
-                            }
-                            if (((unsafe {
-                                *unsafe {
-                                    unsafe { std::ptr::addr_of!(sqlite3CtypeMap) as *const u8 }
-                                        .offset(
-                                            (((unsafe { *unsafe { z.offset(i as isize) } }) as u32)
-                                                as i32)
-                                                as isize,
-                                        )
-                                }
-                            }) as u32) as i32)
-                                & (4 as i32)
-                                == (0 as i32)
-                            {
-                                if (((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32)
-                                    == (95 as i32)
-                                {
-                                    unsafe {
-                                        *tokenType = 183 as i32;
-                                    }
-                                } else {
-                                    break '__slate_break_389;
-                                }
-                            }
-                            let _v506: i64 = i;
-                            let _v507: i64 = _v506 + ((1 as i32) as i64);
-                            i = _v507;
-                        }
-                    }
-                    if ((((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32)
-                        == (101 as i32)
-                        || (((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32)
-                            == (69 as i32))
-                        && ((((unsafe {
-                            *unsafe {
-                                unsafe { std::ptr::addr_of!(sqlite3CtypeMap) as *const u8 }.offset(
-                                    (((unsafe {
-                                        *unsafe { z.offset((i + ((1 as i32) as i64)) as isize) }
-                                    }) as u32) as i32) as isize,
-                                )
-                            }
-                        }) as u32) as i32)
-                            & (4 as i32)
-                            != (0 as i32)
-                            || ((((unsafe {
-                                *unsafe { z.offset((i + ((1 as i32) as i64)) as isize) }
-                            }) as u32) as i32)
-                                == (43 as i32)
-                                || (((unsafe {
-                                    *unsafe { z.offset((i + ((1 as i32) as i64)) as isize) }
-                                }) as u32) as i32)
-                                    == (45 as i32))
-                                && (((unsafe {
-                                    *unsafe {
-                                        unsafe { std::ptr::addr_of!(sqlite3CtypeMap) as *const u8 }
-                                            .offset(
-                                                (((unsafe {
-                                                    *unsafe {
-                                                        z.offset((i + ((2 as i32) as i64)) as isize)
-                                                    }
-                                                })
-                                                    as u32)
-                                                    as i32)
-                                                    as isize,
-                                            )
-                                    }
-                                }) as u32) as i32)
-                                    & (4 as i32)
-                                    != (0 as i32))
-                    {
-                        if (unsafe { *tokenType }) == (156 as i32) {
-                            unsafe {
-                                *tokenType = 154 as i32;
-                            }
-                        }
-                        let _v508: i64 = i;
-                        let _v509: i64 = _v508 + ((2 as i32) as i64);
-                        i = _v509;
-                        '__slate_break_390: loop {
-                            if !((1 as i32) != (0 as i32)) {
-                                break;
-                            }
-                            if (((unsafe {
-                                *unsafe {
-                                    unsafe { std::ptr::addr_of!(sqlite3CtypeMap) as *const u8 }
-                                        .offset(
-                                            (((unsafe { *unsafe { z.offset(i as isize) } }) as u32)
-                                                as i32)
-                                                as isize,
-                                        )
-                                }
-                            }) as u32) as i32)
-                                & (4 as i32)
-                                == (0 as i32)
-                            {
-                                if (((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32)
-                                    == (95 as i32)
-                                {
-                                    unsafe {
-                                        *tokenType = 183 as i32;
-                                    }
-                                } else {
-                                    break '__slate_break_390;
-                                }
-                            }
-                            let _v510: i64 = i;
-                            let _v511: i64 = _v510 + ((1 as i32) as i64);
-                            i = _v511;
-                        }
-                    }
-                }
-                '__slate_break_391: while (((unsafe {
-                    *unsafe {
-                        unsafe { std::ptr::addr_of!(sqlite3CtypeMap) as *const u8 }.offset(
-                            (((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32)
-                                as isize,
-                        )
-                    }
-                }) as u32) as i32)
-                    & (70 as i32)
-                    != (0 as i32)
-                {
-                    '__slate_continue_391: {
-                        {
-                            unsafe {
-                                *tokenType = 186 as i32;
-                            }
-                            let _v512: i64 = i;
-                            let _v513: i64 = _v512 + ((1 as i32) as i64);
-                            i = _v513;
-                        }
-                    }
-                }
-                return i;
-            }
-            3 => {
-                {}
-                {}
-                {}
-                {}
-                {}
-                {}
-                {}
-                {}
-                {}
-                {}
-                {}
-                unsafe {
-                    *tokenType = 156 as i32;
-                }
-                if (((unsafe { *unsafe { z.offset((0 as i32) as isize) } }) as u32) as i32)
-                    == (48 as i32)
-                    && ((((unsafe { *unsafe { z.offset((1 as i32) as isize) } }) as u32) as i32)
-                        == (120 as i32)
-                        || (((unsafe { *unsafe { z.offset((1 as i32) as isize) } }) as u32) as i32)
-                            == (88 as i32))
-                    && (((unsafe {
-                        *unsafe {
-                            unsafe { std::ptr::addr_of!(sqlite3CtypeMap) as *const u8 }.offset(
-                                (((unsafe { *unsafe { z.offset((2 as i32) as isize) } }) as u32)
-                                    as i32) as isize,
-                            )
-                        }
-                    }) as u32) as i32)
-                        & (8 as i32)
-                        != (0 as i32)
-                {
-                    {
-                        {
-                            i = (3 as i32) as i64;
-                            '__slate_break_387: loop {
-                                if !((1 as i32) != (0 as i32)) {
-                                    break;
-                                }
-                                '__slate_continue_387: {
-                                    {
-                                        if (((unsafe {
-                                            *unsafe {
-                                                unsafe {
-                                                    std::ptr::addr_of!(sqlite3CtypeMap) as *const u8
-                                                }
-                                                .offset(
-                                                    (((unsafe { *unsafe { z.offset(i as isize) } })
-                                                        as u32)
-                                                        as i32)
-                                                        as isize,
-                                                )
-                                            }
-                                        }) as u32)
-                                            as i32)
-                                            & (8 as i32)
-                                            == (0 as i32)
-                                        {
-                                            {
-                                                if (((unsafe { *unsafe { z.offset(i as isize) } })
-                                                    as u32)
-                                                    as i32)
-                                                    == (95 as i32)
-                                                {
-                                                    {
-                                                        unsafe {
-                                                            *tokenType = 183 as i32;
-                                                        }
-                                                    }
-                                                } else {
-                                                    {
-                                                        break '__slate_break_387;
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                                let __v440: i64 = i;
-                                let __v441: i64 = __v440 + ((1 as i32) as i64);
-                                i = __v441;
-                            }
-                        }
-                    }
-                } else {
-                    {
-                        {
-                            i = (0 as i32) as i64;
-                            '__slate_break_388: loop {
-                                if !((1 as i32) != (0 as i32)) {
-                                    break;
-                                }
-                                '__slate_continue_388: {
-                                    {
-                                        if (((unsafe {
-                                            *unsafe {
-                                                unsafe {
-                                                    std::ptr::addr_of!(sqlite3CtypeMap) as *const u8
-                                                }
-                                                .offset(
-                                                    (((unsafe { *unsafe { z.offset(i as isize) } })
-                                                        as u32)
-                                                        as i32)
-                                                        as isize,
-                                                )
-                                            }
-                                        }) as u32)
-                                            as i32)
-                                            & (4 as i32)
-                                            == (0 as i32)
-                                        {
-                                            {
-                                                if (((unsafe { *unsafe { z.offset(i as isize) } })
-                                                    as u32)
-                                                    as i32)
-                                                    == (95 as i32)
-                                                {
-                                                    {
-                                                        unsafe {
-                                                            *tokenType = 183 as i32;
-                                                        }
-                                                    }
-                                                } else {
-                                                    {
-                                                        break '__slate_break_388;
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                                let __v442: i64 = i;
-                                let __v443: i64 = __v442 + ((1 as i32) as i64);
-                                i = __v443;
-                            }
-                        }
-                        if (((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32)
-                            == (46 as i32)
-                        {
-                            {
-                                if (unsafe { *tokenType }) == (156 as i32) {
-                                    unsafe {
-                                        *tokenType = 154 as i32;
-                                    }
-                                }
-                                {
-                                    let __v444: i64 = i;
-                                    let __v445: i64 = __v444 + ((1 as i32) as i64);
-                                    i = __v445;
-                                    '__slate_break_389: loop {
-                                        if !((1 as i32) != (0 as i32)) {
-                                            break;
-                                        }
-                                        '__slate_continue_389: {
-                                            {
-                                                if (((unsafe {
-                                                    *unsafe {
-                                                        unsafe {
-                                                            std::ptr::addr_of!(sqlite3CtypeMap)
-                                                                as *const u8
-                                                        }
-                                                        .offset(
-                                                            (((unsafe {
-                                                                *unsafe { z.offset(i as isize) }
-                                                            })
-                                                                as u32)
-                                                                as i32)
-                                                                as isize,
-                                                        )
-                                                    }
-                                                })
-                                                    as u32)
-                                                    as i32)
-                                                    & (4 as i32)
-                                                    == (0 as i32)
-                                                {
-                                                    {
-                                                        if (((unsafe {
-                                                            *unsafe { z.offset(i as isize) }
-                                                        })
-                                                            as u32)
-                                                            as i32)
-                                                            == (95 as i32)
-                                                        {
-                                                            {
-                                                                unsafe {
-                                                                    *tokenType = 183 as i32;
-                                                                }
-                                                            }
-                                                        } else {
-                                                            {
-                                                                break '__slate_break_389;
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                        let __v446: i64 = i;
-                                        let __v447: i64 = __v446 + ((1 as i32) as i64);
-                                        i = __v447;
-                                    }
-                                }
-                            }
-                        }
-                        if ((((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32)
-                            == (101 as i32)
-                            || (((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32)
-                                == (69 as i32))
-                            && ((((unsafe {
-                                *unsafe {
-                                    unsafe { std::ptr::addr_of!(sqlite3CtypeMap) as *const u8 }
-                                        .offset(
-                                            (((unsafe {
-                                                *unsafe {
-                                                    z.offset((i + ((1 as i32) as i64)) as isize)
-                                                }
-                                            }) as u32)
-                                                as i32)
-                                                as isize,
-                                        )
-                                }
-                            }) as u32) as i32)
-                                & (4 as i32)
-                                != (0 as i32)
-                                || ((((unsafe {
-                                    *unsafe { z.offset((i + ((1 as i32) as i64)) as isize) }
-                                }) as u32) as i32)
-                                    == (43 as i32)
-                                    || (((unsafe {
-                                        *unsafe { z.offset((i + ((1 as i32) as i64)) as isize) }
-                                    }) as u32) as i32)
-                                        == (45 as i32))
-                                    && (((unsafe {
-                                        *unsafe {
-                                            unsafe {
-                                                std::ptr::addr_of!(sqlite3CtypeMap) as *const u8
-                                            }
-                                            .offset(
-                                                (((unsafe {
-                                                    *unsafe {
-                                                        z.offset((i + ((2 as i32) as i64)) as isize)
-                                                    }
-                                                })
-                                                    as u32)
-                                                    as i32)
-                                                    as isize,
-                                            )
-                                        }
-                                    }) as u32) as i32)
-                                        & (4 as i32)
-                                        != (0 as i32))
-                        {
-                            {
-                                if (unsafe { *tokenType }) == (156 as i32) {
-                                    unsafe {
-                                        *tokenType = 154 as i32;
-                                    }
-                                }
-                                {
-                                    let __v448: i64 = i;
-                                    let __v449: i64 = __v448 + ((2 as i32) as i64);
-                                    i = __v449;
-                                    '__slate_break_390: loop {
-                                        if !((1 as i32) != (0 as i32)) {
-                                            break;
-                                        }
-                                        '__slate_continue_390: {
-                                            {
-                                                if (((unsafe {
-                                                    *unsafe {
-                                                        unsafe {
-                                                            std::ptr::addr_of!(sqlite3CtypeMap)
-                                                                as *const u8
-                                                        }
-                                                        .offset(
-                                                            (((unsafe {
-                                                                *unsafe { z.offset(i as isize) }
-                                                            })
-                                                                as u32)
-                                                                as i32)
-                                                                as isize,
-                                                        )
-                                                    }
-                                                })
-                                                    as u32)
-                                                    as i32)
-                                                    & (4 as i32)
-                                                    == (0 as i32)
-                                                {
-                                                    {
-                                                        if (((unsafe {
-                                                            *unsafe { z.offset(i as isize) }
-                                                        })
-                                                            as u32)
-                                                            as i32)
-                                                            == (95 as i32)
-                                                        {
-                                                            {
-                                                                unsafe {
-                                                                    *tokenType = 183 as i32;
-                                                                }
-                                                            }
-                                                        } else {
-                                                            {
-                                                                break '__slate_break_390;
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                        let __v450: i64 = i;
-                                        let __v451: i64 = __v450 + ((1 as i32) as i64);
-                                        i = __v451;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                '__slate_break_391: while (((unsafe {
-                    *unsafe {
-                        unsafe { std::ptr::addr_of!(sqlite3CtypeMap) as *const u8 }.offset(
-                            (((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32)
-                                as isize,
-                        )
-                    }
-                }) as u32) as i32)
-                    & (70 as i32)
-                    != (0 as i32)
-                {
-                    '__slate_continue_391: {
-                        {
-                            unsafe {
-                                *tokenType = 186 as i32;
-                            }
-                            let __v452: i64 = i;
-                            let __v453: i64 = __v452 + ((1 as i32) as i64);
-                            i = __v453;
-                        }
-                    }
-                }
-                return i;
-            }
-            9 => {
-                i = (1 as i32) as i64;
-                let __v454: i32 =
-                    ((unsafe { *unsafe { z.offset((0 as i32) as isize) } }) as u32) as i32;
-                c = __v454;
-                '__slate_break_392: loop {
-                    let __v455: bool;
-                    if c != (93 as i32) {
-                        let __v456: i32 =
-                            ((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32;
-                        c = __v456;
-                        __v455 = __v456 != (0 as i32);
-                    } else {
-                        __v455 = false as bool;
-                    }
-                    if !__v455 {
-                        break;
-                    }
-                    '__slate_continue_392: {
-                        {}
-                    }
-                    let __v457: i64 = i;
-                    let __v458: i64 = __v457 + ((1 as i32) as i64);
-                    i = __v458;
-                }
-                unsafe {
-                    *tokenType = if c == (93 as i32) {
-                        60 as i32
-                    } else {
-                        186 as i32
-                    };
-                }
-                return i;
-            }
-            6 => {
-                unsafe {
-                    *tokenType = 157 as i32;
-                }
-                i = (1 as i32) as i64;
-                '__slate_break_393: loop {
-                    if !((((unsafe {
-                        *unsafe {
-                            unsafe { std::ptr::addr_of!(sqlite3CtypeMap) as *const u8 }.offset(
-                                (((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32)
-                                    as isize,
-                            )
-                        }
-                    }) as u32) as i32)
-                        & (4 as i32)
-                        != (0 as i32))
-                    {
-                        break;
-                    }
-                    '__slate_continue_393: {
-                        {}
-                    }
-                    let __v459: i64 = i;
-                    let __v460: i64 = __v459 + ((1 as i32) as i64);
-                    i = __v460;
-                }
-                return i;
-            }
-            4 | 5 => {
-                let mut n: i64 = (0 as i32) as i64;
-                {}
-                {}
-                {}
-                {}
-                unsafe {
-                    *tokenType = 157 as i32;
-                }
-                i = (1 as i32) as i64;
-                '__slate_break_394: loop {
-                    let __v461: i32 = ((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32;
-                    c = __v461;
-                    if !(__v461 != (0 as i32)) {
-                        break;
-                    }
-                    '__slate_continue_394: {
-                        {
-                            if (((unsafe {
-                                *unsafe {
-                                    unsafe { std::ptr::addr_of!(sqlite3CtypeMap) as *const u8 }
-                                        .offset(((((c as i8) as u8) as u32) as i32) as isize)
-                                }
-                            }) as u32) as i32)
-                                & (70 as i32)
-                                != (0 as i32)
-                            {
-                                {
-                                    let __v464: i64 = n;
-                                    let __v465: i64 = __v464 + ((1 as i32) as i64);
-                                    n = __v465;
-                                }
-                            } else {
-                                if c == (40 as i32) && n > ((0 as i32) as i64) {
-                                    {
-                                        '__slate_break_395: loop {
-                                            '__slate_continue_395: {
-                                                {
-                                                    let __v466: i64 = i;
-                                                    let __v467: i64 = __v466 + ((1 as i32) as i64);
-                                                    i = __v467;
-                                                }
-                                            }
-                                            let __v468: i32 =
-                                                ((unsafe { *unsafe { z.offset(i as isize) } })
-                                                    as u32)
-                                                    as i32;
-                                            c = __v468;
-                                            if !(__v468 != (0 as i32)
-                                                && !((((unsafe {
-                                                    *unsafe {
-                                                        unsafe {
-                                                            std::ptr::addr_of!(sqlite3CtypeMap)
-                                                                as *const u8
-                                                        }
-                                                        .offset(
-                                                            ((((c as i8) as u8) as u32) as i32)
-                                                                as isize,
-                                                        )
-                                                    }
-                                                })
-                                                    as u32)
-                                                    as i32)
-                                                    & (1 as i32)
-                                                    != (0 as i32))
-                                                && c != (41 as i32))
-                                            {
-                                                break;
-                                            }
-                                        }
-                                        if c == (41 as i32) {
-                                            {
-                                                let __v469: i64 = i;
-                                                let __v470: i64 = __v469 + ((1 as i32) as i64);
-                                                i = __v470;
-                                            }
-                                        } else {
-                                            {
-                                                unsafe {
-                                                    *tokenType = 186 as i32;
-                                                }
-                                            }
-                                        }
-                                        break '__slate_break_394;
-                                    }
-                                } else {
-                                    if c == (58 as i32)
-                                        && (((unsafe {
-                                            *unsafe { z.offset((i + ((1 as i32) as i64)) as isize) }
-                                        }) as u32)
-                                            as i32)
-                                            == (58 as i32)
-                                    {
-                                        {
-                                            let __v471: i64 = i;
-                                            let __v472: i64 = __v471 + ((1 as i32) as i64);
-                                            i = __v472;
-                                        }
-                                    } else {
-                                        {
-                                            break '__slate_break_394;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    let __v462: i64 = i;
-                    let __v463: i64 = __v462 + ((1 as i32) as i64);
-                    i = __v463;
-                }
-                if n == ((0 as i32) as i64) {
-                    unsafe {
-                        *tokenType = 186 as i32;
-                    }
-                }
-                return i;
-            }
-            1 => {
-                if (((unsafe {
-                    *unsafe {
-                        unsafe { std::ptr::addr_of!(aiClass.0) as *const u8 }.offset(
-                            (((unsafe { *unsafe { z.offset((1 as i32) as isize) } }) as u32) as i32)
-                                as isize,
-                        )
-                    }
-                }) as u32) as i32)
-                    > (2 as i32)
-                {
-                    {
-                        i = (1 as i32) as i64;
-                        break '__slate_break_382;
-                    }
-                }
-                i = (2 as i32) as i64;
-                '__slate_break_396: loop {
-                    if !((((unsafe {
-                        *unsafe {
-                            unsafe { std::ptr::addr_of!(aiClass.0) as *const u8 }.offset(
-                                (((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32)
-                                    as isize,
-                            )
-                        }
-                    }) as u32) as i32)
-                        <= (2 as i32))
-                    {
-                        break;
-                    }
-                    '__slate_continue_396: {
-                        {}
-                    }
-                    let __v473: i64 = i;
-                    let __v474: i64 = __v473 + ((1 as i32) as i64);
-                    i = __v474;
-                }
-                if (((unsafe {
-                    *unsafe {
-                        unsafe { std::ptr::addr_of!(sqlite3CtypeMap) as *const u8 }.offset(
-                            (((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32)
-                                as isize,
-                        )
-                    }
-                }) as u32) as i32)
-                    & (70 as i32)
-                    != (0 as i32)
-                {
-                    {
-                        // /* This token started out using characters that can appear in keywords,
-                        //         ** but z[i] is a character not allowed within keywords, so this must
-                        //         ** be an identifier instead */
-                        let __v475: i64 = i;
-                        let __v476: i64 = __v475 + ((1 as i32) as i64);
-                        i = __v476;
-                        break '__slate_break_382;
-                    }
-                }
-                unsafe {
-                    *tokenType = 60 as i32;
-                }
-                return keywordCode((z as *mut i8) as *const i8, i, tokenType);
-            }
-            0 => {
-                {}
-                {}
-                if (((unsafe { *unsafe { z.offset((1 as i32) as isize) } }) as u32) as i32)
-                    == (39 as i32)
-                {
-                    {
-                        unsafe {
-                            *tokenType = 155 as i32;
-                        }
-                        {
-                            i = (2 as i32) as i64;
-                            '__slate_break_397: loop {
-                                if !((((unsafe {
-                                    *unsafe {
-                                        unsafe { std::ptr::addr_of!(sqlite3CtypeMap) as *const u8 }
-                                            .offset(
-                                                (((unsafe { *unsafe { z.offset(i as isize) } })
-                                                    as u32)
-                                                    as i32)
-                                                    as isize,
-                                            )
-                                    }
-                                }) as u32) as i32)
-                                    & (8 as i32)
-                                    != (0 as i32))
-                                {
-                                    break;
-                                }
-                                '__slate_continue_397: {
-                                    {}
-                                }
-                                let __v477: i64 = i;
-                                let __v478: i64 = __v477 + ((1 as i32) as i64);
-                                i = __v478;
-                            }
-                        }
-                        if (((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32)
-                            != (39 as i32)
-                            || i % ((2 as i32) as i64) != (0 as i64)
-                        {
-                            {
-                                unsafe {
-                                    *tokenType = 186 as i32;
-                                }
-                                '__slate_break_398: loop {
-                                    if !((unsafe { *unsafe { z.offset(i as isize) } }) != (0 as u8)
-                                        && (((unsafe { *unsafe { z.offset(i as isize) } }) as u32)
-                                            as i32)
-                                            != (39 as i32))
-                                    {
-                                        break;
-                                    }
-                                    '__slate_continue_398: {
-                                        {
-                                            let __v479: i64 = i;
-                                            let __v480: i64 = __v479 + ((1 as i32) as i64);
-                                            i = __v480;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        if (unsafe { *unsafe { z.offset(i as isize) } }) != (0 as u8) {
-                            let __v481: i64 = i;
-                            let __v482: i64 = __v481 + ((1 as i32) as i64);
-                            i = __v482;
-                        }
-                        return i;
-                    }
-                }
-                // /* If it is not a BLOB literal, then it must be an ID, since no
-                //       ** SQL keywords start with the letter 'x'.  Fall through */
-                // /* no break */
-                {}
-                i = (1 as i32) as i64;
-            }
-            2 | 27 => {
-                i = (1 as i32) as i64;
-            }
-            30 => {
-                if (((unsafe { *unsafe { z.offset((1 as i32) as isize) } }) as u32) as i32)
-                    == (187 as i32)
-                    && (((unsafe { *unsafe { z.offset((2 as i32) as isize) } }) as u32) as i32)
-                        == (191 as i32)
-                {
-                    {
-                        unsafe {
-                            *tokenType = 184 as i32;
-                        }
-                        return (3 as i32) as i64;
-                    }
-                }
-                i = (1 as i32) as i64;
-            }
-            29 => {
-                unsafe {
-                    *tokenType = 186 as i32;
-                }
-                return (0 as i32) as i64;
-            }
-            _ => {
-                unsafe {
-                    *tokenType = 186 as i32;
-                }
-                return (1 as i32) as i64;
-            }
-        }
-    }
-    '__slate_break_399: while (((unsafe {
-        *unsafe {
-            unsafe { std::ptr::addr_of!(sqlite3CtypeMap) as *const u8 }
-                .offset((((unsafe { *unsafe { z.offset(i as isize) } }) as u32) as i32) as isize)
-        }
-    }) as u32) as i32)
-        & (70 as i32)
-        != (0 as i32)
-    {
-        let __v483: i64 = i;
-        let __v484: i64 = __v483 + ((1 as i32) as i64);
-        i = __v484;
-    }
-    unsafe {
-        *tokenType = 60 as i32;
-    }
-    return i;
-}
-
-fn keywordCode(mut z: *const i8, mut n: i64, mut pType: *mut i32) -> i64 {
-    let mut i: i64 = 0 as i64;
-    let mut j: i64 = 0 as i64;
-    let mut zKW: *const i8 = unsafe { std::mem::zeroed() };
-    0 as i32;
-    i = ((((((unsafe {
-        *unsafe {
-            unsafe { std::ptr::addr_of!(sqlite3UpperToLower) as *const u8 }.offset(
-                ((((unsafe { *unsafe { z.offset((0 as i32) as isize) } }) as u8) as u32) as i32)
-                    as isize,
-            )
-        }
-    }) as u32) as i32)
-        * (4 as i32)
-        ^ (((unsafe {
-            *unsafe {
-                unsafe { std::ptr::addr_of!(sqlite3UpperToLower) as *const u8 }.offset(
-                    ((((unsafe { *unsafe { z.offset((n - ((1 as i32) as i64)) as isize) } }) as u8)
-                        as u32) as i32) as isize,
-                )
-            }
-        }) as u32) as i32)
-            * (3 as i32)) as i64)
-        ^ n * ((1 as i32) as i64))
-        % ((127 as i32) as i64);
-    i = (((unsafe {
-        *unsafe { unsafe { std::ptr::addr_of!(aKWHash.0) as *const u8 }.offset(i as isize) }
-    }) as u32) as i32) as i64;
-    '__slate_break_379: while i > ((0 as i32) as i64) {
-        if ((((unsafe {
-            *unsafe { unsafe { std::ptr::addr_of!(aKWLen.0) as *const u8 }.offset(i as isize) }
-        }) as u32) as i32) as i64)
-            != n
-        {
-        } else {
-            zKW = unsafe {
-                unsafe { std::ptr::addr_of!(zKWText.0) as *const i8 }.offset(
-                    (((unsafe {
-                        *unsafe {
-                            unsafe { std::ptr::addr_of!(aKWOffset.0) as *const u16 }
-                                .offset(i as isize)
-                        }
-                    }) as u32) as i32) as isize,
-                )
-            };
-            if ((unsafe { *unsafe { z.offset((0 as i32) as isize) } }) as i32) & !(32 as i32)
-                != ((unsafe { *unsafe { zKW.offset((0 as i32) as isize) } }) as i32)
-            {
-            } else {
-                if ((unsafe { *unsafe { z.offset((1 as i32) as isize) } }) as i32) & !(32 as i32)
-                    != ((unsafe { *unsafe { zKW.offset((1 as i32) as isize) } }) as i32)
-                {
-                } else {
-                    j = (2 as i32) as i64;
-                    '__slate_break_380: while j < n
-                        && ((unsafe { *unsafe { z.offset(j as isize) } }) as i32) & !(32 as i32)
-                            == ((unsafe { *unsafe { zKW.offset(j as isize) } }) as i32)
-                    {
-                        let __v485: i64 = j;
-                        let __v486: i64 = __v485 + ((1 as i32) as i64);
-                        j = __v486;
-                    }
-                    if j < n {
-                    } else {
-                        // /* REINDEX */
-                        {}
-                        // /* INDEXED */
-                        {}
-                        // /* INDEX */
-                        {}
-                        // /* DESC */
-                        {}
-                        // /* ESCAPE */
-                        {}
-                        // /* EACH */
-                        {}
-                        // /* CHECK */
-                        {}
-                        // /* KEY */
-                        {}
-                        // /* BEFORE */
-                        {}
-                        // /* FOREIGN */
-                        {}
-                        // /* FOR */
-                        {}
-                        // /* IGNORE */
-                        {}
-                        // /* REGEXP */
-                        {}
-                        // /* EXPLAIN */
-                        {}
-                        // /* INSTEAD */
-                        {}
-                        // /* ADD */
-                        {}
-                        // /* DATABASE */
-                        {}
-                        // /* AS */
-                        {}
-                        // /* SELECT */
-                        {}
-                        // /* TABLE */
-                        {}
-                        // /* LEFT */
-                        {}
-                        // /* THEN */
-                        {}
-                        // /* END */
-                        {}
-                        // /* DEFERRABLE */
-                        {}
-                        // /* ELSE */
-                        {}
-                        // /* EXCLUDE */
-                        {}
-                        // /* DELETE */
-                        {}
-                        // /* TEMPORARY */
-                        {}
-                        // /* TEMP */
-                        {}
-                        // /* OR */
-                        {}
-                        // /* ISNULL */
-                        {}
-                        // /* NULLS */
-                        {}
-                        // /* SAVEPOINT */
-                        {}
-                        // /* INTERSECT */
-                        {}
-                        // /* TIES */
-                        {}
-                        // /* NOTNULL */
-                        {}
-                        // /* NOT */
-                        {}
-                        // /* NO */
-                        {}
-                        // /* NULL */
-                        {}
-                        // /* LIKE */
-                        {}
-                        // /* EXCEPT */
-                        {}
-                        // /* TRANSACTION */
-                        {}
-                        // /* ACTION */
-                        {}
-                        // /* ON */
-                        {}
-                        // /* NATURAL */
-                        {}
-                        // /* ALTER */
-                        {}
-                        // /* RAISE */
-                        {}
-                        // /* EXCLUSIVE */
-                        {}
-                        // /* EXISTS */
-                        {}
-                        // /* CONSTRAINT */
-                        {}
-                        // /* INTO */
-                        {}
-                        // /* OFFSET */
-                        {}
-                        // /* OF */
-                        {}
-                        // /* SET */
-                        {}
-                        // /* TRIGGER */
-                        {}
-                        // /* RANGE */
-                        {}
-                        // /* GENERATED */
-                        {}
-                        // /* DETACH */
-                        {}
-                        // /* HAVING */
-                        {}
-                        // /* GLOB */
-                        {}
-                        // /* BEGIN */
-                        {}
-                        // /* INNER */
-                        {}
-                        // /* REFERENCES */
-                        {}
-                        // /* UNIQUE */
-                        {}
-                        // /* QUERY */
-                        {}
-                        // /* WITHOUT */
-                        {}
-                        // /* WITH */
-                        {}
-                        // /* OUTER */
-                        {}
-                        // /* RELEASE */
-                        {}
-                        // /* ATTACH */
-                        {}
-                        // /* BETWEEN */
-                        {}
-                        // /* NOTHING */
-                        {}
-                        // /* GROUPS */
-                        {}
-                        // /* GROUP */
-                        {}
-                        // /* CASCADE */
-                        {}
-                        // /* ASC */
-                        {}
-                        // /* DEFAULT */
-                        {}
-                        // /* CASE */
-                        {}
-                        // /* COLLATE */
-                        {}
-                        // /* CREATE */
-                        {}
-                        // /* CURRENT_DATE */
-                        {}
-                        // /* IMMEDIATE */
-                        {}
-                        // /* JOIN */
-                        {}
-                        // /* INSERT */
-                        {}
-                        // /* MATCH */
-                        {}
-                        // /* PLAN */
-                        {}
-                        // /* ANALYZE */
-                        {}
-                        // /* PRAGMA */
-                        {}
-                        // /* MATERIALIZED */
-                        {}
-                        // /* DEFERRED */
-                        {}
-                        // /* DISTINCT */
-                        {}
-                        // /* IS */
-                        {}
-                        // /* UPDATE */
-                        {}
-                        // /* VALUES */
-                        {}
-                        // /* VIRTUAL */
-                        {}
-                        // /* ALWAYS */
-                        {}
-                        // /* WHEN */
-                        {}
-                        // /* WHERE */
-                        {}
-                        // /* RECURSIVE */
-                        {}
-                        // /* ABORT */
-                        {}
-                        // /* AFTER */
-                        {}
-                        // /* RENAME */
-                        {}
-                        // /* AND */
-                        {}
-                        // /* DROP */
-                        {}
-                        // /* PARTITION */
-                        {}
-                        // /* AUTOINCREMENT */
-                        {}
-                        // /* TO */
-                        {}
-                        // /* IN */
-                        {}
-                        // /* CAST */
-                        {}
-                        // /* COLUMN */
-                        {}
-                        // /* COMMIT */
-                        {}
-                        // /* CONFLICT */
-                        {}
-                        // /* CROSS */
-                        {}
-                        // /* CURRENT_TIMESTAMP */
-                        {}
-                        // /* CURRENT_TIME */
-                        {}
-                        // /* CURRENT */
-                        {}
-                        // /* PRECEDING */
-                        {}
-                        // /* FAIL */
-                        {}
-                        // /* LAST */
-                        {}
-                        // /* FILTER */
-                        {}
-                        // /* REPLACE */
-                        {}
-                        // /* FIRST */
-                        {}
-                        // /* FOLLOWING */
-                        {}
-                        // /* FROM */
-                        {}
-                        // /* FULL */
-                        {}
-                        // /* LIMIT */
-                        {}
-                        // /* IF */
-                        {}
-                        // /* ORDER */
-                        {}
-                        // /* RESTRICT */
-                        {}
-                        // /* OTHERS */
-                        {}
-                        // /* OVER */
-                        {}
-                        // /* RETURNING */
-                        {}
-                        // /* RIGHT */
-                        {}
-                        // /* ROLLBACK */
-                        {}
-                        // /* ROWS */
-                        {}
-                        // /* ROW */
-                        {}
-                        // /* UNBOUNDED */
-                        {}
-                        // /* UNION */
-                        {}
-                        // /* USING */
-                        {}
-                        // /* VACUUM */
-                        {}
-                        // /* VIEW */
-                        {}
-                        // /* WINDOW */
-                        {}
-                        // /* DO */
-                        {}
-                        // /* BY */
-                        {}
-                        // /* INITIALLY */
-                        {}
-                        // /* ALL */
-                        {}
-                        // /* PRIMARY */
-                        {}
-                        unsafe {
-                            *pType = ((unsafe {
-                                *unsafe {
-                                    unsafe { std::ptr::addr_of!(aKWCode.0) as *const u8 }
-                                        .offset(i as isize)
-                                }
-                            }) as u32) as i32;
-                        }
-                        break '__slate_break_379;
-                    }
-                }
-            }
-        }
-        i = ((unsafe {
-            *unsafe { unsafe { std::ptr::addr_of!(aKWNext.0) as *const u8 }.offset(i as isize) }
-        }) as u64) as i64;
-    }
-    return n;
-}
-
-// /*
-// ** Return the id of the next token in string (*pz). Before returning, set
-// ** (*pz) to point to the byte following the parsed token.
-// */
-fn getToken(mut pz: *mut *const u8) -> i32 {
-    let mut z: *const u8 = unsafe { *pz };
-    // /* Token type to return */
-    let mut t: i32 = 0 as i32;
-    '__slate_break_381: loop {
-        let __v487: *const u8 = z;
-        let __v488: *const u8 =
-            unsafe { __v487.offset(sqlite3GetToken(z, std::ptr::addr_of_mut!(t)) as isize) };
-        z = __v488;
-        if !(t == (184 as i32) || t == (185 as i32)) {
-            break;
-        }
-    }
-    let __v489: bool;
-    if t == (60 as i32)
-        || t == (118 as i32)
-        || t == (119 as i32)
-        || t == (165 as i32)
-        || t == (166 as i32)
-    {
-        __v489 = true as bool;
-    } else {
-        __v489 = (unsafe { sqlite3ParserFallback(t) }) == (60 as i32);
-    }
-    if __v489 {
-        t = 60 as i32;
-    }
-    unsafe {
-        *pz = z;
-    }
-    return t;
-}
-
-// /*
-// ** The following three functions are called immediately after the tokenizer
-// ** reads the keywords WINDOW, OVER and FILTER, respectively, to determine
-// ** whether the token should be treated as a keyword or an SQL identifier.
-// ** This cannot be handled by the usual lemon %fallback method, due to
-// ** the ambiguity in some constructions. e.g.
-// **
-// **   SELECT sum(x) OVER ...
-// **
-// ** In the above, "OVER" might be a keyword, or it might be an alias for the
-// ** sum(x) expression. If a "%fallback ID OVER" directive were added to
-// ** grammar, then SQLite would always treat "OVER" as an alias, making it
-// ** impossible to call a window-function without a FILTER clause.
-// **
-// ** WINDOW is treated as a keyword if:
-// **
-// **   * the following token is an identifier, or a keyword that can fallback
-// **     to being an identifier, and
-// **   * the token after than one is TK_AS.
-// **
-// ** OVER is a keyword if:
-// **
-// **   * the previous token was TK_RP, and
-// **   * the next token is either TK_LP or an identifier.
-// **
-// ** FILTER is a keyword if:
-// **
-// **   * the previous token was TK_RP, and
-// **   * the next token is TK_LP.
-// */
-fn analyzeWindowKeyword(mut z: *const u8) -> i32 {
-    let mut t: i32 = 0 as i32;
-    t = getToken(std::ptr::addr_of_mut!(z));
-    if t != (60 as i32) {
-        return 60 as i32;
-    }
-    t = getToken(std::ptr::addr_of_mut!(z));
-    if t != (24 as i32) {
-        return 60 as i32;
-    }
-    return 165 as i32;
-}
-
-fn analyzeOverKeyword(mut z: *const u8, mut lastToken: i32) -> i32 {
-    if lastToken == (23 as i32) {
-        let mut t: i32 = getToken(std::ptr::addr_of_mut!(z));
-        if t == (22 as i32) || t == (60 as i32) {
-            return 166 as i32;
-        }
-    }
-    return 60 as i32;
-}
-
-fn analyzeFilterKeyword(mut z: *const u8, mut lastToken: i32) -> i32 {
-    let __v490: bool;
-    if lastToken == (23 as i32) {
-        __v490 = getToken(std::ptr::addr_of_mut!(z)) == (22 as i32);
-    } else {
-        __v490 = false as bool;
-    }
-    if __v490 {
-        return 167 as i32;
-    }
-    return 60 as i32;
 }

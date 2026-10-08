@@ -1,3 +1,28 @@
+//! 2012 July 21
+//!
+//! The author disclaims copyright to this source code.  In place of
+//! a legal notice, here is a blessing:
+//!
+//!    May you do good and not evil.
+//!    May you find forgiveness for yourself and forgive others.
+//!    May you share freely, never taking more than you give.
+//!
+//!
+//!
+//! This file presents a simple cross-platform threading interface for
+//! use internally by SQLite.
+//!
+//! A "thread" can be created using sqlite3ThreadCreate().  This thread
+//! runs independently of its creator until it is joined using
+//! sqlite3ThreadJoin(), at which point it terminates.
+//!
+//! Threads do not have to be real.  It could be that the work of the
+//! "thread" is done by the main thread at either the sqlite3ThreadCreate()
+//! or sqlite3ThreadJoin() call.  This is, in fact, what happens in
+//! single threaded systems.  Nothing in SQLite requires multiple threads.
+//! This interface exists so that applications that want to take advantage
+//! of multiple cores can do so, while also allowing applications to stay
+//! single-threaded if desired.
 unsafe extern "C" {
     fn sqlite3_free(__v33: *mut ());
     fn memset(__s: *mut (), __c: i32, __n: u64) -> *mut ();
@@ -19,52 +44,31 @@ union pthread_attr_t {
     __align: i64,
 }
 
+// Unix Pthreads
+// Prevent the single-thread code below
+/// A running thread
 #[repr(C)]
 #[derive(Clone, Copy)]
 struct SQLiteThread {
+    /// Thread ID
     tid: u64,
+    /// Set to true when thread finishes
     done: i32,
+    /// Result returned by the thread
     pOut: *mut (),
+    /// The thread routine
     xTask: Option<unsafe extern "C-unwind" fn(*mut ()) -> *mut ()>,
+    /// Argument to the thread
     pIn: *mut (),
 }
 
-// /*
-// ** 2012 July 21
-// **
-// ** The author disclaims copyright to this source code.  In place of
-// ** a legal notice, here is a blessing:
-// **
-// **    May you do good and not evil.
-// **    May you find forgiveness for yourself and forgive others.
-// **    May you share freely, never taking more than you give.
-// **
-// ******************************************************************************
-// **
-// ** This file presents a simple cross-platform threading interface for
-// ** use internally by SQLite.
-// **
-// ** A "thread" can be created using sqlite3ThreadCreate().  This thread
-// ** runs independently of its creator until it is joined using
-// ** sqlite3ThreadJoin(), at which point it terminates.
-// **
-// ** Threads do not have to be real.  It could be that the work of the
-// ** "thread" is done by the main thread at either the sqlite3ThreadCreate()
-// ** or sqlite3ThreadJoin() call.  This is, in fact, what happens in
-// ** single threaded systems.  Nothing in SQLite requires multiple threads.
-// ** This interface exists so that applications that want to take advantage
-// ** of multiple cores can do so, while also allowing applications to stay
-// ** single-threaded if desired.
-// */
-// /********************************* Unix Pthreads ****************************/
-// /* Prevent the single-thread code below */
-// /* A running thread */
-// /* Thread ID */
-// /* Set to true when thread finishes */
-// /* Result returned by the thread */
-// /* The thread routine */
-// /* Argument to the thread */
-// /* Create a new thread */
+/// Create a new thread
+///
+/// # Arguments
+///
+/// * `ppThread` - OUT: Write the thread object here
+/// * `xTask` - Routine to run in a separate thread
+/// * `pIn` - Argument passed into xTask()
 #[unsafe(no_mangle)]
 extern "C-unwind" fn sqlite3ThreadCreate(
     mut ppThread: *mut *mut SQLiteThread,
@@ -75,7 +79,7 @@ extern "C-unwind" fn sqlite3ThreadCreate(
     let mut rc: i32 = 0 as i32;
     0 as i32;
     0 as i32;
-    // /* This routine is never used in single-threaded mode */
+    // This routine is never used in single-threaded mode
     0 as i32;
     unsafe {
         *ppThread = std::ptr::null_mut::<SQLiteThread>();
@@ -91,10 +95,10 @@ extern "C-unwind" fn sqlite3ThreadCreate(
     unsafe {
         (*p).pIn = pIn;
     }
-    // /* If the SQLITE_TESTCTRL_FAULT_INSTALL callback is registered to a
-    //   ** function that returns SQLITE_ERROR when passed the argument 200, that
-    //   ** forces worker threads to run sequentially and deterministically
-    //   ** for testing purposes. */
+    // If the SQLITE_TESTCTRL_FAULT_INSTALL callback is registered to a
+    // function that returns SQLITE_ERROR when passed the argument 200, that
+    // forces worker threads to run sequentially and deterministically
+    // for testing purposes.
     if (unsafe { sqlite3FaultSim(200 as i32) }) != (0 as i32) {
         rc = 1 as i32;
     } else {
@@ -121,10 +125,7 @@ extern "C-unwind" fn sqlite3ThreadCreate(
     return 0 as i32;
 }
 
-// /* OUT: Write the thread object here */
-// /* Routine to run in a separate thread */
-// /* Argument passed into xTask() */
-// /* Get the results of the thread */
+/// Get the results of the thread
 #[unsafe(no_mangle)]
 extern "C-unwind" fn sqlite3ThreadJoin(mut p: *mut SQLiteThread, mut ppOut: *mut *mut ()) -> i32 {
     let mut rc: i32 = 0 as i32;
@@ -148,10 +149,9 @@ extern "C-unwind" fn sqlite3ThreadJoin(mut p: *mut SQLiteThread, mut ppOut: *mut
     return rc;
 }
 
-// /* SQLITE_OS_UNIX && defined(SQLITE_MUTEX_PTHREADS) */
-// /******************************** End Unix Pthreads *************************/
-// /********************************* Win32 Threads ****************************/
-// /******************************** End Win32 Threads *************************/
-// /********************************* Single-Threaded **************************/
-// /****************************** End Single-Threaded *************************/
-// /* SQLITE_MAX_WORKER_THREADS>0 */
+// End Unix Pthreads
+// Win32 Threads
+// End Win32 Threads
+// Single-Threaded
+//
+// End Single-Threaded
